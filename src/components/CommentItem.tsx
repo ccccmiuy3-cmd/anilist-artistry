@@ -22,6 +22,8 @@ export type CommentRow = {
   user_id: string;
   is_spoiler?: boolean | null;
   image_url?: string | null;
+  parent_id?: string | null;
+  parent?: { id: string; username: string } | null;
   author: CommentAuthor | null;
 };
 
@@ -39,11 +41,12 @@ export function CommentItem({
 }: {
   comment: CommentRow;
   userId?: string | undefined;
-  onReply?: ((username: string) => void) | undefined;
+  onReply?: ((comment: CommentRow) => void) | undefined;
 }) {
   const author = comment.author;
   const username = author?.username ?? "leitor";
   const level = Math.max(1, Number(author?.level ?? 1));
+  const usernames = [username, comment.parent?.username].filter((n): n is string => Boolean(n));
 
   return (
     <li className="relative -mx-3 -my-1 scroll-mt-32 rounded-xl p-3">
@@ -87,17 +90,28 @@ export function CommentItem({
               {formatDate(comment.created_at)}
             </span>
           </div>
+          {comment.parent ? (
+            <Link
+              to="/u/$username"
+              params={{ username: comment.parent.username }}
+              className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              <MessageSquare className="h-3 w-3" />
+              Respondeu @{comment.parent.username}
+            </Link>
+          ) : null}
           <CommentContent
             body={comment.body}
             isSpoiler={comment.is_spoiler ?? null}
             imageUrl={comment.image_url ?? null}
+            usernames={usernames}
           />
           <div className="relative z-10 mt-2 flex flex-wrap items-center gap-4 pt-1">
             <CommentReactions commentId={comment.id} userId={userId} />
             {onReply ? (
               <button
                 type="button"
-                onClick={() => onReply(username)}
+                onClick={() => onReply(comment)}
                 className="flex items-center gap-1.5 whitespace-nowrap text-xs text-white/40 transition-colors hover:text-foreground"
               >
                 <MessageSquare className="h-3.5 w-3.5" />
