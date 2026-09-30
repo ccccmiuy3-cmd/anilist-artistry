@@ -2,12 +2,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const KINDS = [
   "Comic",
-  "Manga",
-  "Manhwa",
-  "Manhua",
+  "Comic2",
   "Shoujo",
+  "Shoujo2",
+  "Manga",
   "Yaoi",
   "Yuri",
+  "Hentai",
+  "English",
   "Novel",
 ] as const;
 

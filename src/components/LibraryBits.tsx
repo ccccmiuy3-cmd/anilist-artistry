@@ -2,8 +2,9 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Ban, BookmarkPlus, BookOpen, CheckCircle2, Sparkles, Star, Trash2 } from "lucide-react";
 import { coverUrl } from "@/lib/media";
+import { KINDS } from "@/lib/queries";
 
-export const FORMATS = ["Todos", "Comic", "Manga", "Manhwa", "Manhua", "Shoujo", "Yaoi", "Yuri", "Novel"];
+export const FORMATS = ["Todos", ...KINDS];
 
 export function PageTitle({
   icon,
