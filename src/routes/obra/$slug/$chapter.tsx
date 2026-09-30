@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronLeft, ChevronRight, List } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, ChevronsDown, Home, Infinity, Maximize2, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSeriesBySlug } from "@/lib/queries";
@@ -95,27 +95,63 @@ function Reader() {
     });
   }
 
+  const iconBtn =
+    "grid h-9 w-9 place-items-center rounded-md text-foreground/90 transition hover:bg-surface-2 hover:text-primary disabled:opacity-30 disabled:pointer-events-none";
+
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-4xl items-center gap-3 px-4">
-          <Button asChild variant="ghost" size="icon">
-            <Link to="/obra/$slug" params={{ slug }}>
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{obra.title}</p>
-            <p className="text-xs text-muted-foreground">
-              Capítulo {formatChapter(current.number)}
-              {current.title ? ` · ${current.title}` : ""}
-            </p>
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:px-8">
+          <button type="button" onClick={() => history.back()} className={iconBtn} aria-label="Voltar">
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <Link to="/obra/$slug" params={{ slug }} className="ml-2 flex items-center gap-1.5 text-sm font-bold hover:text-primary">
+            <BookOpen className="h-4 w-4" /> Obra
+          </Link>
+          <div className="ml-3 flex min-w-0 items-center gap-2 text-sm">
+            <span className="truncate text-muted-foreground">{obra.title}</span>
+            <span className="shrink-0 font-bold text-primary">Cap. {formatChapter(current.number)}</span>
           </div>
-          <Button asChild variant="ghost" size="icon">
-            <Link to="/obra/$slug" params={{ slug }}>
-              <List className="h-5 w-5" />
+          <div className="ml-auto flex items-center gap-1">
+            <button type="button" disabled={!prev} onClick={() => go("prev")} className={iconBtn} aria-label="Capítulo anterior">
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button type="button" disabled={!next} onClick={() => go("next")} className={iconBtn} aria-label="Próximo capítulo">
+              <ChevronRight className="h-5 w-5" />
+            </button>
+            <Link to="/obra/$slug" params={{ slug }} className={`${iconBtn} hidden sm:grid`} aria-label="Lista de capítulos">
+              <Infinity className="h-5 w-5" />
             </Link>
-          </Button>
+            <button
+              type="button"
+              className={`${iconBtn} hidden sm:grid`}
+              aria-label="Tema"
+              onClick={() => document.documentElement.classList.toggle("reader-dim")}
+            >
+              <Palette className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              className={iconBtn}
+              aria-label="Ir para o fim"
+              onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })}
+            >
+              <ChevronsDown className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              className={`${iconBtn} hidden sm:grid`}
+              aria-label="Tela cheia"
+              onClick={() =>
+                document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()
+              }
+            >
+              <Maximize2 className="h-5 w-5" />
+            </button>
+            <Link to="/" className={iconBtn} aria-label="Início">
+              <Home className="h-5 w-5" />
+            </Link>
+          </div>
         </div>
       </header>
 
