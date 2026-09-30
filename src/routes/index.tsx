@@ -156,7 +156,7 @@ function Home() {
           <ContinueReading rows={history.data!} userId={user.id} />
         ) : null}
 
-        {topRated.data?.length ?? 0) > 0 ? <TopRated rows={topRated.data!} /> : null}
+        {(topRated.data?.length ?? 0) > 0 ? <TopRated rows={topRated.data!} /> : null}
 
         {(recent.data?.length ?? 0) > 0 ? (
           <SectionRow icon={<PlusSquare className="h-5 w-5" />} title="Adicionados recentemente">
