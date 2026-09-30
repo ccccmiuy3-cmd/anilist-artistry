@@ -399,6 +399,14 @@ function EditProfile({
     is_private: profile.is_private,
   });
   const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
+  const { data: frames } = useQuery({
+    queryKey: ["avatar-frames"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("avatar_frames").select("id, name, image_url").eq("active", true).order("created_at");
+      if (error) throw error;
+      return data;
+    },
+  });
   const avatarInput = useRef<HTMLInputElement>(null);
   const bannerInput = useRef<HTMLInputElement>(null);
 
