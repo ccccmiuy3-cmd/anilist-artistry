@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BookOpen, LayoutDashboard, PlusCircle, Shield, Users, ExternalLink } from "lucide-react";
+import { BookOpen, LayoutDashboard, PlusCircle, Shield, Users, ExternalLink, Frame } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ const NAV = [
   { to: "/admin/obras", label: "Obras", icon: BookOpen, exact: false },
   { to: "/admin/nova", label: "Nova obra", icon: PlusCircle, exact: true },
   { to: "/admin/contas", label: "Contas", icon: Users, exact: true, adminOnly: true },
+  { to: "/admin/molduras", label: "Molduras", icon: Frame, exact: true, adminOnly: true },
 ] as const;
 
 export function AdminShell({

@@ -34,6 +34,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useAuth";
 import { coverUrl, timeAgo } from "@/lib/media";
+import { FramedAvatar } from "@/components/FramedAvatar";
 
 export const Route = createFileRoute("/u/$username")({
   head: ({ params }) => ({
@@ -190,16 +191,7 @@ function Perfil() {
 
         <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
           <aside className="-mt-20 relative">
-            <div
-              className="h-36 w-36 overflow-hidden rounded-full border-4 border-background bg-surface-2"
-              style={{ boxShadow: `0 0 0 2px ${frameColor(p.avatar_frame)}` }}
-            >
-              {p.avatar_url ? (
-                <img src={p.avatar_url} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <div className="grid h-full w-full place-items-center"><User2 className="h-12 w-12 text-muted-foreground" /></div>
-              )}
-            </div>
+            <FramedAvatar src={p.avatar_url} frame={p.avatar_frame} size={144} />
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <h1 className="font-display text-2xl font-extrabold" style={{ color: p.accent_color ?? "var(--primary)" }}>@{p.username}</h1>
               <span className="rounded border border-border px-1.5 text-xs font-bold text-muted-foreground">Nv. {p.level}</span>
@@ -407,6 +399,14 @@ function EditProfile({
     is_private: profile.is_private,
   });
   const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
+  const { data: frames } = useQuery({
+    queryKey: ["avatar-frames"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("avatar_frames").select("id, name, image_url").eq("active", true).order("created_at");
+      if (error) throw error;
+      return data;
+    },
+  });
   const avatarInput = useRef<HTMLInputElement>(null);
   const bannerInput = useRef<HTMLInputElement>(null);
 
@@ -535,16 +535,7 @@ function EditProfile({
             </div>
 
             <div className="-mt-10 ml-8 relative h-20 w-20">
-              <div
-                className="h-20 w-20 overflow-hidden rounded-full border-4 border-background bg-surface-2"
-                style={{ boxShadow: `0 0 0 2px ${frameColor(form.avatar_frame || null)}` }}
-              >
-                {form.avatar_url ? (
-                  <img src={form.avatar_url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="grid h-full w-full place-items-center"><User2 className="h-8 w-8 text-muted-foreground" /></div>
-                )}
-              </div>
+              <FramedAvatar src={form.avatar_url} frame={form.avatar_frame || null} size={80} />
               <button
                 onClick={() => avatarInput.current?.click()}
                 className="absolute inset-0 grid place-items-center rounded-full bg-black/40 text-[11px] font-semibold opacity-0 transition hover:opacity-100"
@@ -645,16 +636,23 @@ function EditProfile({
 
         {screen === "moldura" ? (
           <div className="space-y-4 px-6 py-5">
-            <p className="text-xs font-bold tracking-widest text-muted-foreground">MOLDURA DO AVATAR</p>
+            <p className="text-xs font-bold tracking-widest text-muted-foreground">MOLDURA</p>
             <div className="grid grid-cols-3 gap-3">
-              {FRAMES.map((f) => (
+              <button
+                onClick={() => save.mutate({ avatar_frame: "" })}
+                className={`flex aspect-square flex-col items-center justify-center gap-2 rounded-xl border p-2 text-xs ${!form.avatar_frame ? "border-primary bg-surface-2" : "border-border bg-surface"}`}
+              >
+                <span className="h-12 w-12 rounded-full border-2 border-dashed border-border" />
+                Sem moldura
+              </button>
+              {(frames ?? []).map((f) => (
                 <button
                   key={f.id}
-                  onClick={() => save.mutate({ avatar_frame: f.id === "none" ? "" : f.id })}
-                  className={`flex flex-col items-center gap-2 rounded-xl border p-3 text-xs ${(form.avatar_frame || "none") === f.id ? "border-primary bg-surface-2" : "border-border bg-surface"}`}
+                  onClick={() => save.mutate({ avatar_frame: f.image_url })}
+                  className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border p-2 text-xs ${form.avatar_frame === f.image_url ? "border-primary bg-surface-2" : "border-border bg-surface"}`}
                 >
-                  <span className="h-10 w-10 rounded-full bg-surface-2" style={{ boxShadow: `0 0 0 3px ${f.color}` }} />
-                  {f.label}
+                  <img src={f.image_url} alt="" loading="lazy" className="h-16 w-16 object-contain" />
+                  <span className="line-clamp-1">{f.name}</span>
                 </button>
               ))}
             </div>
