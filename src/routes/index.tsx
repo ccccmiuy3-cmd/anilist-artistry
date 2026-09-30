@@ -5,10 +5,11 @@ import { BookOpen, Clock, Heart, LayoutGrid, PlusSquare, Star, Trophy } from "lu
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { SeriesCard } from "@/components/SeriesCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { ContinueReading } from "@/components/ContinueReading";
 import { HScroll, SectionRow } from "@/components/SectionRow";
 import { Button } from "@/components/ui/button";
 import { fetchFavorites, fetchHistory, fetchSeries, KINDS } from "@/lib/queries";
-import { coverUrl, formatChapter } from "@/lib/media";
+import { coverUrl } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/")({
