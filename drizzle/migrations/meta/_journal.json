@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790731008298,
+      "tag": "0000_create_manga_platform",
+      "breakpoints": true
+    }
+  ]
 }

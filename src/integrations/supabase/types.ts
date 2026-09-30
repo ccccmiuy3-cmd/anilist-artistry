@@ -14,16 +14,306 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chapters: {
+        Row: {
+          created_at: string
+          id: string
+          number: number
+          pages: Json
+          published: boolean
+          series_id: string
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          number: number
+          pages?: Json
+          published?: boolean
+          series_id: string
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          number?: number
+          pages?: Json
+          published?: boolean
+          series_id?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapters_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          body: string
+          chapter_id: string | null
+          created_at: string
+          id: string
+          series_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          chapter_id?: string | null
+          created_at?: string
+          id?: string
+          series_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          chapter_id?: string | null
+          created_at?: string
+          id?: string
+          series_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      favorites: {
+        Row: {
+          created_at: string
+          series_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          series_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          series_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          level: number
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          level?: number
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          level?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      ratings: {
+        Row: {
+          created_at: string
+          score: number
+          series_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          score: number
+          series_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          score?: number
+          series_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reading_history: {
+        Row: {
+          chapter_id: string | null
+          progress: number
+          series_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter_id?: string | null
+          progress?: number
+          series_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter_id?: string | null
+          progress?: number
+          series_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_history_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reading_history_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      series: {
+        Row: {
+          alt_titles: string | null
+          anilist_id: number | null
+          artist: string | null
+          author: string | null
+          banner_url: string | null
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          genres: string[]
+          id: string
+          kind: string
+          pinned: boolean
+          published: boolean
+          rating: number
+          slug: string
+          status: string
+          synopsis: string | null
+          title: string
+          updated_at: string
+          views: number
+        }
+        Insert: {
+          alt_titles?: string | null
+          anilist_id?: number | null
+          artist?: string | null
+          author?: string | null
+          banner_url?: string | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          genres?: string[]
+          id?: string
+          kind?: string
+          pinned?: boolean
+          published?: boolean
+          rating?: number
+          slug: string
+          status?: string
+          synopsis?: string | null
+          title: string
+          updated_at?: string
+          views?: number
+        }
+        Update: {
+          alt_titles?: string | null
+          anilist_id?: number | null
+          artist?: string | null
+          author?: string | null
+          banner_url?: string | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          genres?: string[]
+          id?: string
+          kind?: string
+          pinned?: boolean
+          published?: boolean
+          rating?: number
+          slug?: string
+          status?: string
+          synopsis?: string | null
+          title?: string
+          updated_at?: string
+          views?: number
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "uploader" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +440,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "uploader", "user"],
+    },
   },
 } as const
