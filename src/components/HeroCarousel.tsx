@@ -40,9 +40,53 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
   if (allSlides.length === 0) return null;
 
   const active = slides[index] ?? slides[0] ?? null;
-  const latest = active.chapters[0];
+  const latest = active?.chapters[0];
   const go = (delta: number) =>
     setIndex((current) => (current + delta + slides.length) % slides.length);
+
+  const categoryBar = (
+    <div className="mx-auto mb-5 hidden w-full max-w-[1400px] justify-center px-6 md:flex">
+      <div className="no-scrollbar inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full border border-foreground/10 bg-card/70 px-1 py-1 backdrop-blur-sm">
+        {CATEGORY_LABELS.map((label) => (
+          <Button
+            key={label}
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => setKind(label)}
+            className={`h-8 shrink-0 rounded-full px-4 text-[11px] font-semibold whitespace-nowrap transition-all duration-200 ease-out active:scale-[0.97] ${
+              kind === label
+                ? "ring-1 ring-foreground/80 bg-primary text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary"
+                : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+            }`}
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (!active) {
+    return (
+      <section aria-label="Destaques" className="w-full overflow-hidden bg-background pb-6 pt-4 md:pb-8 md:pt-5">
+        {categoryBar}
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <div className="flex min-h-[16rem] flex-col items-center justify-center gap-4 rounded-2xl border border-foreground/10 bg-card/60 py-10 text-center backdrop-blur-sm">
+            <BookOpen className="h-8 w-8 text-muted-foreground" />
+            <p className="max-w-sm text-sm text-muted-foreground">
+              Nenhuma obra de <span className="font-bold text-foreground">{kind}</span> no slide ainda.
+            </p>
+            <Button asChild size="sm" className="rounded-full px-5 text-xs font-black uppercase shadow-[var(--shadow-glow)]">
+              <Link to="/catalogo" search={{ kind }}>
+                Explorar {kind} no catálogo
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
