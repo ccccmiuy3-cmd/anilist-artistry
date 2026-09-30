@@ -270,8 +270,8 @@ function Perfil() {
               <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
                 <span><b className="text-foreground">{stats.data?.followers ?? 0}</b> seguidores</span>
                 <span><b className="text-foreground">{stats.data?.following ?? 0}</b> seguindo</span>
-                <Link to="/ranking" className="inline-flex items-center gap-1 hover:text-primary"><Trophy className="h-3.5 w-3.5" /> #{stats.data?.totalRank || "—"} global</Link>
-                <Link to="/ranking" className="inline-flex items-center gap-1 hover:text-primary"><Sparkles className="h-3.5 w-3.5" /> #{stats.data?.weeklyRank || "—"} semanal</Link>
+                <Link to="/ranking-leitores" className="inline-flex items-center gap-1 hover:text-primary"><Trophy className="h-3.5 w-3.5" /> #{stats.data?.totalRank || "—"} global</Link>
+                <Link to="/ranking-leitores" className="inline-flex items-center gap-1 hover:text-primary"><Sparkles className="h-3.5 w-3.5" /> #{stats.data?.weeklyRank || "—"} semanal</Link>
               </div>
             </div>
             <div className="flex shrink-0 gap-2 sm:pb-1">

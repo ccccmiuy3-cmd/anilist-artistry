@@ -17,7 +17,8 @@ const NAV = [
   { to: "/", label: "Início" },
   { to: "/biblioteca", label: "Coleção" },
   { to: "/listas", label: "Listas" },
-  { to: "/ranking", label: "Ranking" },
+  { to: "/ranking", label: "Obras" },
+  { to: "/ranking-leitores", label: "Leitores" },
   { to: "/historico", label: "Histórico" },
 ] as const;
 
@@ -235,7 +236,13 @@ export function SiteFooter() {
                 to="/ranking"
                 className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
               >
-                Ranking
+                Ranking de obras
+              </Link>
+              <Link
+                to="/ranking-leitores"
+                className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                Ranking de leitores
               </Link>
               <Link
                 to="/historico"
@@ -297,7 +304,13 @@ export function SiteFooter() {
                 to="/ranking"
                 className="transition-colors hover:text-primary"
               >
-                Ranking
+                Obras
+              </Link>
+              <Link
+                to="/ranking-leitores"
+                className="transition-colors hover:text-primary"
+              >
+                Leitores
               </Link>
               <Link
                 to="/listas"
