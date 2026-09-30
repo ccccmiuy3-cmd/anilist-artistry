@@ -42,12 +42,11 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4">
         <Link to="/" className="flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-lg font-black text-primary-foreground">
-            M
-          </span>
-          <span className="hidden font-display text-lg font-extrabold tracking-tight sm:block">
-            Manga<span className="text-primary">Verso</span>
-          </span>
+          <img
+            src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
+            alt="Better Mangá"
+            className="h-9 w-auto rounded-md object-contain"
+          />
         </Link>
 
         <nav className="no-scrollbar flex flex-1 items-center gap-1 overflow-x-auto text-sm font-semibold">
