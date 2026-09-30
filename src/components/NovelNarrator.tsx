@@ -105,8 +105,9 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
       const saved = JSON.parse(localStorage.getItem("novel-tts") ?? "{}");
       if (typeof saved.rate === "number") setRate(saved.rate);
       if (typeof saved.voice === "string") setVoiceUri(saved.voice);
-      if (saved.engine === "ai" || saved.engine === "device") setEngine(saved.engine);
+      if (saved.engine === "ai" || saved.engine === "device" || saved.engine === "elevenlabs") setEngine(saved.engine);
       if (typeof saved.aiVoice === "string") setAiVoice(saved.aiVoice);
+      if (typeof saved.elevenVoice === "string") setElevenVoice(saved.elevenVoice);
     } catch {
       /* ignore */
     }
@@ -128,8 +129,8 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
 
   useEffect(() => {
     if (!supported) return;
-    localStorage.setItem("novel-tts", JSON.stringify({ rate, voice: voiceUri, engine, aiVoice }));
-  }, [rate, voiceUri, engine, aiVoice, supported]);
+    localStorage.setItem("novel-tts", JSON.stringify({ rate, voice: voiceUri, engine, aiVoice, elevenVoice }));
+  }, [rate, voiceUri, engine, aiVoice, elevenVoice, supported]);
 
   const stopAi = useCallback(() => {
     ai.current.abort?.abort();
