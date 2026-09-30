@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { searchAnilist, type AnilistResult } from "@/lib/anilist.functions";
-import { coverUrl, slugify, timeAgo } from "@/lib/media";
+import { coverUrl, timeAgo } from "@/lib/media";
+import { findByAnilistId, uniqueSlug } from "@/lib/series-import";
 import { useRoles, useSession } from "@/hooks/useAuth";
 import { KINDS } from "@/lib/queries";
 
@@ -66,9 +67,11 @@ function AdminPage() {
 
   const importSeries = useMutation({
     mutationFn: async (item: AnilistResult) => {
+      const existing = await findByAnilistId(item.anilistId);
+      if (existing) throw new Error("Essa obra já está no catálogo.");
       const { error } = await supabase.from("series").insert({
         anilist_id: item.anilistId,
-        slug: slugify(item.title) || `obra-${item.anilistId}`,
+        slug: await uniqueSlug(item.title, `obra-${item.anilistId}`),
         title: item.title,
         alt_titles: item.altTitles,
         synopsis: item.synopsis,
@@ -91,7 +94,7 @@ function AdminPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-series"] });
     },
     onError: (e) =>
-      toast.error(e instanceof Error && e.message.includes("duplicate") ? "Essa obra já está no catálogo." : "Não foi possível importar."),
+      toast.error(e instanceof Error ? (e.message.includes("duplicate") ? "Essa obra já está no catálogo." : e.message) : "Não foi possível importar."),
   });
 
   const d = stats.data;
@@ -139,7 +142,7 @@ function AdminPage() {
                   <p className="line-clamp-2 text-sm font-bold">{item.title}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{item.status} · nota {item.averageScore || "—"}</p>
                   <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{item.synopsis}</p>
-                  <Button size="sm" className="mt-2 font-semibold" disabled={importSeries.isPending} onClick={() => importSeries.mutate(item)}>
+                  <Button size="sm" className="mt-2 font-semibold" disabled={importSeries.isPending} onClick={() => importSeries.mutate({ ...item })}>
                     Publicar como {kind}
                   </Button>
                 </div>

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { slugify } from "@/lib/media";
+import { findByAnilistId, uniqueSlug } from "@/lib/series-import";
 import { KINDS } from "@/lib/queries";
 import { useSession } from "@/hooks/useAuth";
 import { searchAnilist } from "@/lib/anilist.functions";
@@ -45,6 +45,7 @@ function NovaObra() {
     artist: "",
     genres: "",
   });
+  const [meta, setMeta] = useState<{ anilistId: number | null; rating: number }>({ anilistId: null, rating: 0 });
 
   function set(key: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -57,8 +58,10 @@ function NovaObra() {
       return results[0]!;
     },
     onSuccess: (item) => {
+      setMeta({ anilistId: item.anilistId, rating: item.averageScore });
       setForm((prev) => ({
         ...prev,
+        kind: item.suggestedKind,
         title: item.title,
         altTitles: item.altTitles,
         synopsis: item.synopsis,
@@ -76,11 +79,16 @@ function NovaObra() {
 
   const create = useMutation({
     mutationFn: async () => {
+      const existing = await findByAnilistId(meta.anilistId);
+      if (existing) throw new Error(`"${existing.title}" já está no catálogo.`);
+      const title = form.title.trim();
       const { data, error } = await supabase
         .from("series")
         .insert({
-          slug: slugify(form.title),
-          title: form.title,
+          slug: await uniqueSlug(title, form.altTitles),
+          title,
+          anilist_id: meta.anilistId,
+          rating: meta.rating,
           alt_titles: form.altTitles,
           synopsis: form.synopsis,
           cover_url: form.coverUrl,

@@ -13,6 +13,7 @@ export type AnilistResult = {
   author: string;
   artist: string;
   averageScore: number;
+  suggestedKind: string;
 };
 
 const QUERY = `
@@ -27,6 +28,8 @@ query ($search: String, $ids: [Int], $sort: [MediaSort]) {
       genres
       status
       averageScore
+      countryOfOrigin
+      format
       staff(perPage: 6) { edges { role node { name { full } } } }
     }
   }
@@ -61,6 +64,7 @@ export const searchAnilist = createServerFn({ method: "POST" })
           `query ($id: Int) { Media(id: $id, type: ANIME) { relations { edges { relationType node { id type } } } } }`,
           { id: Number(id) },
         );
+        if (!r.ok) throw new Error(`Não foi possível ler o anime no AniList (${r.status}).`);
         const j = (await r.json()) as { data?: { Media?: { relations?: { edges?: Array<{ node?: { id: number; type: string } }> } } } };
         const ids = (j.data?.Media?.relations?.edges ?? []).filter((e) => e.node?.type === "MANGA").map((e) => e.node!.id);
         if (!ids.length) throw new Error("Esse anime não tem mangá de origem no AniList.");
@@ -77,7 +81,12 @@ export const searchAnilist = createServerFn({ method: "POST" })
         variables = { search: q, sort: ["SEARCH_MATCH"] };
       }
     }
-    const response = await gql(QUERY, variables);
+    let response = await gql(QUERY, variables);
+    if (response.status === 429) {
+      await new Promise((r) => setTimeout(r, 1500));
+      response = await gql(QUERY, variables);
+    }
+    if (response.status === 429) throw new Error("AniList está limitando as buscas. Aguarde um minuto e tente de novo.");
 
     if (!response.ok) {
       throw new Error(`Não foi possível buscar no AniList (${response.status}).`);
@@ -98,6 +107,8 @@ export const searchAnilist = createServerFn({ method: "POST" })
       genres?: string[];
       status?: string;
       averageScore?: number;
+      countryOfOrigin?: string;
+      format?: string;
       staff?: { edges?: Array<{ role?: string; node?: { name?: { full?: string } } }> };
     }>;
 
@@ -105,19 +116,26 @@ export const searchAnilist = createServerFn({ method: "POST" })
       const edges = item.staff?.edges ?? [];
       const findRole = (needle: string) =>
         edges.find((edge) => (edge.role ?? "").toLowerCase().includes(needle))?.node?.name?.full ?? "";
-      const titles = [item.title.romaji, item.title.english, item.title.native].filter(Boolean) as string[];
+      const titles = [...new Set([item.title.english, item.title.romaji, item.title.native])].filter(Boolean) as string[];
       return {
         anilistId: item.id,
         title: titles[0] ?? "Sem título",
         altTitles: titles.slice(1).join(", "),
-        synopsis: (item.description ?? "").replace(/<[^>]+>/g, "").trim(),
+        synopsis: decode((item.description ?? "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")).replace(/\n{3,}/g, "\n\n").trim(),
         coverUrl: item.coverImage?.extraLarge ?? item.coverImage?.large ?? "",
         bannerUrl: item.bannerImage ?? "",
         genres: item.genres ?? [],
         status: STATUS_PT[item.status ?? ""] ?? "Em andamento",
         author: findRole("story") || findRole("original") || "",
         artist: findRole("art") || "",
+        suggestedKind: item.format === "NOVEL" ? "Novel" : item.countryOfOrigin === "KR" ? "Manhwa" : item.countryOfOrigin === "CN" || item.countryOfOrigin === "TW" ? "Manhua" : "Manga",
         averageScore: item.averageScore ? Math.round((item.averageScore / 10) * 10) / 10 : 0,
       };
     });
   });
+
+function decode(text: string) {
+  return text
+    .replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ").replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n))).replace(/&amp;/g, "&");
+}
