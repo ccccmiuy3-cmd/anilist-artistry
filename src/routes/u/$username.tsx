@@ -545,7 +545,10 @@ function OwnerProfileHeader({
           </div>
         </div>
         <div className="min-w-0 text-center lg:text-left">
-          <h1 className="truncate font-display text-2xl font-extrabold sm:text-3xl" style={profile.accent_color ? { color: profile.accent_color } : undefined}>{profile.display_name || profile.username}</h1>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="truncate font-display text-2xl font-extrabold sm:text-3xl" style={profile.accent_color ? { color: profile.accent_color } : undefined}>{profile.display_name || profile.username}</h1>
+            <UserBadges variant="inline" size={26} tier={profile.subscription_tier} badges={badges} isAdmin={isAdmin} />
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">@{profile.username}</p>
           {profile.bio ? <p className="mx-auto mt-2 max-w-2xl text-sm text-foreground/80 lg:mx-0">{profile.bio}</p> : null}
           <div className="mt-3 flex flex-wrap justify-center gap-2 lg:justify-start">
