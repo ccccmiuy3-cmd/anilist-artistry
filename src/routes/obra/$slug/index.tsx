@@ -509,75 +509,142 @@ function SeriesPage() {
           </div>
 
           {/* Chapters */}
-          <section className="mt-8 rounded-xl border border-border bg-surface">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <h2 className="font-display text-lg font-bold">Capítulos</h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setOrder(order === "asc" ? "desc" : "asc")}
-                className="font-semibold"
-              >
-                {order === "desc" ? "Recentes" : "Antigos"}
-              </Button>
+          <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-surface">
+            <div className="border-b border-border px-4 py-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <h2 className="font-display text-lg font-bold">Capítulos</h2>
+                <div className="flex flex-wrap items-center justify-end gap-1.5">
+                  {user ? (
+                    <>
+                      <button
+                        type="button"
+                        title="Marcar todos como lidos"
+                        aria-label="Marcar todos como lidos"
+                        disabled={markAll.isPending || chapters.length === 0}
+                        onClick={() => markAll.mutate("read")}
+                        className="rounded-lg border border-emerald-500/25 p-2 text-emerald-400/90 transition-colors hover:bg-emerald-500/15 hover:text-emerald-300 disabled:pointer-events-none disabled:opacity-40"
+                      >
+                        <CheckCheck className="h-[18px] w-[18px]" />
+                      </button>
+                      <button
+                        type="button"
+                        title="Desmarcar leitura de todos os capítulos"
+                        aria-label="Desmarcar leitura de todos os capítulos"
+                        disabled={markAll.isPending || readIds.size === 0}
+                        onClick={() => markAll.mutate("unread")}
+                        className="rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                      >
+                        <RotateCcw className="h-[18px] w-[18px]" />
+                      </button>
+                    </>
+                  ) : null}
+                  <button
+                    type="button"
+                    title={
+                      order === "desc"
+                        ? "Ordem: do mais recente ao mais antigo"
+                        : "Ordem: do mais antigo ao mais recente"
+                    }
+                    aria-label={
+                      order === "desc"
+                        ? "Mostrar capítulos do mais antigo ao mais recente"
+                        : "Mostrar capítulos do mais recente ao mais antigo"
+                    }
+                    onClick={() => setOrder(order === "asc" ? "desc" : "asc")}
+                    className="flex items-center gap-1.5 rounded-lg border border-transparent px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:border-border hover:text-foreground sm:text-sm"
+                  >
+                    <ArrowDownWideNarrow
+                      className={`h-4 w-4 shrink-0 text-primary opacity-90 ${order === "asc" ? "rotate-180" : ""}`}
+                    />
+                    <span>{order === "desc" ? "Recentes" : "Antigos"}</span>
+                  </button>
+                </div>
+              </div>
             </div>
-            <ul className="divide-y divide-border">
+            <ul className="max-h-[60vh] divide-y divide-border/60 overflow-y-auto pr-1 md:max-h-[min(72vh,780px)]">
               {chapters.map((chapter) => {
-                const isRead = readNumbers.has(chapter.number);
+                const isRead = readIds.has(chapter.id);
+                const commentCount =
+                  chapterCommentCounts.data?.get(chapter.id) ?? 0;
                 return (
-                  <li key={chapter.id} className="flex items-center">
+                  <li
+                    key={chapter.id}
+                    className={`flex items-center gap-4 px-4 py-4 transition-colors hover:bg-surface-2/60 ${
+                      isRead ? "opacity-75 hover:opacity-100" : ""
+                    }`}
+                  >
                     <Link
                       to="/obra/$slug/$chapter"
                       params={{ slug: obra.slug, chapter: formatChapter(chapter.number) }}
-                      className="flex min-w-0 flex-1 items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2/60"
+                      className="flex min-w-0 flex-1 items-center gap-4 text-left"
                     >
                       <span
-                        className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg text-sm font-bold ${
-                          isRead ? "bg-primary/15 text-primary" : "bg-surface-2"
+                        className={`grid h-12 w-12 shrink-0 place-items-center rounded-lg text-sm font-bold ${
+                          isRead
+                            ? "bg-emerald-500/10 text-emerald-500"
+                            : "bg-surface-2 text-muted-foreground"
                         }`}
                       >
-                        {isRead ? <Check className="h-5 w-5" /> : formatChapter(chapter.number)}
+                        {isRead ? (
+                          <Check className="h-5 w-5" />
+                        ) : (
+                          formatChapter(chapter.number)
+                        )}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span
-                          className={`block truncate text-sm font-bold ${
-                            isRead ? "text-primary" : ""
+                          className={`flex min-w-0 items-center gap-1.5 font-medium ${
+                            isRead ? "text-emerald-500/90" : ""
                           }`}
                         >
-                          Capítulo {formatChapter(chapter.number)}
-                          {chapter.title ? (
-                            <span className="ml-2 font-normal text-muted-foreground">
-                              {chapter.title}
-                            </span>
-                          ) : null}
+                          <span className="truncate">
+                            Capítulo {formatChapter(chapter.number)}
+                            {chapter.title ? (
+                              <span className="ml-2 font-normal text-muted-foreground">
+                                {chapter.title}
+                              </span>
+                            ) : null}
+                          </span>
                         </span>
-                        <span className="mt-0.5 block text-xs text-muted-foreground">
-                          {timeAgo(chapter.created_at)}
+                        <span className="mt-0.5 flex flex-wrap items-center gap-2">
+                          <span className="text-xs text-muted-foreground/70">
+                            {timeAgo(chapter.created_at)}
+                          </span>
                           {isRead ? (
-                            <span className="ml-2 font-bold uppercase tracking-wide text-primary">
+                            <span className="text-[10px] uppercase tracking-wider text-emerald-500/80">
                               Lido
                             </span>
                           ) : null}
                         </span>
                       </span>
-                      <span className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <Eye className="h-4 w-4" />
-                      </span>
                     </Link>
+                    <span className="flex shrink-0 items-center gap-2.5 text-muted-foreground/60">
+                      <span
+                        className="inline-flex items-center gap-1 text-xs tabular-nums"
+                        title="Comentários"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        {commentCount}
+                      </span>
+                    </span>
                     {user ? (
                       <button
                         type="button"
                         disabled={toggleRead.isPending}
                         onClick={() => toggleRead.mutate({ id: chapter.id, isRead })}
-                        title={isRead ? "Desmarcar como lido" : "Marcar como lido"}
-                        aria-label={isRead ? "Desmarcar como lido" : "Marcar como lido"}
-                        className={`mr-4 grid h-8 w-8 shrink-0 place-items-center rounded-md border transition-colors ${
+                        title={isRead ? "Marcar como não lido" : "Marcar como lido"}
+                        aria-label={isRead ? "Marcar como não lido" : "Marcar como lido"}
+                        className={`shrink-0 rounded-full p-2 transition-colors ${
                           isRead
-                            ? "border-primary/50 bg-primary/15 text-primary"
-                            : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                            ? "text-emerald-500 hover:bg-emerald-500/10"
+                            : "text-muted-foreground/50 hover:bg-surface-2 hover:text-foreground"
                         }`}
                       >
-                        <Check className="h-4 w-4" />
+                        {isRead ? (
+                          <EyeOff className="h-[18px] w-[18px]" />
+                        ) : (
+                          <Eye className="h-[18px] w-[18px]" />
+                        )}
                       </button>
                     ) : null}
                   </li>
