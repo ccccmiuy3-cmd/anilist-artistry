@@ -95,29 +95,7 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {kinds.size > 0 ? (
-        <div className="mx-auto mb-5 hidden w-full max-w-[1400px] justify-center px-6 md:flex">
-          <div className="no-scrollbar inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full border border-foreground/10 bg-card/70 px-1 py-1 backdrop-blur-sm">
-          {CATEGORY_LABELS.map((label) => (
-            <Button
-              key={label}
-              type="button"
-              size="sm"
-              variant="ghost"
-              disabled={!kinds.has(label)}
-              onClick={() => setKind(label)}
-              className={`h-8 shrink-0 rounded-full px-4 text-[11px] font-semibold whitespace-nowrap transition-all duration-200 ease-out active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45 ${
-                kind === label
-                  ? "ring-1 ring-foreground/80 bg-primary text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary"
-                  : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
-              }`}
-            >
-              {label}
-            </Button>
-          ))}
-          </div>
-        </div>
-      ) : null}
+      {kinds.size > 0 ? categoryBar : null}
 
       <div className="mx-auto max-w-7xl px-4 md:px-6">
         <div className="relative overflow-hidden md:min-h-[25rem]">
