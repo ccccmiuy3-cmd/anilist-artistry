@@ -297,18 +297,14 @@ function SeriesPage() {
   }
 
   const chapters = order === "asc" ? obra.chapters : [...obra.chapters].reverse();
-  const readNumbers = new Set(
-    (history.data ?? [])
-      .filter((entry) => entry.progress >= 1)
-      .map((entry) => entry.chapters?.number),
-  );
+  const readIds = chapterReads.data ?? new Set<string>();
   const lastRead = (history.data ?? [])
     .map((entry) => entry.chapters?.number)
     .filter((n): n is number => typeof n === "number")
     .sort((a, b) => b - a)[0];
   const continueChapter =
     obra.chapters.find((c) => c.number === lastRead) ??
-    obra.chapters.find((c) => !readNumbers.has(c.number)) ??
+    obra.chapters.find((c) => !readIds.has(c.id)) ??
     obra.chapters[0];
 
   const synopsisLong = (obra.synopsis ?? "").length > 320;
