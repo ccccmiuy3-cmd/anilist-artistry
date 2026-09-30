@@ -233,12 +233,14 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         /* resumed on next gesture */
       }
       setState("playing");
-      const voice = aiSettings.current.voice;
+      const useEleven = aiSettings.current.engine === "elevenlabs";
+      const voice = useEleven ? aiSettings.current.elevenVoice : aiSettings.current.voice;
+      const fetcher = useEleven ? fetchElevenSpeech : fetchSpeech;
       const get = (k: number) => {
         if (k >= chunks.length) return null;
         let pr = ai.current.cache.get(k);
         if (!pr) {
-          pr = fetchSpeech(chunks[k]!.text, voice, controller.signal);
+          pr = fetcher(chunks[k]!.text, voice, controller.signal);
           pr.catch(() => undefined);
           ai.current.cache.set(k, pr);
         }
