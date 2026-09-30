@@ -40,7 +40,7 @@ export function CommentItem({
 }: {
   comment: CommentRow;
   userId?: string | undefined;
-  onReply?: (username: string) => void;
+  onReply?: ((username: string) => void) | undefined;
 }) {
   const author = comment.author;
   const username = author?.username ?? "leitor";
