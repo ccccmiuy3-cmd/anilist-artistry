@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { EyeOff } from "lucide-react";
+import { getCommentImageUrl } from "@/lib/comments";
 
 interface CommentContentProps {
   body: string;
@@ -10,6 +12,13 @@ interface CommentContentProps {
 export function CommentContent({ body, isSpoiler, imageUrl }: CommentContentProps) {
   const [revealed, setRevealed] = useState(false);
   const hidden = Boolean(isSpoiler) && !revealed;
+
+  const image = useQuery({
+    queryKey: ["comment-image", imageUrl],
+    enabled: Boolean(imageUrl) && !hidden,
+    staleTime: Infinity,
+    queryFn: () => getCommentImageUrl(imageUrl!),
+  });
 
   return (
     <div className="mt-1">
@@ -26,9 +35,9 @@ export function CommentContent({ body, isSpoiler, imageUrl }: CommentContentProp
           {body ? (
             <p className="whitespace-pre-line text-sm text-muted-foreground">{body}</p>
           ) : null}
-          {imageUrl ? (
+          {image.data ? (
             <img
-              src={imageUrl}
+              src={image.data}
               alt="Imagem do comentário"
               loading="lazy"
               className="mt-2 max-h-64 rounded-lg border border-border"
