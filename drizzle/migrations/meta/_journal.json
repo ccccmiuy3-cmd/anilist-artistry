@@ -169,6 +169,13 @@
       "when": 1790780302445,
       "tag": "0023_event_badges_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790783616959,
+      "tag": "0024_perf_indexes",
+      "breakpoints": true
     }
   ]
 }
