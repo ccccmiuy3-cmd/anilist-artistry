@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutGrid, PlusSquare, Star, Trophy } from "lucide-react";
+import { LayoutGrid, PlusSquare, Trophy } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { SeriesCard } from "@/components/SeriesCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
@@ -9,10 +9,10 @@ import { ContinueReading } from "@/components/ContinueReading";
 import { FavoritesUpdated } from "@/components/FavoritesUpdated";
 import { Releases } from "@/components/Releases";
 import { RecentlyUpdated } from "@/components/RecentlyUpdated";
+import { TopRated } from "@/components/TopRated";
 import { HScroll, SectionRow } from "@/components/SectionRow";
 import { Button } from "@/components/ui/button";
 import { fetchFavorites, fetchHistory, fetchSeries, KINDS } from "@/lib/queries";
-import { coverUrl } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/")({
@@ -156,42 +156,7 @@ function Home() {
           <ContinueReading rows={history.data!} userId={user.id} />
         ) : null}
 
-        {(topRated.data?.length ?? 0) > 0 ? (
-          <SectionRow icon={<Star className="h-5 w-5 fill-primary" />} title="Muito bem avaliados">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {topRated.data!.slice(0, 4).map((item) => (
-                <Link
-                  key={item.id}
-                  to="/obra/$slug"
-                  params={{ slug: item.slug }}
-                  className="card-hover relative block h-44 overflow-hidden rounded-xl ring-1 ring-border"
-                >
-                  <img
-                    src={coverUrl(item.cover_url)}
-                    alt={item.title}
-                    className="h-full w-full object-cover"
-                  />
-                  <span className="cover-fade" />
-                  <div className="absolute inset-x-0 bottom-0 p-4">
-                    <p className="line-clamp-2 font-display text-base font-bold">{item.title}</p>
-                    <div className="mt-2 flex items-center gap-2 text-xs">
-                      <span className="rounded-md bg-surface-2/90 px-2 py-0.5 font-semibold">
-                        {item.kind}
-                      </span>
-                      <span className="flex items-center gap-1 font-semibold text-gold">
-                        <Star className="h-3 w-3 fill-gold" />
-                        {Number(item.rating).toFixed(1).replace(".", ",")}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {item.chapters.length} capítulos
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </SectionRow>
-        ) : null}
+        {topRated.data?.length ?? 0) > 0 ? <TopRated rows={topRated.data!} /> : null}
 
         {(recent.data?.length ?? 0) > 0 ? (
           <SectionRow icon={<PlusSquare className="h-5 w-5" />} title="Adicionados recentemente">
