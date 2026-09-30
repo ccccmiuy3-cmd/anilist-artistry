@@ -77,7 +77,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
   const [voiceUri, setVoiceUri] = useState("");
   const [rate, setRate] = useState(1);
   const [state, setState] = useState<"idle" | "playing" | "paused">("idle");
-  const [engine, setEngine] = useState<"ai" | "elevenlabs" | "device">("ai");
+  const [engine, setEngine] = useState<"ai" | "elevenlabs" | "device">("elevenlabs");
   const [aiVoice, setAiVoice] = useState("Kore");
   const [elevenVoice, setElevenVoice] = useState("EXAVITQu4vr4xnSDxMaL");
   const [loading, setLoading] = useState(false);
