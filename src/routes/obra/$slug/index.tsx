@@ -389,6 +389,32 @@ function SeriesPage() {
                     para avaliar.
                   </p>
                 ) : null}
+                <div className="-mx-5 -mb-5 mt-5 border-t border-border p-5">
+                  <div className="flex items-start gap-3">
+                    <Heart className="mt-1 h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-sm font-bold">Apoiar esta obra</p>
+                      <p className="text-xs text-muted-foreground">O valor vai ajudar a pagar os capítulos.</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    {["R$ 5", "R$ 10", "R$ 15", "Outro valor"].map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => toast.info("Doações em breve!")}
+                        className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-bold hover:border-primary"
+                      >
+                        {v}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => toast.info("Doações em breve!")}
+                      className="ml-auto rounded-lg border border-primary/50 bg-primary/15 px-5 py-2 text-sm font-bold text-primary"
+                    >
+                      Doar agora
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
