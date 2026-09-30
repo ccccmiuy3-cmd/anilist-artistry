@@ -18,7 +18,6 @@ const NAV = [
   { to: "/listas", label: "Listas" },
   { to: "/ranking", label: "Ranking" },
   { to: "/historico", label: "Histórico" },
-  { to: "/catalogo", label: "Pesquisar" },
 ] as const;
 
 export function SiteHeader() {
