@@ -59,8 +59,8 @@
   --card-foreground: oklch(0.96 0.005 80);
   --popover: oklch(0.21 0.012 60);
   --popover-foreground: oklch(0.96 0.005 80);
-  --primary: oklch(0.69 0.19 44);
-  --primary-foreground: oklch(0.15 0.01 60);
+  --primary: oklch(0.84 0.13 210);
+  --primary-foreground: oklch(0.16 0.03 230);
   --secondary: oklch(0.27 0.014 55);
   --secondary-foreground: oklch(0.95 0.005 80);
   --muted: oklch(0.25 0.012 55);
@@ -73,7 +73,7 @@
   --input: oklch(0.3 0.015 55);
   --ring: oklch(0.69 0.19 44);
   --gold: oklch(0.83 0.16 88);
-  --gradient-primary: linear-gradient(135deg, oklch(0.69 0.19 44), oklch(0.78 0.16 72));
+  --gradient-primary: linear-gradient(135deg, oklch(0.84 0.13 210), oklch(0.7 0.16 230));
   --gradient-fade: linear-gradient(to top, oklch(0.16 0.008 60) 4%, transparent 70%);
   --shadow-card: 0 12px 30px -14px oklch(0 0 0 / 0.75);
   --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--primary) 45%, transparent), 0 14px 40px -18px color-mix(in oklab, var(--primary) 55%, transparent);
