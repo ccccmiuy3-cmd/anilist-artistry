@@ -256,10 +256,10 @@ function Reader() {
           <Link to="/obra/$slug" params={{ slug }} className="ml-2 flex items-center gap-1.5 text-sm font-bold hover:text-primary">
             <BookOpen className="h-4 w-4" /> Obra
           </Link>
-          <div className="ml-3 flex min-w-0 items-center gap-2 text-sm">
+          <h1 className="ml-3 flex min-w-0 items-center gap-2 text-sm">
             <span className="truncate text-muted-foreground">{obra.title}</span>
             <span className="shrink-0 font-bold text-primary">Cap. {formatChapter(current.number)}</span>
-          </div>
+          </h1>
           <div className="ml-auto flex items-center gap-1">
             <button type="button" disabled={!prev} onClick={() => go("prev")} className={iconBtn} aria-label="Capítulo anterior">
               <ChevronLeft className="h-5 w-5" />
@@ -304,9 +304,6 @@ function Reader() {
       </header>
 
       <main className="mx-auto max-w-3xl">
-        <h1 className="sr-only">
-          {obra.title} — Capítulo {formatChapter(current.number)}
-        </h1>
         {pages.length === 0 ? (
           <p className="p-16 text-center text-sm text-muted-foreground">
             Este capítulo ainda não tem páginas.

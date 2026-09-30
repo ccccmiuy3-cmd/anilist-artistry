@@ -76,7 +76,9 @@ function Home() {
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-7xl px-4 py-8">
-        <h1 className="sr-only">Better Mangá — ler mangás, manhwas e comics online</h1>
+        <h1 className="mb-7 font-display text-2xl font-extrabold sm:text-3xl">
+          Better Mangá — ler mangás, manhwas e comics online
+        </h1>
         {empty ? (
           <div className="rounded-2xl border border-border bg-surface p-10 text-center">
             <h1 className="font-display text-2xl font-extrabold">Nenhuma obra publicada ainda</h1>

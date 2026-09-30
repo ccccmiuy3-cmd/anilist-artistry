@@ -20,6 +20,7 @@ import { useSession } from "@/hooks/useAuth";
 import { coverUrl } from "@/lib/media";
 
 export const Route = createFileRoute("/listas/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Listas — Better Mangá" },

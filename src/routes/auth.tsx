@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useSession } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/auth")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Entrar no Better Mangá" },

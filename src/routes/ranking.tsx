@@ -6,6 +6,7 @@ import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/ranking")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Ranking de XP dos leitores — Better Mangá" },

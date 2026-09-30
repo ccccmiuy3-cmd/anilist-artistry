@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { createFileRoute } from "@tanstack/react-router";
 import { getRouterInstance } from "@tanstack/react-start";
 import type { Database } from "@/integrations/supabase/types";
@@ -11,6 +10,7 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
+        const { createClient } = await import("@supabase/supabase-js");
         const url = process.env["SUPABASE_URL"];
         const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
         if (!url || !key) return new Response("Sitemap data source unavailable", { status: 503 });

@@ -39,6 +39,7 @@ import { FramedAvatar } from "@/components/FramedAvatar";
 import { SubscriptionSeal } from "@/components/SubscriptionSeal";
 
 export const Route = createFileRoute("/u/$username")({
+  staticData: { sitemap: false },
   head: ({ params }) => ({
     meta: [
       { title: `@${params.username} — Better Mangá` },
