@@ -8,9 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSeriesBySlug } from "@/lib/queries";
 import { formatChapter, timeAgo } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
-import { CommentLikeButton } from "@/components/CommentLikeButton";
+import { CommentItem } from "@/components/CommentItem";
 import { CommentComposer, type CommentDraft } from "@/components/CommentComposer";
-import { CommentContent } from "@/components/CommentContent";
 import { uploadCommentImage } from "@/lib/comments";
 
 export const Route = createFileRoute("/obra/$slug/$chapter")({
@@ -53,6 +52,7 @@ function Reader() {
   }, [current]);
 
   const queryClient = useQueryClient();
+  const [replyTo, setReplyTo] = useState<string | null>(null);
 
   const comments = useQuery({
     queryKey: ["chapter-comments", current?.id],
@@ -67,11 +67,14 @@ function Reader() {
       if (error) throw error;
       const rows = data ?? [];
       const ids = [...new Set(rows.map((row) => row.user_id))];
-      const authors = new Map<string, { username: string; avatar_url: string | null }>();
+      const authors = new Map<
+        string,
+        { username: string; avatar_url: string | null; level: number; avatar_frame: string | null }
+      >();
       if (ids.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, username, avatar_url")
+          .select("id, username, avatar_url, level, avatar_frame")
           .in("id", ids);
         for (const profile of profiles ?? []) authors.set(profile.id, profile);
       }
@@ -314,6 +317,8 @@ function Reader() {
             <CommentComposer
               pending={postComment.isPending}
               onSubmit={(draft) => postComment.mutate(draft)}
+              replyTo={replyTo}
+              onCancelReply={() => setReplyTo(null)}
             />
           </div>
         ) : (
@@ -327,25 +332,12 @@ function Reader() {
 
         <ul className="mt-6 space-y-5">
           {(comments.data ?? []).map((comment) => (
-            <li key={comment.id} className="flex gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-2 text-sm font-bold">
-                {comment.author?.avatar_url ? (
-                  <img src={comment.author.avatar_url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  (comment.author?.username ?? "?").slice(0, 1).toUpperCase()
-                )}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-bold">{comment.author?.username ?? "leitor"}</span>
-                  <span className="text-xs text-muted-foreground">{timeAgo(comment.created_at)}</span>
-                </div>
-                <CommentContent body={comment.body} isSpoiler={comment.is_spoiler} imageUrl={comment.image_url} />
-                <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                  <CommentLikeButton commentId={comment.id} userId={user?.id} />
-                </div>
-              </div>
-            </li>
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              userId={user?.id}
+              onReply={user ? (name) => setReplyTo(name) : undefined}
+            />
           ))}
           {(comments.data ?? []).length === 0 && !comments.isLoading ? (
             <li className="py-6 text-center text-sm text-muted-foreground">

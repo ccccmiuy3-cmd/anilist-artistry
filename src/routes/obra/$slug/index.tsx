@@ -25,9 +25,8 @@ import { fetchComments, fetchSeriesBySlug } from "@/lib/queries";
 import { coverUrl, formatChapter, timeAgo } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 import { AddToListButton, StatusButton } from "@/components/SeriesActions";
-import { CommentLikeButton } from "@/components/CommentLikeButton";
+import { CommentItem } from "@/components/CommentItem";
 import { CommentComposer, type CommentDraft } from "@/components/CommentComposer";
-import { CommentContent } from "@/components/CommentContent";
 import { uploadCommentImage } from "@/lib/comments";
 
 export const Route = createFileRoute("/obra/$slug/")({
@@ -51,6 +50,7 @@ function SeriesPage() {
   const queryClient = useQueryClient();
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [expanded, setExpanded] = useState(false);
+  const [replyTo, setReplyTo] = useState<string | null>(null);
 
   const series = useQuery({
     queryKey: ["series", slug],
@@ -674,6 +674,8 @@ function SeriesPage() {
                 <CommentComposer
                   pending={postComment.isPending}
                   onSubmit={(draft) => postComment.mutate(draft)}
+                  replyTo={replyTo}
+                  onCancelReply={() => setReplyTo(null)}
                 />
               </div>
             ) : (
@@ -687,33 +689,12 @@ function SeriesPage() {
 
             <ul className="mt-6 space-y-5">
               {(comments.data ?? []).map((comment) => (
-                <li key={comment.id} className="flex gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-2 text-sm font-bold">
-                    {comment.author?.avatar_url ? (
-                      <img
-                        src={comment.author.avatar_url}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      (comment.author?.username ?? "?").slice(0, 1).toUpperCase()
-                    )}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-bold">
-                        {comment.author?.username ?? "leitor"}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {timeAgo(comment.created_at)}
-                      </span>
-                    </div>
-                    <CommentContent body={comment.body} isSpoiler={comment.is_spoiler} imageUrl={comment.image_url} />
-                    <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                      <CommentLikeButton commentId={comment.id} userId={user?.id} />
-                    </div>
-                  </div>
-                </li>
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
+                  userId={user?.id}
+                  onReply={user ? (name) => setReplyTo(name) : undefined}
+                />
               ))}
             </ul>
           </section>

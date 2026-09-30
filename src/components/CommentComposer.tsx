@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CircleDollarSign, Eye, EyeOff, ImagePlus, Send, Smile, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,11 @@ export interface CommentDraft {
 interface CommentComposerProps {
   pending: boolean;
   onSubmit: (draft: CommentDraft) => void;
+  replyTo?: string | null;
+  onCancelReply?: () => void;
 }
 
-export function CommentComposer({ pending, onSubmit }: CommentComposerProps) {
+export function CommentComposer({ pending, onSubmit, replyTo, onCancelReply }: CommentComposerProps) {
   const [body, setBody] = useState("");
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [image, setImage] = useState<File | null>(null);
@@ -77,10 +79,41 @@ export function CommentComposer({ pending, onSubmit }: CommentComposerProps) {
     setIsSpoiler(false);
     clearImage();
     setShowEmojis(false);
+    onCancelReply?.();
   };
+
+  const startReply = (username: string) => {
+    setBody(`@${username} `);
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (el) {
+        el.focus();
+        el.setSelectionRange(el.value.length, el.value.length);
+      }
+    });
+  };
+
+  // Preenche o campo quando o usuário clica em "Responder" em um comentário.
+  useEffect(() => {
+    if (replyTo) startReply(replyTo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replyTo]);
 
   return (
     <div className="rounded-xl border-2 border-dashed border-border bg-surface/60 p-4 transition-colors focus-within:border-primary/40">
+      {replyTo ? (
+        <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+          Respondendo a @{replyTo}
+          <button
+            type="button"
+            onClick={onCancelReply}
+            aria-label="Cancelar resposta"
+            className="rounded-full p-0.5 hover:bg-primary/20"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ) : null}
       <textarea
         ref={textareaRef}
         value={body}
