@@ -25,8 +25,8 @@ async function fromZip(file: File, onProgress?: ExtractProgress): Promise<File[]
 async function fromPdf(file: File, onProgress?: ExtractProgress): Promise<File[]> {
   // Polyfill for pdfjs-dist on browsers without the Map upsert proposal.
   const MP = Map.prototype as unknown as Record<string, unknown>;
-  if (typeof MP.getOrInsertComputed !== "function") {
-    MP.getOrInsertComputed = function (this: Map<unknown, unknown>, key: unknown, fn: (k: unknown) => unknown) {
+  if (typeof MP["getOrInsertComputed"] !== "function") {
+    MP["getOrInsertComputed"] = function (this: Map<unknown, unknown>, key: unknown, fn: (k: unknown) => unknown) {
       if (this.has(key)) return this.get(key);
       const v = fn(key);
       this.set(key, v);
