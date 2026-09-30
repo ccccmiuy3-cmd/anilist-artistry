@@ -659,7 +659,7 @@ function OwnerOverview({ collectionCount, readingCount, readCount, favoritesCoun
     { label: "Seguidores", value: followersCount, icon: Users },
   ];
   return (
-    <section className="relative z-20 mx-auto -mt-6 grid max-w-7xl gap-8 px-4 pb-8 sm:px-6 lg:-mt-24 lg:grid-cols-12">
+    <section className="relative z-20 mx-auto -mt-6 grid max-w-7xl gap-8 px-4 pb-8 sm:px-6 lg:-mt-[40rem] lg:grid-cols-12 lg:pb-32">
       <div className="hidden lg:col-span-3 lg:block" />
       <div className="min-w-0 lg:col-span-9">
         <nav className="flex items-center gap-1 overflow-x-auto border-b border-border py-2 no-scrollbar">
