@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Ban, Pencil, Save, Search, Shield, Upload as UploadIcon } from "lucide-react";
+import { Ban, Pencil, Plus, Save, Search, Shield, Trash2, Upload as UploadIcon } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/AdminShell";
 import { subscriptionSeal } from "@/lib/subscription";
@@ -126,6 +126,53 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
   }, [account]);
   const isSelf = account?.id === selfId;
 
+  const badges = useQuery({
+    queryKey: ["admin-badges", account?.id],
+    enabled: Boolean(account),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profile_badges")
+        .select("id, name, image_url")
+        .eq("user_id", account!.id)
+        .order("position", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const [badgeDraft, setBadgeDraft] = useState({ name: "", image_url: "" });
+  useEffect(() => setBadgeDraft({ name: "", image_url: "" }), [account?.id]);
+
+  const addBadge = useMutation({
+    mutationFn: async () => {
+      if (!account) return;
+      const name = badgeDraft.name.trim();
+      const image_url = badgeDraft.image_url.trim();
+      if (!name || !image_url) throw new Error("Preencha o nome e a URL da imagem do selo.");
+      const { error } = await supabase
+        .from("profile_badges")
+        .insert({ user_id: account.id, name, image_url, position: (badges.data?.length ?? 0) + 1 });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Selo adicionado!");
+      setBadgeDraft({ name: "", image_url: "" });
+      qc.invalidateQueries({ queryKey: ["admin-badges", account?.id] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível adicionar."),
+  });
+
+  const removeBadge = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("profile_badges").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Selo removido.");
+      qc.invalidateQueries({ queryKey: ["admin-badges", account?.id] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível remover."),
+  });
+
   const save = useMutation({
     mutationFn: async () => {
       if (!account) return;
@@ -216,6 +263,48 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
                 </button>
               );
             })}
+          </div>
+        </div>
+        <div className="space-y-2 rounded-xl border border-border p-3">
+          <p className="text-sm font-bold">Selos extras</p>
+          <p className="text-xs text-muted-foreground">Emblemas exibidos ao lado do nome nos comentários e no perfil.</p>
+          <div className="flex flex-wrap gap-2">
+            {(badges.data ?? []).map((b) => (
+              <span key={b.id} className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-2 py-1 text-xs">
+                <img src={b.image_url} alt={b.name} title={b.name} className="h-6 w-6 object-contain" />
+                <span className="max-w-28 truncate">{b.name}</span>
+                <button
+                  type="button"
+                  aria-label={`Remover selo ${b.name}`}
+                  onClick={() => removeBadge.mutate(b.id)}
+                  className="text-muted-foreground transition-colors hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            ))}
+            {badges.data?.length === 0 ? <span className="text-xs text-muted-foreground">Nenhum selo extra.</span> : null}
+          </div>
+          <div className="grid grid-cols-[1fr_2fr_auto] items-end gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Nome</Label>
+              <Input
+                value={badgeDraft.name}
+                onChange={(e) => setBadgeDraft({ ...badgeDraft, name: e.target.value })}
+                placeholder="Beta Tester"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">URL da imagem</Label>
+              <Input
+                value={badgeDraft.image_url}
+                onChange={(e) => setBadgeDraft({ ...badgeDraft, image_url: e.target.value })}
+                placeholder="https://…/selo.webp"
+              />
+            </div>
+            <Button type="button" variant="outline" size="icon" disabled={addBadge.isPending} onClick={() => addBadge.mutate()} aria-label="Adicionar selo">
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
         </div>
         <div className="space-y-2 rounded-xl border border-border p-3">
