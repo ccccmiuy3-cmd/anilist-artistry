@@ -1,3 +1,4 @@
+import type React from "react";
 import { Link } from "@tanstack/react-router";
 import { MessageSquare } from "lucide-react";
 import { FramedAvatar } from "@/components/FramedAvatar";
@@ -23,7 +24,7 @@ export type CommentRow = {
   is_spoiler?: boolean | null;
   image_url?: string | null;
   parent_id?: string | null;
-  parent?: { id: string; username: string } | null;
+  parent?: { id: string; username: string; excerpt?: string } | null;
   author: CommentAuthor | null;
 };
 
@@ -38,10 +39,12 @@ export function CommentItem({
   comment,
   userId,
   onReply,
+  footerExtra,
 }: {
   comment: CommentRow;
   userId?: string | undefined;
   onReply?: ((comment: CommentRow) => void) | undefined;
+  footerExtra?: React.ReactNode;
 }) {
   const author = comment.author;
   const username = author?.username ?? "leitor";
@@ -91,14 +94,19 @@ export function CommentItem({
             </span>
           </div>
           {comment.parent ? (
-            <Link
-              to="/u/$username"
-              params={{ username: comment.parent.username }}
-              className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-            >
-              <MessageSquare className="h-3 w-3" />
-              Respondeu @{comment.parent.username}
-            </Link>
+            <div className="mb-1.5 flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+              <MessageSquare className="h-3 w-3 shrink-0 text-primary/70" />
+              <span className="shrink-0">respondendo a</span>
+              <Link to="/u/$username" params={{ username: comment.parent.username }} className="shrink-0 font-semibold text-primary hover:underline">
+                @{comment.parent.username}
+              </Link>
+              {comment.parent.excerpt ? (
+                <>
+                  <span className="shrink-0 opacity-50">—</span>
+                  <span className="truncate italic opacity-70">{comment.parent.excerpt}{comment.parent.excerpt.length >= 60 ? "…" : ""}</span>
+                </>
+              ) : null}
+            </div>
           ) : null}
           <CommentContent
             body={comment.body}
@@ -118,6 +126,7 @@ export function CommentItem({
                 <span className="hidden sm:inline">Responder</span>
               </button>
             ) : null}
+            {footerExtra}
           </div>
         </div>
       </div>

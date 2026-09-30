@@ -164,19 +164,19 @@ export async function fetchCommentAuthors(ids: string[]) {
   return authors;
 }
 
-export type CommentParent = { id: string; username: string };
+export type CommentParent = { id: string; username: string; excerpt?: string };
 
 export async function fetchCommentParents(rows: Array<{ parent_id: string | null }>) {
   const parents = new Map<string, CommentParent>();
   const parentIds = [...new Set(rows.map((row) => row.parent_id).filter((id): id is string => Boolean(id)))];
   if (parentIds.length === 0) return parents;
-  const { data } = await supabase.from("comments").select("id, user_id").in("id", parentIds);
+  const { data } = await supabase.from("comments").select("id, user_id, body").in("id", parentIds);
   const parentRows = data ?? [];
   const userIds = [...new Set(parentRows.map((row) => row.user_id))];
   const { data: profiles } = await supabase.from("profiles").select("id, username").in("id", userIds);
   const names = new Map((profiles ?? []).map((p) => [p.id, p.username]));
   for (const row of parentRows) {
-    parents.set(row.id, { id: row.id, username: names.get(row.user_id) ?? "leitor" });
+    parents.set(row.id, { id: row.id, username: names.get(row.user_id) ?? "leitor", excerpt: (row.body ?? "").slice(0, 60) });
   }
   return parents;
 }

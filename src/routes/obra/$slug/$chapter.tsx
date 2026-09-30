@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchCommentAuthors, fetchCommentParents, fetchSeriesBySlug } from "@/lib/queries";
 import { formatChapter, timeAgo } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
-import { CommentItem } from "@/components/CommentItem";
+import { CommentThreads } from "@/components/CommentThreads";
 import { CommentComposer, type CommentDraft } from "@/components/CommentComposer";
 import { uploadCommentImage } from "@/lib/comments";
 
@@ -348,14 +348,11 @@ function Reader() {
         )}
 
         <ul className="mt-6 space-y-5">
-          {(comments.data ?? []).map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
+          {<CommentThreads
+              comments={(comments.data ?? [])}
               userId={user?.id}
               onReply={user ? (c) => setReplyTo({ id: c.id, username: c.author?.username ?? "leitor" }) : undefined}
             />
-          ))}
           {(comments.data ?? []).length === 0 && !comments.isLoading ? (
             <li className="py-6 text-center text-sm text-muted-foreground">
               Seja o primeiro a comentar este capítulo.
