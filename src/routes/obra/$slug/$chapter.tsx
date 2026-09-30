@@ -13,17 +13,38 @@ import { CommentComposer, type CommentDraft } from "@/components/CommentComposer
 import { uploadCommentImage } from "@/lib/comments";
 
 export const Route = createFileRoute("/obra/$slug/$chapter")({
-  head: () => ({
-    meta: [
-      { title: "Leitor de capítulo — Better Mangá" },
-      {
-        name: "description",
-        content: "Leia o capítulo página por página com navegação rápida entre capítulos.",
-      },
-      { property: "og:title", content: "Leitor de capítulo — Better Mangá" },
-      { property: "og:description", content: "Leitura fluida, página por página." },
-    ],
-  }),
+  staticData: { sitemap: false },
+  loader: ({ params, context }) =>
+    context.queryClient.ensureQueryData({
+      queryKey: ["series", params.slug],
+      queryFn: () => fetchSeriesBySlug(params.slug),
+    }),
+  head: ({ params, loaderData }) => {
+    const seriesTitle = loaderData?.title ?? params.slug.replace(/-/g, " ");
+    const chapterLabel = params.chapter.replace(/-/g, " ");
+    const title = `Capítulo ${chapterLabel} — ${seriesTitle}`;
+    const description = `Leia o capítulo ${chapterLabel} de ${seriesTitle} online no Better Mangá.`;
+    const url = `https://bettermanga.net/obra/${encodeURIComponent(params.slug)}/${encodeURIComponent(params.chapter)}`;
+    const image = loaderData?.cover_url?.startsWith("https://") ? loaderData.cover_url : null;
+    return {
+      meta: [
+        { title: `${title} — Better Mangá` },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "article" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
+        ...(image
+          ? [
+              { property: "og:image", content: image },
+              { name: "twitter:image", content: image },
+            ]
+          : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: Reader,
 });
 
@@ -283,6 +304,9 @@ function Reader() {
       </header>
 
       <main className="mx-auto max-w-3xl">
+        <h1 className="sr-only">
+          {obra.title} — Capítulo {formatChapter(current.number)}
+        </h1>
         {pages.length === 0 ? (
           <p className="p-16 text-center text-sm text-muted-foreground">
             Este capítulo ainda não tem páginas.

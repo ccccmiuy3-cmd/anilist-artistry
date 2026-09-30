@@ -10,16 +10,52 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/listas/$id")({
-  head: () => ({
-    meta: [
-      { title: "Lista — Better Mangá" },
-      { name: "description", content: "Obras reunidas em uma lista da comunidade Better Mangá." },
-      { property: "og:title", content: "Lista — Better Mangá" },
-      { property: "og:description", content: "Obras reunidas em uma lista da comunidade." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  staticData: { sitemap: true },
+  loader: async ({ params, context }) =>
+    context.queryClient.ensureQueryData({
+      queryKey: ["list", params.id],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from("lists")
+          .select("id, title, description, user_id, is_public, list_items(series(id, slug, title, cover_url, rating))")
+          .eq("id", params.id)
+          .eq("is_public", true)
+          .maybeSingle();
+        if (error) throw error;
+        return data as unknown as {
+          id: string;
+          title: string;
+          description: string | null;
+          user_id: string;
+          is_public: boolean;
+          list_items: { series: { id: string; slug: string; title: string; cover_url: string | null; rating: number } | null }[];
+        } | null;
+      },
+    }),
+  head: ({ params, loaderData }) => {
+    const name = loaderData?.title ?? "Lista da comunidade";
+    const description = (loaderData?.description ?? `Descubra as obras reunidas em ${name} no Better Mangá.`).slice(0, 160);
+    const url = `https://bettermanga.net/listas/${encodeURIComponent(params.id)}`;
+    const cover = loaderData?.list_items.find((item) => item.series?.cover_url?.startsWith("https://"))?.series?.cover_url ?? null;
+    return {
+      meta: [
+        { title: `${name} — Better Mangá` },
+        { name: "description", content: description },
+        { property: "og:title", content: `${name} — Better Mangá` },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: cover ? "summary_large_image" : "summary" },
+        ...(cover
+          ? [
+              { property: "og:image", content: cover },
+              { name: "twitter:image", content: cover },
+            ]
+          : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: ListaPage,
 });
 
@@ -34,8 +70,9 @@ function ListaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lists")
-        .select("id, title, description, user_id, list_items(series(id, slug, title, cover_url, rating))")
+        .select("id, title, description, user_id, is_public, list_items(series(id, slug, title, cover_url, rating))")
         .eq("id", id)
+        .eq("is_public", true)
         .maybeSingle();
       if (error) throw error;
       return data as unknown as {
@@ -43,6 +80,7 @@ function ListaPage() {
         title: string;
         description: string | null;
         user_id: string;
+         is_public: boolean;
         list_items: { series: { id: string; slug: string; title: string; cover_url: string | null; rating: number } | null }[];
       } | null;
     },
