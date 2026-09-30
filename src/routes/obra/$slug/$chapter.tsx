@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { AlignJustify, BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronsDown, Home, Infinity, List, Maximize2, MessageCircle, Minus, Moon, Palette, Plus, Settings2, SunMedium } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,7 @@ function Reader() {
   const navigate = useNavigate();
   const { user } = useSession();
 
-  const series = useQuery({
+  const series = useSuspenseQuery({
     queryKey: ["series", slug],
     queryFn: () => fetchSeriesBySlug(slug),
   });
@@ -221,10 +221,6 @@ function Reader() {
     void supabase.rpc("increment_series_views", { _series_id: obra.id });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [obra?.id, chapter]);
-
-  if (series.isLoading) {
-    return <p className="p-10 text-center text-muted-foreground">Carregando capítulo…</p>;
-  }
 
   if (!obra || !current) {
     return (
