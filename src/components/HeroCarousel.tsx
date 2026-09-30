@@ -12,7 +12,7 @@ const CATEGORY_LABELS = [...KINDS];
 export function HeroCarousel({ items }: { items: SeriesRow[] }) {
   const allSlides = items.slice(0, 10);
   const kinds = useMemo(() => new Set(allSlides.map((item) => item.kind).filter(Boolean)), [allSlides]);
-  const [kind, setKind] = useState("");
+  const [kind, setKind] = useState(() => allSlides[0]?.kind ?? "");
   const slides = useMemo(
     () => (kind ? allSlides.filter((item) => item.kind === kind) : allSlides),
     [allSlides, kind],
@@ -20,12 +20,6 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    if (kinds.size > 0 && !kinds.has(kind)) {
-      setKind(CATEGORY_LABELS.find((label) => kinds.has(label)) ?? "");
-    }
-  }, [kind, kinds]);
 
   useEffect(() => setIndex(0), [kind]);
 
