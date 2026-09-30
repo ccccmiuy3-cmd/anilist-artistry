@@ -37,7 +37,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:h-24 sm:gap-4 sm:px-4">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 gap-y-0 px-3 py-2 sm:h-24 sm:flex-nowrap sm:gap-4 sm:px-4 sm:py-0">
         <Link to="/" className="flex shrink-0 items-center" aria-label="Better Mangá — início">
           <img
             src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
@@ -46,7 +46,9 @@ export function SiteHeader() {
           />
         </Link>
 
-        <nav className="no-scrollbar flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto text-xs font-semibold sm:gap-1 sm:text-sm">
+        <div className="flex-1 sm:hidden" />
+
+        <nav className="no-scrollbar order-last flex w-full items-center justify-between gap-0.5 overflow-x-auto text-xs font-semibold sm:order-none sm:w-auto sm:min-w-0 sm:flex-1 sm:justify-start sm:gap-1 sm:text-sm">
           {NAV.map((item) => (
             <Link
               key={item.to}
