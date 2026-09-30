@@ -19,9 +19,11 @@ export interface CommentDraft {
 interface CommentComposerProps {
   pending: boolean;
   onSubmit: (draft: CommentDraft) => void;
+  replyTo?: string | null;
+  onCancelReply?: () => void;
 }
 
-export function CommentComposer({ pending, onSubmit }: CommentComposerProps) {
+export function CommentComposer({ pending, onSubmit, replyTo, onCancelReply }: CommentComposerProps) {
   const [body, setBody] = useState("");
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [image, setImage] = useState<File | null>(null);
@@ -77,7 +79,27 @@ export function CommentComposer({ pending, onSubmit }: CommentComposerProps) {
     setIsSpoiler(false);
     clearImage();
     setShowEmojis(false);
+    onCancelReply?.();
   };
+
+  const startReply = (username: string) => {
+    setBody(`@${username} `);
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (el) {
+        el.focus();
+        el.setSelectionRange(el.value.length, el.value.length);
+      }
+    });
+  };
+
+  // Preenche o campo quando o usuário clica em "Responder" em um comentário.
+  const lastReply = useRef<string | null>(null);
+  if (replyTo && replyTo !== lastReply.current) {
+    lastReply.current = replyTo;
+    startReply(replyTo);
+  }
+  if (!replyTo && lastReply.current) lastReply.current = null;
 
   return (
     <div className="rounded-xl border-2 border-dashed border-border bg-surface/60 p-4 transition-colors focus-within:border-primary/40">
