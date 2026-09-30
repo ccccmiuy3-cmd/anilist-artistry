@@ -164,16 +164,37 @@ export async function fetchCommentAuthors(ids: string[]) {
   return authors;
 }
 
+export type CommentParent = { id: string; username: string };
+
+export async function fetchCommentParents(rows: Array<{ parent_id: string | null }>) {
+  const parents = new Map<string, CommentParent>();
+  const parentIds = [...new Set(rows.map((row) => row.parent_id).filter((id): id is string => Boolean(id)))];
+  if (parentIds.length === 0) return parents;
+  const { data } = await supabase.from("comments").select("id, user_id").in("id", parentIds);
+  const parentRows = data ?? [];
+  const userIds = [...new Set(parentRows.map((row) => row.user_id))];
+  const { data: profiles } = await supabase.from("profiles").select("id, username").in("id", userIds);
+  const names = new Map((profiles ?? []).map((p) => [p.id, p.username]));
+  for (const row of parentRows) {
+    parents.set(row.id, { id: row.id, username: names.get(row.user_id) ?? "leitor" });
+  }
+  return parents;
+}
+
 export async function fetchComments(seriesId: string) {
   const { data, error } = await supabase
     .from("comments")
-    .select("id, body, created_at, user_id, is_spoiler, image_url")
+    .select("id, body, created_at, user_id, is_spoiler, image_url, parent_id")
     .eq("series_id", seriesId)
     .order("created_at", { ascending: false })
     .limit(80);
   if (error) throw error;
   const rows = data ?? [];
   const ids = [...new Set(rows.map((row) => row.user_id))];
-  const authors = await fetchCommentAuthors(ids);
-  return rows.map((row) => ({ ...row, author: authors.get(row.user_id) ?? null }));
+  const [authors, parents] = await Promise.all([fetchCommentAuthors(ids), fetchCommentParents(rows)]);
+  return rows.map((row) => ({
+    ...row,
+    author: authors.get(row.user_id) ?? null,
+    parent: row.parent_id ? (parents.get(row.parent_id) ?? null) : null,
+  }));
 }
