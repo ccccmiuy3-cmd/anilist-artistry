@@ -337,6 +337,7 @@ export type Database = {
           id: string
           is_private: boolean
           level: number
+          subscription_tier: string
           username: string
           xp: number
         }
@@ -353,6 +354,7 @@ export type Database = {
           id: string
           is_private?: boolean
           level?: number
+          subscription_tier?: string
           username: string
           xp?: number
         }
@@ -369,6 +371,7 @@ export type Database = {
           id?: string
           is_private?: boolean
           level?: number
+          subscription_tier?: string
           username?: string
           xp?: number
         }

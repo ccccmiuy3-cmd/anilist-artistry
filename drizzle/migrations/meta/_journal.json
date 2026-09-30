@@ -120,6 +120,20 @@
       "when": 1790738219081,
       "tag": "0016_comment_likes_value",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790738496561,
+      "tag": "0017_subscription_tiers",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790738618443,
+      "tag": "0018_fix_subscription_tier_trigger",
+      "breakpoints": true
     }
   ]
 }

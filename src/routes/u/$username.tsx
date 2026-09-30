@@ -36,6 +36,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useAuth";
 import { coverUrl, timeAgo } from "@/lib/media";
 import { FramedAvatar } from "@/components/FramedAvatar";
+import { SubscriptionSeal } from "@/components/SubscriptionSeal";
 
 export const Route = createFileRoute("/u/$username")({
   head: ({ params }) => ({
@@ -70,7 +71,7 @@ function Perfil() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, display_name, bio, avatar_url, banner_url, level, xp, created_at, accent_color, avatar_frame, comment_bg, is_private")
+        .select("id, username, display_name, bio, avatar_url, banner_url, level, xp, created_at, accent_color, avatar_frame, comment_bg, is_private, subscription_tier")
         .eq("username", username)
         .maybeSingle();
       if (error) throw error;
@@ -196,6 +197,7 @@ function Perfil() {
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <h1 className="font-display text-2xl font-extrabold" style={{ color: p.accent_color ?? "var(--primary)" }}>@{p.username}</h1>
               <span className="rounded border border-border px-1.5 text-xs font-bold text-muted-foreground">Nv. {p.level}</span>
+              <SubscriptionSeal tier={p.subscription_tier} size={22} />
             </div>
             {p.display_name ? <p className="text-sm text-muted-foreground">{p.display_name}</p> : null}
             {p.bio ? <p className="mt-2 text-sm">{p.bio}</p> : null}

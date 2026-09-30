@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ban, Pencil, Save, Search, Shield, Upload as UploadIcon } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/AdminShell";
+import { subscriptionSeal } from "@/lib/subscription";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +28,7 @@ export const Route = createFileRoute("/_authenticated/admin/contas")({
 
 type Account = {
   id: string; username: string; display_name: string | null; avatar_url: string | null; bio: string | null;
-  level: number; xp: number; banned: boolean; created_at: string; roles: string[];
+  level: number; xp: number; banned: boolean; created_at: string; roles: string[]; subscription_tier: string;
 };
 
 const ROLES = [
@@ -46,7 +47,7 @@ function Contas() {
     enabled: isAdmin,
     queryFn: async () => {
       const [p, r] = await Promise.all([
-        supabase.from("profiles").select("id, username, display_name, avatar_url, bio, level, xp, banned, created_at").order("created_at", { ascending: false }),
+        supabase.from("profiles").select("id, username, display_name, avatar_url, bio, level, xp, banned, created_at, subscription_tier").order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id, role"),
       ]);
       if (p.error) throw p.error;
@@ -108,7 +109,7 @@ function Contas() {
 
 function AccountDialog({ account, selfId, onClose }: { account: Account | null; selfId?: string | undefined; onClose: () => void }) {
   const qc = useQueryClient();
-  const [f, setF] = useState({ username: "", display_name: "", avatar_url: "", bio: "", xp: "0", banned: false, roles: [] as string[] });
+  const [f, setF] = useState({ username: "", display_name: "", avatar_url: "", bio: "", xp: "0", banned: false, roles: [] as string[], subscription_tier: "none" });
   useEffect(() => {
     if (!account) return;
     setF({
@@ -119,6 +120,7 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
       xp: String(account.xp),
       banned: account.banned,
       roles: account.roles,
+      subscription_tier: account.subscription_tier ?? "none",
     });
   }, [account]);
   const isSelf = account?.id === selfId;
@@ -139,6 +141,7 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
           xp,
           level: 1 + Math.floor(xp / 1000),
           banned: isSelf ? false : f.banned,
+          subscription_tier: f.subscription_tier,
         })
         .eq("id", account.id);
       if (error) throw error.message.includes("duplicate") ? new Error("Esse @usuário já existe.") : error;
@@ -187,6 +190,32 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
         <div className="space-y-1.5">
           <Label>XP (nível = 1 + XP ÷ 1000)</Label>
           <Input type="number" min={0} value={f.xp} onChange={(e) => setF({ ...f, xp: e.target.value })} />
+        </div>
+        <div className="space-y-2 rounded-xl border border-border p-3">
+          <p className="text-sm font-bold">Selo de assinatura</p>
+          <div className="grid grid-cols-5 gap-2">
+            {(["none", "bronze", "prata", "ouro", "diamante"] as const).map((tier) => {
+              const seal = subscriptionSeal(tier);
+              const active = f.subscription_tier === tier;
+              return (
+                <button
+                  key={tier}
+                  type="button"
+                  onClick={() => setF({ ...f, subscription_tier: tier })}
+                  className={`flex flex-col items-center gap-1 rounded-lg border p-2 text-[11px] font-semibold transition-colors ${
+                    active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/40"
+                  }`}
+                >
+                  {seal ? (
+                    <img src={seal.seal} alt={seal.label} className="h-8 w-8 object-contain" />
+                  ) : (
+                    <span className="grid h-8 w-8 place-items-center text-muted-foreground/50">—</span>
+                  )}
+                  {seal?.label ?? "Nenhum"}
+                </button>
+              );
+            })}
+          </div>
         </div>
         <div className="space-y-2 rounded-xl border border-border p-3">
           <p className="text-sm font-bold">Cargos</p>
