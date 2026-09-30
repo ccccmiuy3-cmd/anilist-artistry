@@ -53,12 +53,14 @@ async function uploadFiles(seriesId: string, chapterNumber: string, files: File[
 function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) => void }) {
   const [over, setOver] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const handle = async (list: File[]) => {
     if (!list.length) return;
     setBusy(true);
+    setProgress(null);
     try {
       const { extractPages } = await import("@/lib/extract-pages");
-      const imgs = await extractPages(list);
+      const imgs = await extractPages(list, (done, total) => setProgress({ done, total }));
       if (!imgs.length) throw new Error("Nenhuma imagem encontrada no arquivo.");
       setFiles(imgs);
       toast.success(`${imgs.length} imagem(ns) extraída(s)`);
@@ -66,8 +68,10 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
       toast.error(e instanceof Error ? e.message : "Falha ao extrair arquivo");
     } finally {
       setBusy(false);
+      setProgress(null);
     }
   };
+  const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : null;
   return (
     <label
       onDragOver={(e) => {
@@ -86,8 +90,22 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
     >
       <Upload className="h-7 w-7 text-primary" />
       <p className="text-sm font-semibold">
-        {busy ? "Extraindo imagens…" : files.length ? `${files.length} imagem(ns) selecionada(s)` : "Arraste imagens, .zip ou .pdf ou clique para escolher"}
+        {busy
+          ? progress && progress.total > 0
+            ? `Extraindo imagens… ${progress.done}/${progress.total}`
+            : "Extraindo imagens…"
+          : files.length
+            ? `${files.length} imagem(ns) selecionada(s)`
+            : "Arraste imagens, .zip ou .pdf ou clique para escolher"}
       </p>
+      {busy && (
+        <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+          <div
+            className={`h-full rounded-full bg-primary transition-all duration-200 ${pct === null ? "animate-pulse" : ""}`}
+            style={{ width: `${pct ?? 100}%` }}
+          />
+        </div>
+      )}
       <p className="text-xs text-muted-foreground">ZIP/PDF: as imagens são extraídas e só elas são salvas. Ordem pelo nome (01.jpg, 02.jpg…)</p>
       <input
         type="file"
