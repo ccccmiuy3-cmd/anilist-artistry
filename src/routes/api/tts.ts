@@ -4,6 +4,7 @@ const MODEL = "google/gemini-3.1-flash-tts-preview";
 const VOICES = new Set(["Kore", "Charon", "Aoede", "Puck", "Fenrir", "Leda", "Orus", "Zephyr"]);
 
 export const Route = createFileRoute("/api/tts")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {
