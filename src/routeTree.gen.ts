@@ -16,6 +16,7 @@ import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as AuthenticatedBibliotecaRouteImport } from './routes/_authenticated/biblioteca'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
 import { Route as AuthenticatedAdminNovaRouteImport } from './routes/_authenticated/admin/nova'
 import { Route as ObraSlugIndexRouteImport } from './routes/obra/$slug/index'
 import { Route as ObraSlugChapterRouteImport } from './routes/obra/$slug/$chapter'
@@ -54,6 +55,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminIdRoute = AuthenticatedAdminIdRouteImport.update({
+  id: '/admin/$id',
+  path: '/admin/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminNovaRoute = AuthenticatedAdminNovaRouteImport.update({
   id: '/admin/nova',
   path: '/admin/nova',
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/catalogo': typeof CatalogoRoute
   '/ranking': typeof RankingRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
+  '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/nova': typeof AuthenticatedAdminNovaRoute
   '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/catalogo': typeof CatalogoRoute
   '/ranking': typeof RankingRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
+  '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/nova': typeof AuthenticatedAdminNovaRoute
   '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/catalogo': typeof CatalogoRoute
   '/ranking': typeof RankingRoute
   '/_authenticated/biblioteca': typeof AuthenticatedBibliotecaRoute
+  '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/nova': typeof AuthenticatedAdminNovaRoute
   '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/ranking'
     | '/biblioteca'
+    | '/admin/$id'
     | '/admin/nova'
     | '/obra/$slug/$chapter'
     | '/admin/'
@@ -124,6 +134,7 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/ranking'
     | '/biblioteca'
+    | '/admin/$id'
     | '/admin/nova'
     | '/obra/$slug/$chapter'
     | '/admin'
@@ -136,6 +147,7 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/ranking'
     | '/_authenticated/biblioteca'
+    | '/_authenticated/admin/$id'
     | '/_authenticated/admin/nova'
     | '/obra/$slug/$chapter'
     | '/_authenticated/admin/'
@@ -203,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/$id': {
+      id: '/_authenticated/admin/$id'
+      path: '/admin/$id'
+      fullPath: '/admin/$id'
+      preLoaderRoute: typeof AuthenticatedAdminIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/nova': {
       id: '/_authenticated/admin/nova'
       path: '/admin/nova'
@@ -229,12 +248,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBibliotecaRoute: typeof AuthenticatedBibliotecaRoute
+  AuthenticatedAdminIdRoute: typeof AuthenticatedAdminIdRoute
   AuthenticatedAdminNovaRoute: typeof AuthenticatedAdminNovaRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBibliotecaRoute: AuthenticatedBibliotecaRoute,
+  AuthenticatedAdminIdRoute: AuthenticatedAdminIdRoute,
   AuthenticatedAdminNovaRoute: AuthenticatedAdminNovaRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
