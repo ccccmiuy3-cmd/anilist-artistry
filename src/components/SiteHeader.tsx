@@ -40,12 +40,12 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4">
+      <div className="mx-auto flex h-20 max-w-7xl items-center gap-4 px-4">
         <Link to="/" className="flex items-center gap-2">
           <img
             src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
             alt="Better Mangá"
-            className="h-10 w-auto object-contain drop-shadow-[0_0_12px_color-mix(in_oklab,var(--primary)_40%,transparent)] sm:h-12"
+            className="h-14 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-16"
           />
         </Link>
 
@@ -135,7 +135,11 @@ export function SiteFooter() {
     <footer className="mt-16 border-t border-border/70 bg-surface/50">
       <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-display text-base font-bold text-primary">MangaVerso</p>
+          <img
+            src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
+            alt="Better Mangá"
+            className="h-14 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-16"
+          />
           <p>© {new Date().getFullYear()} — leitura de mangás, manhwas e comics</p>
         </div>
         <div className="flex gap-4">
