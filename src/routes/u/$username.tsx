@@ -599,43 +599,33 @@ function OwnerProfileHeader({
 }) {
   const percentage = Math.min(100, Math.round((xpInLevel / xpGoal) * 100));
   return (
-    <section className="relative z-10 mx-auto -mt-20 max-w-7xl px-4 sm:-mt-28 sm:px-6">
-      <div className="grid items-start gap-8 lg:grid-cols-12">
-        <aside className="rounded-xl border border-border bg-background/70 p-6 shadow-[var(--shadow-card)] backdrop-blur-2xl lg:col-span-3">
-          <div className="flex justify-center">
-            <div className="relative rounded-full bg-background p-1.5">
-              <FramedAvatar src={profile.avatar_url} frame={profile.avatar_frame} size={128} />
-              <span className="absolute -bottom-2 left-1/2 z-30 inline-flex -translate-x-1/2 items-center gap-1 rounded-full border border-primary/40 bg-background px-2.5 py-1 text-[11px] font-black text-primary">
-                <span className="h-1 w-1 rounded-full bg-primary" /> {profile.level}
-              </span>
-            </div>
+    <section className="relative z-10 mx-auto -mt-16 max-w-7xl px-4 sm:-mt-24 sm:px-6">
+      <div className="grid gap-4 rounded-xl border border-border bg-background/85 p-4 shadow-[var(--shadow-hero)] backdrop-blur-2xl sm:p-6 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
+        <div className="flex justify-center lg:justify-start">
+          <div className="relative rounded-full bg-background p-1.5">
+            <FramedAvatar src={profile.avatar_url} frame={profile.avatar_frame} size={128} />
+            <span className="absolute -bottom-1 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full border border-primary/40 bg-background px-2.5 py-1 text-[10px] font-extrabold text-primary">Nível {profile.level}</span>
           </div>
-          <div className="mt-5 text-center">
-            <h1 className="truncate font-display text-xl font-bold">{profile.display_name || profile.username}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">@{profile.username}</p>
+        </div>
+        <div className="min-w-0 text-center lg:text-left">
+          <h1 className="truncate font-display text-2xl font-extrabold sm:text-3xl">{profile.display_name || profile.username}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">@{profile.username}</p>
+          <div className="mt-3 flex flex-wrap justify-center gap-2 lg:justify-start">
+            <Link to="/ranking-leitores" className="rounded-md border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-foreground/75 hover:border-primary/40 hover:text-primary">Global #{totalRank || "—"}</Link>
+            <Link to="/ranking-leitores" className="rounded-md border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-foreground/75 hover:border-primary/40 hover:text-primary">Semanal #{weeklyRank || "—"}</Link>
+            <span className="inline-flex items-center gap-1.5 px-1 text-[11px] text-muted-foreground"><CalendarDays className="h-3.5 w-3.5" /> Desde {joinedAt}</span>
           </div>
-          <div className="mt-4 flex flex-wrap justify-center gap-2 border-y border-border py-3.5">
-            <Link to="/ranking-leitores" className="rounded-md border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-foreground/75 hover:text-primary">Global #{totalRank || "—"}</Link>
-            <Link to="/ranking-leitores" className="rounded-md border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-foreground/75 hover:text-primary">Semanal #{weeklyRank || "—"}</Link>
-          </div>
-          <div className="flex min-h-12 flex-wrap items-center justify-center gap-2 py-2">
-            <UserBadges tier={profile.subscription_tier} badges={badges} isAdmin={isAdmin} size={40} />
-          </div>
-          <div className="border-t border-border pt-4">
-            <div className="flex justify-between text-[10px] font-bold uppercase text-muted-foreground"><span>Nível {profile.level}</span><span>{profile.xp.toLocaleString("pt-BR")} XP total</span></div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full border border-border bg-surface-2"><div className="h-full rounded-full bg-primary" style={{ width: `${percentage}%` }} /></div>
-            <div className="mt-1 flex justify-between text-[10px] text-muted-foreground"><span>XP</span><span>{percentage}%</span></div>
-            <p className="mt-1.5 text-center text-[11px] text-muted-foreground">{xpInLevel.toLocaleString("pt-BR")} / {xpGoal.toLocaleString("pt-BR")} XP para o próximo nível</p>
-          </div>
-          <div className="mt-4 flex items-center justify-around border-t border-border pt-4 text-center">
-            <div><b className="block text-base">{followers}</b><span className="text-[10px] font-semibold uppercase text-muted-foreground">seguidores</span></div>
-            <span className="h-7 w-px bg-border" />
-            <div><b className="block text-base">{following}</b><span className="text-[10px] font-semibold uppercase text-muted-foreground">seguindo</span></div>
-          </div>
-          <p className="mt-4 flex items-center justify-center gap-1.5 border-t border-border pt-4 text-xs text-muted-foreground"><CalendarDays className="h-3.5 w-3.5" /> Membro desde {joinedAt}</p>
-          <Button variant="secondary" className="mt-5 w-full rounded-lg text-xs font-bold uppercase" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Editar perfil</Button>
-        </aside>
-        <div className="pointer-events-none hidden min-h-24 lg:col-span-9 lg:block" />
+        </div>
+        <div className="grid grid-cols-2 gap-2 lg:w-52">
+          <div className="rounded-lg border border-border bg-surface/60 p-3 text-center"><b className="block text-lg">{followers}</b><span className="text-[9px] font-bold uppercase text-muted-foreground">Seguidores</span></div>
+          <div className="rounded-lg border border-border bg-surface/60 p-3 text-center"><b className="block text-lg">{following}</b><span className="text-[9px] font-bold uppercase text-muted-foreground">Seguindo</span></div>
+          <Button variant="secondary" className="col-span-2 rounded-lg text-xs font-bold" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Editar perfil</Button>
+        </div>
+        <div className="lg:col-start-2 lg:col-span-2">
+          <div className="mb-2 flex justify-between text-[10px] font-bold uppercase text-muted-foreground"><span>{profile.xp.toLocaleString("pt-BR")} XP total</span><span>{percentage}% do nível</span></div>
+          <div className="h-2 overflow-hidden rounded-full bg-surface-2"><div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${percentage}%` }} /></div>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">{xpInLevel.toLocaleString("pt-BR")} / {xpGoal.toLocaleString("pt-BR")} XP para o próximo nível</p>
+        </div>
       </div>
     </section>
   );
@@ -662,33 +652,35 @@ function OwnerOverview({ collectionCount, readingCount, readCount, favoritesCoun
     { label: "Seguidores", value: followersCount, icon: Users },
   ];
   return (
-    <section className="pointer-events-none relative z-20 mx-auto -mt-6 grid max-w-7xl gap-8 px-4 pb-8 sm:px-6 lg:-mt-[40rem] lg:grid-cols-12 lg:pb-32">
-      <div className="pointer-events-none hidden lg:col-span-3 lg:block" />
-      <div className="pointer-events-auto min-w-0 lg:col-span-9">
+    <section className="relative z-10 mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6">
+      <div className="min-w-0">
         <nav className="flex items-center gap-1 overflow-x-auto border-b border-border py-2 no-scrollbar">
           <Button variant="ghost" className="relative rounded-none text-primary after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:rounded-full after:bg-primary"><LayoutGrid className="h-4 w-4" /> Visão geral</Button>
           <Button asChild variant="ghost" className="rounded-none text-muted-foreground"><Link to="/biblioteca"><Library className="h-4 w-4" /> Coleção</Link></Button>
           <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={onEdit}><Settings className="h-4 w-4" /> Configurações</Button>
         </nav>
-        <div className="mt-7">
-          <h2 className="mb-4 text-sm font-bold uppercase text-muted-foreground">Estatísticas</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="mt-6 grid gap-4 lg:grid-cols-12">
+          <div className="lg:col-span-7">
+            <h2 className="mb-4 text-xs font-extrabold uppercase text-muted-foreground">Sua atividade</h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {cards.map((card) => (
-              <div key={card.label} className="flex flex-col gap-3 rounded-lg border border-border bg-surface/45 p-4">
+              <div key={card.label} className="group flex min-h-32 flex-col justify-between rounded-lg border border-border bg-surface/45 p-4 transition-colors hover:border-primary/40">
                 <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary"><card.icon className="h-4 w-4" /></span>
                 <div><b className="block text-2xl font-black tabular-nums">{card.value}</b><span className="text-[11px] font-semibold uppercase text-muted-foreground">{card.label}</span></div>
               </div>
             ))}
+            </div>
           </div>
-          <div className="mt-8 rounded-lg border border-border bg-surface/30 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div><h2 className="font-display text-base font-bold">Meus selos</h2><p className="mt-1 text-xs text-muted-foreground">Selos conquistados e ativos no seu perfil</p></div>
+          <div className="min-w-0 rounded-lg border border-border bg-surface/30 p-5 lg:col-span-5">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+              <div className="min-w-0"><h2 className="font-display text-base font-bold">Meus selos</h2><p className="mt-1 text-xs text-muted-foreground">Conquistas exibidas no seu perfil</p></div>
               <Button variant="outline" size="sm" onClick={onEdit}><Settings className="h-3.5 w-3.5" /> Personalizar</Button>
             </div>
-            <div className="mt-5 flex min-h-14 flex-wrap items-center gap-3">
-              <UserBadges tier={tier} badges={badges} isAdmin={isAdmin} size={52} />
+            <div className="mt-5 min-h-24 max-w-full overflow-hidden rounded-lg border border-border bg-background/35 p-3">
+              <UserBadges tier={tier} badges={badges} isAdmin={isAdmin} size={40} />
               {badges.length === 0 && !isAdmin && (!tier || tier === "none") ? <span className="text-sm text-muted-foreground">Nenhum selo conquistado.</span> : null}
             </div>
+            <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">Passe sobre um selo para ver o nome da conquista.</p>
           </div>
         </div>
       </div>
