@@ -8,7 +8,7 @@ import { AdminShell, StatCard } from "@/components/AdminShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { searchAnilist, type AnilistResult } from "@/lib/anilist.functions";
+import { searchAnilist, searchAnilistSmart, type AnilistResult } from "@/lib/anilist.functions";
 import { coverUrl, timeAgo } from "@/lib/media";
 import { findByAnilistId, uniqueSlug } from "@/lib/series-import";
 import { useRoles, useSession } from "@/hooks/useAuth";
@@ -57,7 +57,7 @@ function AdminPage() {
   });
 
   const search = useMutation({
-    mutationFn: async () => anilist({ data: { search: term.trim() } }),
+    mutationFn: async () => searchAnilistSmart(term.trim(), anilist),
     onSuccess: (data) => {
       setResults(data);
       if (data.length === 0) toast.info("Nenhum resultado no AniList.");
