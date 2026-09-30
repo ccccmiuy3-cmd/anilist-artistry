@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, Heart, LayoutGrid, PlusSquare, Star, Trophy } from "lucide-react";
+import { Clock, LayoutGrid, PlusSquare, Star, Trophy } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { SeriesCard } from "@/components/SeriesCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { ContinueReading } from "@/components/ContinueReading";
+import { FavoritesUpdated } from "@/components/FavoritesUpdated";
 import { HScroll, SectionRow } from "@/components/SectionRow";
 import { Button } from "@/components/ui/button";
 import { fetchFavorites, fetchHistory, fetchSeries, KINDS } from "@/lib/queries";
@@ -140,22 +141,7 @@ function Home() {
         </SectionRow>
 
         {user && (favorites.data?.length ?? 0) > 0 ? (
-          <SectionRow icon={<Heart className="h-5 w-5 text-gold" />} title="Favoritas atualizadas">
-            <HScroll>
-              {favorites.data!.map((item) => (
-                <div key={item.id} className="w-[140px] shrink-0">
-                  <SeriesCard
-                    slug={item.slug}
-                    title={item.title}
-                    cover={item.cover_url}
-                    rating={item.rating}
-                    favorite
-                    seriesId={item.id}
-                  />
-                </div>
-              ))}
-            </HScroll>
-          </SectionRow>
+          <FavoritesUpdated rows={favorites.data!} />
         ) : null}
 
         {user && (history.data?.length ?? 0) > 0 ? (

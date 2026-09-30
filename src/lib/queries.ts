@@ -91,7 +91,10 @@ export async function fetchFavorites(userId: string) {
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return ((data ?? []) as unknown as { series: SeriesRow }[]).map((row) => row.series);
+  const rows = ((data ?? []) as unknown as { series: SeriesRow }[]).map((row) => row.series);
+  const latest = (row: SeriesRow) =>
+    row.chapters.reduce((max, ch) => (ch.created_at > max ? ch.created_at : max), "");
+  return rows.sort((a, b) => latest(b).localeCompare(latest(a)));
 }
 
 export async function fetchHistory(userId: string) {
