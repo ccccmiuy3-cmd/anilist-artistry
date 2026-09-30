@@ -505,6 +505,22 @@ function SeriesPage() {
                         <Eye className="h-4 w-4" />
                       </span>
                     </Link>
+                    {user ? (
+                      <button
+                        type="button"
+                        disabled={toggleRead.isPending}
+                        onClick={() => toggleRead.mutate({ id: chapter.id, isRead })}
+                        title={isRead ? "Desmarcar como lido" : "Marcar como lido"}
+                        aria-label={isRead ? "Desmarcar como lido" : "Marcar como lido"}
+                        className={`mr-4 grid h-8 w-8 shrink-0 place-items-center rounded-md border transition-colors ${
+                          isRead
+                            ? "border-primary/50 bg-primary/15 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                        }`}
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                    ) : null}
                   </li>
                 );
               })}
