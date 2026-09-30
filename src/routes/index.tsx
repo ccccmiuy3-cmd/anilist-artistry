@@ -211,7 +211,7 @@ function Home() {
           </SectionRow>
         ) : null}
 
-        <RecentlyUpdated rows={updated.data!} />
+        {(updated.data?.length ?? 0) > 0 ? <RecentlyUpdated rows={updated.data!} /> : null}
 
         {(ranking.data?.length ?? 0) > 0 ? (
           <SectionRow
