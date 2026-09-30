@@ -74,7 +74,7 @@ function Reader() {
       if (ids.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, username, avatar_url, level, avatar_frame")
+          .select("id, username, avatar_url, level, avatar_frame, subscription_tier")
           .in("id", ids);
         for (const profile of profiles ?? []) authors.set(profile.id, profile);
       }

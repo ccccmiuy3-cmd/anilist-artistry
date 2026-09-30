@@ -3,12 +3,14 @@ import { Flame, MessageSquare } from "lucide-react";
 import { FramedAvatar } from "@/components/FramedAvatar";
 import { CommentContent } from "@/components/CommentContent";
 import { CommentReactions } from "@/components/CommentReactions";
+import { SubscriptionSeal } from "@/components/SubscriptionSeal";
 
 export type CommentAuthor = {
   username: string;
   avatar_url: string | null;
   level?: number | null;
   avatar_frame?: string | null;
+  subscription_tier?: string | null;
 };
 
 export type CommentRow = {
@@ -79,6 +81,7 @@ export function CommentItem({
               <Flame className="h-[11px] w-[11px] shrink-0" />
               <span>Nv.&nbsp;{level}</span>
             </span>
+            <SubscriptionSeal tier={author?.subscription_tier} />
             <span className="ml-auto shrink-0 whitespace-nowrap text-xs text-white/40">
               {formatDate(comment.created_at)}
             </span>
