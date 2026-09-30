@@ -36,7 +36,7 @@ function FramesAdmin() {
 
   const add = async (image_url: string, n?: string) => {
     const { error } = await supabase.from("avatar_frames").insert({ name: (n ?? name).trim() || "Moldura", image_url });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Moldura adicionada!");
     setName(""); setUrl(""); refresh();
   };
