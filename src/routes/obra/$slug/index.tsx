@@ -236,7 +236,7 @@ function SeriesPage() {
           <span className="cover-fade" />
         </div>
 
-        <main className="mx-auto -mt-28 max-w-6xl px-4 pb-10">
+        <main className="relative z-10 mx-auto -mt-28 max-w-6xl px-4 pb-10">
           <div className="flex flex-col gap-6 sm:flex-row">
             {/* Cover */}
             <div className="relative w-44 shrink-0 self-start sm:w-56">
