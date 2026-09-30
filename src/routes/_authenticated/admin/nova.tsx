@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowLeft, Download } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { slugify } from "@/lib/media";
 import { KINDS } from "@/lib/queries";
 import { useSession } from "@/hooks/useAuth";
+import { searchAnilist } from "@/lib/anilist.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/nova")({
   head: () => ({
@@ -28,6 +30,8 @@ export const Route = createFileRoute("/_authenticated/admin/nova")({
 function NovaObra() {
   const navigate = useNavigate();
   const { user } = useSession();
+  const anilist = useServerFn(searchAnilist);
+  const [link, setLink] = useState("");
   const [form, setForm] = useState({
     title: "",
     altTitles: "",
@@ -44,6 +48,30 @@ function NovaObra() {
   function set(key: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+  const fill = useMutation({
+    mutationFn: async () => {
+      const results = await anilist({ data: { search: link.trim() } });
+      if (!results.length) throw new Error("Nada encontrado com esse link.");
+      return results[0]!;
+    },
+    onSuccess: (item) => {
+      setForm((prev) => ({
+        ...prev,
+        title: item.title,
+        altTitles: item.altTitles,
+        synopsis: item.synopsis,
+        coverUrl: item.coverUrl,
+        bannerUrl: item.bannerUrl,
+        status: item.status || prev.status,
+        author: item.author,
+        artist: item.artist,
+        genres: item.genres.join(", "),
+      }));
+      toast.success("Dados preenchidos do AniList! Revise e crie a obra.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao buscar no AniList"),
+  });
 
   const create = useMutation({
     mutationFn: async () => {
@@ -89,6 +117,32 @@ function NovaObra() {
           </Link>
         </Button>
         <h1 className="font-display text-2xl font-extrabold">Nova obra</h1>
+
+        <section className="mt-4 rounded-2xl border border-border bg-surface p-5">
+          <h2 className="flex items-center gap-2 font-display text-base font-extrabold">
+            <Download className="h-4 w-4 text-primary" /> Preencher com um link do AniList
+          </h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (link.trim()) fill.mutate();
+            }}
+            className="mt-3 flex flex-wrap gap-3"
+          >
+            <Input
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              placeholder="https://anilist.co/manga/204974/Psychopath-in-Murim"
+              className="h-10 min-w-56 flex-1 bg-background"
+            />
+            <Button type="submit" disabled={fill.isPending} className="h-10 px-5 font-semibold">
+              {fill.isPending ? "Buscando…" : "Preencher"}
+            </Button>
+          </form>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Cole o link da obra no AniList (mangá, manhwa ou anime) e os campos abaixo preenchem sozinhos. Também aceita link de busca do AniList.
+          </p>
+        </section>
 
         <form
           className="mt-6 space-y-4 rounded-2xl border border-border bg-surface p-5"
