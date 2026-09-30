@@ -11,6 +11,7 @@ import { useSession } from "@/hooks/useAuth";
 import { CommentThreads } from "@/components/CommentThreads";
 import { CommentComposer, type CommentDraft } from "@/components/CommentComposer";
 import { uploadCommentImage } from "@/lib/comments";
+import { NovelNarrator } from "@/components/NovelNarrator";
 
 export const Route = createFileRoute("/obra/$slug/$chapter")({
   staticData: { sitemap: false },
@@ -88,6 +89,7 @@ function Reader() {
   const [readingWidth, setReadingWidth] = useState<"narrow" | "comfortable" | "wide">("comfortable");
   const [novelTheme, setNovelTheme] = useState<"dark" | "soft">("dark");
   const [showNovelSettings, setShowNovelSettings] = useState(false);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
   const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
@@ -460,14 +462,28 @@ function Reader() {
                 Este capítulo ainda não tem texto.
               </p>
             ) : (
-              <div
-                className="space-y-6 text-foreground/90 [&_p]:text-justify"
-                style={{ fontSize: `${fontSize}px`, lineHeight }}
-              >
-                {paragraphs.map((paragraph, paragraphIndex) => (
-                  <p key={paragraphIndex}>{paragraph}</p>
-                ))}
-              </div>
+              <>
+                <NovelNarrator
+                  paragraphs={paragraphs}
+                  activeIndex={speakingIndex}
+                  onActiveChange={setSpeakingIndex}
+                />
+                <div
+                  className="space-y-6 text-foreground/90 [&_p]:text-justify"
+                  style={{ fontSize: `${fontSize}px`, lineHeight }}
+                >
+                  {paragraphs.map((paragraph, paragraphIndex) => (
+                    <p
+                      key={paragraphIndex}
+                      id={`novel-p-${paragraphIndex}`}
+                      onClick={() => setSpeakingIndex(paragraphIndex)}
+                      className={`cursor-pointer rounded-md transition-colors ${speakingIndex === paragraphIndex ? "bg-primary/15 text-foreground" : ""}`}
+                    >
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              </>
             )}
           </article>
         ) : pages.length === 0 ? (
