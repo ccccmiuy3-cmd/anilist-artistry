@@ -214,8 +214,8 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
     speak(p, c);
   }, []);
 
-  const aiSettings = useRef({ voice: aiVoice, rate });
-  aiSettings.current = { voice: aiVoice, rate };
+  const aiSettings = useRef({ voice: aiVoice, elevenVoice, rate, engine });
+  aiSettings.current = { voice: aiVoice, elevenVoice, rate, engine };
 
   const playAi = useCallback(
     async (startParagraph: number) => {
