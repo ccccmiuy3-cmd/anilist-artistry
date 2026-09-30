@@ -142,7 +142,7 @@ async function runAnilistSearch(data: { search: string }): Promise<AnilistResult
         altTitles: titles.slice(1).join(", "),
         synopsis: decode((item.description ?? "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")).replace(/\n{3,}/g, "\n\n").trim(),
         coverUrl: item.coverImage?.extraLarge ?? item.coverImage?.large ?? "",
-        bannerUrl: item.bannerImage ?? "",
+        bannerUrl: item.bannerImage || item.coverImage?.extraLarge || item.coverImage?.large || "",
         genres: item.genres ?? [],
         status: STATUS_PT[item.status ?? ""] ?? "Em andamento",
         author: findRole("story") || findRole("original") || "",
