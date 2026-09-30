@@ -484,11 +484,42 @@ export type Database = {
         }
         Relationships: []
       }
+      xp_events: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          reason: string
+          ref_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          reason: string
+          ref_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          reason?: string
+          ref_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      award_xp: {
+        Args: { _amount: number; _reason: string; _ref: string; _user: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -499,6 +530,16 @@ export type Database = {
       increment_series_views: {
         Args: { _series_id: string }
         Returns: undefined
+      }
+      xp_ranking: {
+        Args: { _period: string }
+        Returns: {
+          avatar_url: string
+          id: string
+          level: number
+          username: string
+          xp: number
+        }[]
       }
     }
     Enums: {

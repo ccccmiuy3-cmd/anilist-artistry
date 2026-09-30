@@ -69,13 +69,9 @@ function Ranking() {
   const list = useQuery({
     queryKey: ["xp-ranking", tab],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url, level, xp")
-        .order("xp", { ascending: false })
-        .limit(50);
+      const { data, error } = await supabase.rpc("xp_ranking", { _period: tab });
       if (error) throw error;
-      return (data ?? []) as Reader[];
+      return (data ?? []).map((r) => ({ ...r, xp: Number(r.xp) })) as Reader[];
     },
   });
 
