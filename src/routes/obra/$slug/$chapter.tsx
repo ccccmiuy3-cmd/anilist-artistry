@@ -5,7 +5,7 @@ import { BookOpen, ChevronLeft, ChevronRight, ChevronsDown, Home, Infinity, Maxi
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchSeriesBySlug } from "@/lib/queries";
+import { fetchCommentAuthors, fetchSeriesBySlug } from "@/lib/queries";
 import { formatChapter, timeAgo } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 import { CommentItem } from "@/components/CommentItem";
