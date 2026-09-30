@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { BookMarked, LogOut, Search, Shield, User2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { MobileNav } from "@/components/MobileNav";
 import { useProfile, useRoles, useSession } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,44 +36,45 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 gap-y-0 px-3 py-2 sm:h-24 sm:flex-nowrap sm:gap-4 sm:px-4 sm:py-0">
-        <Link to="/" className="flex shrink-0 items-center" aria-label="Better Mangá — início">
-          <img
-            src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
-            alt="Better Mangá"
-            className="h-11 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-20"
-          />
-        </Link>
-
-        <div className="flex-1 sm:hidden" />
-
-        <nav className="no-scrollbar order-last flex w-full items-center justify-between gap-0.5 overflow-x-auto text-xs font-semibold sm:order-none sm:w-auto sm:min-w-0 sm:flex-1 sm:justify-start sm:gap-1 sm:text-sm">
-          {NAV.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              activeOptions={{ exact: item.to === "/" }}
-              activeProps={{ className: "text-primary" }}
-              inactiveProps={{ className: "text-muted-foreground hover:text-foreground" }}
-              className="whitespace-nowrap rounded-md px-2 py-2 transition-colors sm:px-3"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <Button
-          asChild
-          size="icon"
-          variant="outline"
-          className="h-9 w-9 shrink-0 rounded-full border-border bg-surface"
-          aria-label="Pesquisar"
-        >
-          <Link to="/catalogo" search={{ q: "", kind: "Todos" }}>
-            <Search className="h-4 w-4" />
+    <>
+      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 gap-y-0 px-3 py-2 sm:h-24 sm:flex-nowrap sm:gap-4 sm:px-4 sm:py-0">
+          <Link to="/" className="flex shrink-0 items-center" aria-label="Better Mangá — início">
+            <img
+              src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
+              alt="Better Mangá"
+              className="h-11 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-20"
+            />
           </Link>
-        </Button>
+
+          <div className="flex-1 sm:hidden" />
+
+          <nav className="hidden items-center text-sm font-semibold lg:order-none lg:flex lg:w-auto lg:min-w-0 lg:flex-1 lg:gap-1">
+            {NAV.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                activeOptions={{ exact: item.to === "/" }}
+                activeProps={{ className: "text-primary" }}
+                inactiveProps={{ className: "text-muted-foreground hover:text-foreground" }}
+                className="whitespace-nowrap rounded-md px-2 py-2 transition-colors sm:px-3"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <Button
+            asChild
+            size="icon"
+            variant="outline"
+            className="h-9 w-9 shrink-0 rounded-full border-border bg-surface"
+            aria-label="Pesquisar"
+          >
+            <Link to="/catalogo" search={{ q: "", kind: "Todos" }}>
+              <Search className="h-4 w-4" />
+            </Link>
+          </Button>
 
         {user ? (
           <DropdownMenu>
@@ -119,8 +121,10 @@ export function SiteHeader() {
             <Link to="/auth">Entrar</Link>
           </Button>
         )}
-      </div>
-    </header>
+          </div>
+        </header>
+        <MobileNav />
+      </>
   );
 }
 
@@ -145,6 +149,7 @@ export function SiteFooter() {
           </Link>
         </div>
       </div>
+      <div aria-hidden className="h-[calc(4rem+env(safe-area-inset-bottom))] lg:hidden" />
     </footer>
   );
 }
