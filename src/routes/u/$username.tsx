@@ -60,7 +60,7 @@ function Perfil() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, display_name, bio, avatar_url, banner_url, level, xp, created_at")
+        .select("id, username, display_name, bio, avatar_url, banner_url, level, xp, created_at, accent_color, avatar_frame, comment_bg, is_private")
         .eq("username", username)
         .maybeSingle();
       if (error) throw error;
@@ -182,7 +182,10 @@ function Perfil() {
 
         <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
           <aside className="-mt-20 relative">
-            <div className="h-36 w-36 overflow-hidden rounded-full border-4 border-background bg-surface-2 ring-2 ring-primary">
+            <div
+              className="h-36 w-36 overflow-hidden rounded-full border-4 border-background bg-surface-2"
+              style={{ boxShadow: `0 0 0 2px ${frameColor(p.avatar_frame)}` }}
+            >
               {p.avatar_url ? (
                 <img src={p.avatar_url} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -190,7 +193,7 @@ function Perfil() {
               )}
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-2xl font-extrabold text-primary">@{p.username}</h1>
+              <h1 className="font-display text-2xl font-extrabold" style={{ color: p.accent_color ?? "var(--primary)" }}>@{p.username}</h1>
               <span className="rounded border border-border px-1.5 text-xs font-bold text-muted-foreground">Nv. {p.level}</span>
             </div>
             {p.display_name ? <p className="text-sm text-muted-foreground">{p.display_name}</p> : null}
@@ -299,7 +302,11 @@ function Perfil() {
             )}
             <ul className="mt-6 space-y-5">
               {(comments.data ?? []).map((c) => (
-                <li key={c.id} className="flex gap-3">
+                <li
+                  key={c.id}
+                  className="flex gap-3 rounded-xl p-3"
+                  style={p.comment_bg ? { background: p.comment_bg } : undefined}
+                >
                   <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-2 text-sm font-bold">
                     {c.author?.avatar_url ? <img src={c.author.avatar_url} alt="" className="h-full w-full object-cover" /> : (c.author?.username ?? "?")[0]?.toUpperCase()}
                   </span>
