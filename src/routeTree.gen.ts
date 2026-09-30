@@ -22,6 +22,7 @@ import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
 import { Route as AuthenticatedAdminNovaRouteImport } from './routes/_authenticated/admin/nova'
+import { Route as AuthenticatedAdminObrasRouteImport } from './routes/_authenticated/admin/obras'
 import { Route as ObraSlugIndexRouteImport } from './routes/obra/$slug/index'
 import { Route as ObraSlugChapterRouteImport } from './routes/obra/$slug/$chapter'
 
@@ -89,6 +90,11 @@ const AuthenticatedAdminNovaRoute = AuthenticatedAdminNovaRouteImport.update({
   path: '/admin/nova',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminObrasRoute = AuthenticatedAdminObrasRouteImport.update({
+  id: '/admin/obras',
+  path: '/admin/obras',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ObraSlugIndexRoute = ObraSlugIndexRouteImport.update({
   id: '/obra/$slug/',
   path: '/obra/$slug/',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/listas/': typeof ListasIndexRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/nova': typeof AuthenticatedAdminNovaRoute
+  '/admin/obras': typeof AuthenticatedAdminObrasRoute
   '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/obra/$slug/': typeof ObraSlugIndexRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/listas': typeof ListasIndexRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/nova': typeof AuthenticatedAdminNovaRoute
+  '/admin/obras': typeof AuthenticatedAdminObrasRoute
   '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/obra/$slug': typeof ObraSlugIndexRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/listas/': typeof ListasIndexRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/nova': typeof AuthenticatedAdminNovaRoute
+  '/_authenticated/admin/obras': typeof AuthenticatedAdminObrasRoute
   '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/obra/$slug/': typeof ObraSlugIndexRoute
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/listas/'
     | '/admin/$id'
     | '/admin/nova'
+    | '/admin/obras'
     | '/obra/$slug/$chapter'
     | '/admin/'
     | '/obra/$slug/'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/listas'
     | '/admin/$id'
     | '/admin/nova'
+    | '/admin/obras'
     | '/obra/$slug/$chapter'
     | '/admin'
     | '/obra/$slug'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/listas/'
     | '/_authenticated/admin/$id'
     | '/_authenticated/admin/nova'
+    | '/_authenticated/admin/obras'
     | '/obra/$slug/$chapter'
     | '/_authenticated/admin/'
     | '/obra/$slug/'
@@ -308,6 +320,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminNovaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/obras': {
+      id: '/_authenticated/admin/obras'
+      path: '/admin/obras'
+      fullPath: '/admin/obras'
+      preLoaderRoute: typeof AuthenticatedAdminObrasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/obra/$slug/': {
       id: '/obra/$slug/'
       path: '/obra/$slug'
@@ -330,6 +349,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
   AuthenticatedAdminIdRoute: typeof AuthenticatedAdminIdRoute
   AuthenticatedAdminNovaRoute: typeof AuthenticatedAdminNovaRoute
+  AuthenticatedAdminObrasRoute: typeof AuthenticatedAdminObrasRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -338,6 +358,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedAdminIdRoute: AuthenticatedAdminIdRoute,
   AuthenticatedAdminNovaRoute: AuthenticatedAdminNovaRoute,
+  AuthenticatedAdminObrasRoute: AuthenticatedAdminObrasRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
