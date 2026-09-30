@@ -48,7 +48,7 @@ export function MobileNav() {
   return (
     <nav
       aria-label="Navegação do celular"
-      className="fixed inset-x-0 bottom-0 z-[100] border-t border-border/70 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-[100] border-t border-border/70 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
     >
       <div className="flex h-16 w-full items-stretch overflow-hidden px-1">
         <div className="flex w-full items-stretch gap-1">

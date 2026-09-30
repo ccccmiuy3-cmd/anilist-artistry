@@ -49,7 +49,7 @@ export function SiteHeader() {
 
           <div className="flex-1 sm:hidden" />
 
-          <nav className="hidden items-center text-sm font-semibold sm:order-none sm:flex sm:w-auto sm:min-w-0 sm:flex-1 sm:gap-1">
+          <nav className="hidden items-center text-sm font-semibold lg:order-none lg:flex lg:w-auto lg:min-w-0 lg:flex-1 lg:gap-1">
             {NAV.map((item) => (
               <Link
                 key={item.to}
@@ -149,7 +149,7 @@ export function SiteFooter() {
           </Link>
         </div>
       </div>
-      <div aria-hidden className="h-[calc(4rem+env(safe-area-inset-bottom))] sm:hidden" />
+      <div aria-hidden className="h-[calc(4rem+env(safe-area-inset-bottom))] lg:hidden" />
     </footer>
   );
 }
