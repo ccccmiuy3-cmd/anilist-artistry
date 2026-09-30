@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowLeft, Download } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { slugify } from "@/lib/media";
 import { KINDS } from "@/lib/queries";
 import { useSession } from "@/hooks/useAuth";
+import { searchAnilist } from "@/lib/anilist.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/nova")({
   head: () => ({
