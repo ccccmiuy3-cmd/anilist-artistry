@@ -1,98 +1,188 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Eye, Star, Trophy } from "lucide-react";
+import { Clock, Crown, Flame, Sparkles, Star } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
-import { fetchSeries } from "@/lib/queries";
-import { coverUrl } from "@/lib/media";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/ranking")({
   head: () => ({
     meta: [
-      { title: "Ranking das obras mais lidas — MangaVerso" },
-      {
-        name: "description",
-        content: "Veja o top de mangás, manhwas e comics mais lidos e melhor avaliados do site.",
-      },
-      { property: "og:title", content: "Ranking — MangaVerso" },
-      { property: "og:description", content: "As obras mais lidas e melhor avaliadas do site." },
+      { title: "Ranking de XP dos leitores — MangaVerso" },
+      { name: "description", content: "Veja quem mais ganhou XP lendo mangás, manhwas e comics no MangaVerso." },
+      { property: "og:title", content: "Ranking de XP — MangaVerso" },
+      { property: "og:description", content: "O pódio dos leitores mais ativos do MangaVerso." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Ranking,
 });
 
+type Reader = { id: string; username: string; avatar_url: string | null; level: number; xp: number };
+type Tab = "weekly" | "total" | "snapshot";
+
+function nextReset() {
+  const now = new Date();
+  const next = new Date(now);
+  next.setUTCHours(0, 0, 0, 0);
+  next.setUTCDate(now.getUTCDate() + ((8 - now.getUTCDay()) % 7 || 7));
+  const ms = next.getTime() - now.getTime();
+  const d = Math.floor(ms / 86400000);
+  const h = Math.floor((ms % 86400000) / 3600000);
+  return `${d}d ${h}h`;
+}
+
+function LevelBadge({ level }: { level: number }) {
+  const high = level >= 50;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded border px-1.5 py-px text-[10px] font-bold ${
+        high ? "border-gold/50 bg-gold/10 text-gold" : "border-accent/50 bg-accent/15 text-accent-foreground"
+      }`}
+    >
+      {high ? <Star className="h-2.5 w-2.5" /> : <Flame className="h-2.5 w-2.5" />}
+      Nv. {level}
+    </span>
+  );
+}
+
+function Avatar({ r, className }: { r: Reader; className: string }) {
+  return (
+    <div className={`grid place-items-center overflow-hidden rounded-full bg-surface-2 font-medium text-primary ${className}`}>
+      {r.avatar_url ? (
+        <img src={r.avatar_url} alt={r.username} className="h-full w-full object-cover" />
+      ) : (
+        r.username.slice(0, 2).toUpperCase()
+      )}
+    </div>
+  );
+}
+
+const fmt = (n: number) => n.toLocaleString("pt-BR");
+
 function Ranking() {
-  const [mode, setMode] = useState<"views" | "rating">("views");
+  const [tab, setTab] = useState<Tab>("weekly");
+  const [reset, setReset] = useState("");
+  useEffect(() => setReset(nextReset()), []);
+
   const list = useQuery({
-    queryKey: ["ranking", mode],
-    queryFn: () => fetchSeries({ order: mode, limit: 20 }),
+    queryKey: ["xp-ranking", tab],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url, level, xp")
+        .order("xp", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as Reader[];
+    },
   });
+
+  const rows = list.data ?? [];
+  const [first, second, third] = rows;
+  const rest = rows.slice(3);
+
+  const podium = (r: Reader | undefined, place: 1 | 2 | 3) => {
+    if (!r) return <div className="w-44" />;
+    const cfg = {
+      1: { h: "h-56", av: "h-28 w-28 ring-4 ring-gold", bg: "from-primary/70 via-primary/25 to-transparent", xp: "text-gold" },
+      2: { h: "h-44", av: "h-24 w-24 ring-4 ring-muted", bg: "from-secondary via-secondary/40 to-transparent", xp: "text-foreground/80" },
+      3: { h: "h-36", av: "h-20 w-20 ring-4 ring-primary/40", bg: "from-primary/35 via-primary/10 to-transparent", xp: "text-foreground/80" },
+    }[place];
+    return (
+      <Link to="/u/$username" params={{ username: r.username }} className="relative flex w-40 flex-col items-center sm:w-44">
+        {place === 1 ? (
+          <span className="z-10 -mb-3 grid h-7 w-7 place-items-center rounded-full bg-gold text-background">
+            <Crown className="h-4 w-4" />
+          </span>
+        ) : null}
+        <Avatar r={r} className={`z-10 -mb-10 text-2xl ${cfg.av}`} />
+        <div className={`relative flex w-full flex-col items-center justify-end rounded-t-xl border border-b-0 border-border bg-gradient-to-b ${cfg.bg} ${cfg.h} px-2 pb-3`}>
+          <span className="pointer-events-none absolute top-10 font-display text-6xl font-black text-foreground/10">{place}</span>
+          <p className="flex items-center gap-1.5 text-sm font-bold">
+            <span className="max-w-24 truncate">{r.username}</span> <LevelBadge level={r.level} />
+          </p>
+          <p className={`mt-4 text-sm font-bold ${cfg.xp}`}>
+            {fmt(r.xp)} <span className="text-muted-foreground">XP</span>
+          </p>
+        </div>
+      </Link>
+    );
+  };
 
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <main className="mx-auto max-w-4xl px-4 py-8">
-        <h1 className="section-title">
-          <Trophy className="h-6 w-6 text-primary" /> Rankings
-        </h1>
+      <main className="mx-auto max-w-5xl px-4 py-10">
+        <div className="text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+            <Sparkles className="h-3 w-3 text-primary" /> Leitores
+          </span>
+          <h1 className="mt-4 font-display text-4xl font-extrabold">Ranking de XP</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {tab === "weekly" ? "Quem mais ganhou XP nesta semana." : tab === "total" ? "Quem mais acumulou XP desde sempre." : "Resultado da última semana encerrada."}
+          </p>
 
-        <div className="mt-6 flex gap-2">
-          {(
-            [
-              { key: "views", label: "Views", icon: <Eye className="h-4 w-4" /> },
-              { key: "rating", label: "Notas", icon: <Star className="h-4 w-4" /> },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setMode(tab.key)}
-              className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold ${
-                mode === tab.key
-                  ? "border-primary text-primary"
-                  : "border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+          <div className="mt-8 inline-flex rounded-xl border border-border bg-surface p-1.5">
+            {([
+              ["weekly", "Semanal"],
+              ["total", "Total"],
+              ["snapshot", "Último snapshot"],
+            ] as const).map(([k, l]) => (
+              <button
+                key={k}
+                onClick={() => setTab(k)}
+                className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                  tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+          {tab === "weekly" ? (
+            <p className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Clock className="h-3.5 w-3.5 text-primary" /> Próximo reset semanal:
+              <span className="font-bold text-foreground">{reset}</span>
+            </p>
+          ) : null}
         </div>
 
-        <ol className="mt-6 space-y-2">
-          {(list.data ?? []).map((item, index) => (
-            <li key={item.id}>
-              <Link
-                to="/obra/$slug"
-                params={{ slug: item.slug }}
-                className="flex items-center gap-4 rounded-xl border border-border bg-surface p-3 transition-colors hover:border-primary/60"
-              >
-                <span className="w-8 text-center font-display text-2xl font-black text-primary">
-                  {index + 1}
-                </span>
-                <img
-                  src={coverUrl(item.cover_url)}
-                  alt={item.title}
-                  className="h-20 w-14 rounded-lg object-cover"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{item.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {item.kind} · {item.chapters.length} capítulos
-                  </p>
-                </div>
-                <div className="text-right text-sm">
-                  <p className="flex items-center gap-1 font-semibold text-gold">
-                    <Star className="h-3.5 w-3.5 fill-gold" />
-                    {Number(item.rating).toFixed(1).replace(".", ",")}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{item.views} views</p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ol>
-        {!list.isLoading && (list.data?.length ?? 0) === 0 ? (
-          <p className="mt-6 text-sm text-muted-foreground">Ainda não há obras no ranking.</p>
+        {rows.length ? (
+          <>
+            <div className="mx-auto mt-12 max-w-2xl">
+              <div className="flex items-end justify-center gap-3 sm:gap-6">
+                {podium(second, 2)}
+                {podium(first, 1)}
+                {podium(third, 3)}
+              </div>
+              <div className="h-2 rounded-full bg-surface-2" />
+              <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Pódio</p>
+            </div>
+
+            <ol className="mt-12 space-y-2.5">
+              {rest.map((r, i) => (
+                <li key={r.id}>
+                  <Link
+                    to="/u/$username"
+                    params={{ username: r.username }}
+                    className="flex items-center gap-4 rounded-xl border border-border bg-surface px-4 py-3.5 transition-colors hover:border-primary/60"
+                  >
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-surface-2 text-xs font-bold text-muted-foreground">{i + 4}</span>
+                    <Avatar r={r} className="h-11 w-11 text-lg" />
+                    <span className="font-bold">{r.username}</span>
+                    <LevelBadge level={r.level} />
+                    <span className="ml-auto text-sm font-bold text-primary">
+                      {fmt(r.xp)}<span className="ml-0.5 text-[10px] text-muted-foreground">XP</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </>
+        ) : !list.isLoading ? (
+          <p className="mt-12 text-center text-sm text-muted-foreground">Ainda não há leitores no ranking.</p>
         ) : null}
       </main>
       <SiteFooter />
