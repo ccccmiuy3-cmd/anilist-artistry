@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, ChevronLeft, ChevronRight, ChevronsDown, Home, Infinity, Maximize2, MessageCircle, Minus, Palette, Plus } from "lucide-react";
+import { AlignJustify, BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronsDown, Home, Infinity, List, Maximize2, MessageCircle, Minus, Moon, Palette, Plus, Settings2, SunMedium } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,8 +63,8 @@ function Reader() {
     () => obra?.chapters.findIndex((item) => formatChapter(item.number) === chapter) ?? -1,
     [obra, chapter],
   );
-  const current = index >= 0 ? obra!.chapters[index] : undefined;
-  const prev = index > 0 ? obra!.chapters[index - 1] : undefined;
+  const current = obra && index >= 0 ? obra.chapters[index] : undefined;
+  const prev = obra && index > 0 ? obra.chapters[index - 1] : undefined;
   const next = obra && index >= 0 && index < obra.chapters.length - 1 ? obra.chapters[index + 1] : undefined;
 
   const pages = useMemo(() => {
@@ -84,6 +84,10 @@ function Reader() {
     [current, isNovel],
   );
   const [fontSize, setFontSize] = useState(18);
+  const [lineHeight, setLineHeight] = useState(1.9);
+  const [readingWidth, setReadingWidth] = useState<"narrow" | "comfortable" | "wide">("comfortable");
+  const [novelTheme, setNovelTheme] = useState<"dark" | "soft">("dark");
+  const [showNovelSettings, setShowNovelSettings] = useState(false);
 
   const queryClient = useQueryClient();
   const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
@@ -95,7 +99,7 @@ function Reader() {
       const { data, error } = await supabase
         .from("comments")
         .select("id, body, created_at, user_id, is_spoiler, image_url, parent_id")
-        .eq("chapter_id", current!.id)
+        .eq("chapter_id", current?.id ?? "")
         .order("created_at", { ascending: false })
         .limit(80);
       if (error) throw error;
@@ -249,13 +253,145 @@ function Reader() {
   const iconBtn =
     "grid h-9 w-9 place-items-center rounded-md text-foreground/90 transition hover:bg-surface-2 hover:text-primary disabled:opacity-30 disabled:pointer-events-none";
 
+  const novelWidth = {
+    narrow: "max-w-2xl",
+    comfortable: "max-w-3xl",
+    wide: "max-w-4xl",
+  }[readingWidth];
+
+  const novelControl =
+    "h-9 border-border/80 bg-surface/80 text-muted-foreground shadow-none hover:bg-surface-2 hover:text-foreground";
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen ${isNovel && novelTheme === "soft" ? "bg-surface" : "bg-background"}`}>
+      {isNovel ? (
+        <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur-xl">
+          <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:px-6">
+            <Button asChild variant="ghost" size="icon" aria-label="Voltar para a obra" title="Voltar para a obra">
+              <Link to="/obra/$slug" params={{ slug }}>
+                <ChevronLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+            <Link
+              to="/obra/$slug"
+              params={{ slug }}
+              className="min-w-0 text-sm font-semibold text-foreground/80 transition-colors hover:text-primary"
+            >
+              <span className="hidden max-w-72 truncate sm:block">{obra.title}</span>
+              <BookOpen className="h-5 w-5 sm:hidden" />
+            </Link>
+            <span aria-hidden="true" className="hidden text-border sm:block">·</span>
+            <span className="truncate text-sm font-bold text-primary">Cap. {formatChapter(current.number)}</span>
+
+            <div className="ml-auto flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowNovelSettings((open) => !open)}
+                aria-label="Opções de leitura"
+                aria-expanded={showNovelSettings}
+                title="Opções de leitura"
+                className={showNovelSettings ? "bg-surface-2 text-primary" : undefined}
+              >
+                <Settings2 className="h-5 w-5" />
+              </Button>
+              <Button asChild variant="ghost" size="icon" aria-label="Lista de capítulos" title="Lista de capítulos">
+                <Link to="/obra/$slug" params={{ slug }}>
+                  <List className="h-5 w-5" />
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden sm:inline-flex"
+                aria-label="Tela cheia"
+                title="Tela cheia"
+                onClick={() =>
+                  document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()
+                }
+              >
+                <Maximize2 className="h-5 w-5" />
+              </Button>
+              <Button asChild variant="ghost" size="icon" aria-label="Início" title="Início">
+                <Link to="/">
+                  <Home className="h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {showNovelSettings ? (
+            <div className="border-t border-border/60 bg-background/95 px-3 py-3 shadow-lg">
+              <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-2 sm:justify-end">
+                <div className="flex items-center overflow-hidden rounded-md border border-border/80" aria-label="Tamanho da fonte">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-none"
+                    onClick={() => setFontSize((size) => Math.max(14, size - 2))}
+                    aria-label="Diminuir fonte"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="min-w-11 border-x border-border/80 px-2 text-center text-xs font-bold tabular-nums">
+                    {fontSize}px
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-none"
+                    onClick={() => setFontSize((size) => Math.min(28, size + 2))}
+                    aria-label="Aumentar fonte"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={novelControl}
+                  onClick={() => setLineHeight((height) => (height >= 2.1 ? 1.65 : Number((height + 0.2).toFixed(2))))}
+                  title="Alternar espaçamento entre linhas"
+                >
+                  <AlignJustify className="h-4 w-4" /> {lineHeight.toFixed(2)}
+                </Button>
+
+                <div className="flex items-center overflow-hidden rounded-md border border-border/80" aria-label="Largura do texto">
+                  {(["narrow", "comfortable", "wide"] as const).map((width, widthIndex) => (
+                    <Button
+                      key={width}
+                      variant="ghost"
+                      size="sm"
+                      className={`rounded-none px-3 ${readingWidth === width ? "bg-surface-2 text-primary" : "text-muted-foreground"}`}
+                      onClick={() => setReadingWidth(width)}
+                      aria-label={`Largura ${["estreita", "confortável", "ampla"][widthIndex]}`}
+                      title={`Largura ${["estreita", "confortável", "ampla"][widthIndex]}`}
+                    >
+                      {widthIndex + 1}
+                    </Button>
+                  ))}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={novelControl}
+                  onClick={() => setNovelTheme((theme) => (theme === "dark" ? "soft" : "dark"))}
+                >
+                  {novelTheme === "dark" ? <Moon className="h-4 w-4" /> : <SunMedium className="h-4 w-4" />}
+                  {novelTheme === "dark" ? "Escuro" : "Suave"}
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </header>
+      ) : (
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:px-8">
-          <button type="button" onClick={() => history.back()} className={iconBtn} aria-label="Voltar">
+          <Button variant="ghost" size="icon" type="button" onClick={() => history.back()} className={iconBtn} aria-label="Voltar">
             <ChevronLeft className="h-5 w-5" />
-          </button>
+          </Button>
           <Link to="/obra/$slug" params={{ slug }} className="ml-2 flex items-center gap-1.5 text-sm font-bold hover:text-primary">
             <BookOpen className="h-4 w-4" /> Obra
           </Link>
@@ -264,53 +400,38 @@ function Reader() {
             <span className="shrink-0 font-bold text-primary">Cap. {formatChapter(current.number)}</span>
           </h1>
           <div className="ml-auto flex items-center gap-1">
-            <button type="button" disabled={!prev} onClick={() => go("prev")} className={iconBtn} aria-label="Capítulo anterior">
+            <Button variant="ghost" size="icon" type="button" disabled={!prev} onClick={() => go("prev")} className={iconBtn} aria-label="Capítulo anterior">
               <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button type="button" disabled={!next} onClick={() => go("next")} className={iconBtn} aria-label="Próximo capítulo">
+            </Button>
+            <Button variant="ghost" size="icon" type="button" disabled={!next} onClick={() => go("next")} className={iconBtn} aria-label="Próximo capítulo">
               <ChevronRight className="h-5 w-5" />
-            </button>
+            </Button>
             <Link to="/obra/$slug" params={{ slug }} className={`${iconBtn} hidden sm:grid`} aria-label="Lista de capítulos">
               <Infinity className="h-5 w-5" />
             </Link>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               type="button"
               className={`${iconBtn} hidden sm:grid`}
               aria-label="Tema"
               onClick={() => document.documentElement.classList.toggle("reader-dim")}
             >
               <Palette className="h-5 w-5" />
-            </button>
-            {isNovel ? (
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  className={iconBtn}
-                  aria-label="Diminuir fonte"
-                  onClick={() => setFontSize((s) => Math.max(14, s - 2))}
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="w-8 text-center text-xs font-bold text-muted-foreground">{fontSize}</span>
-                <button
-                  type="button"
-                  className={iconBtn}
-                  aria-label="Aumentar fonte"
-                  onClick={() => setFontSize((s) => Math.min(28, s + 2))}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            ) : null}
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               type="button"
               className={iconBtn}
               aria-label="Ir para o fim"
               onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })}
             >
               <ChevronsDown className="h-5 w-5" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               type="button"
               className={`${iconBtn} hidden sm:grid`}
               aria-label="Tela cheia"
@@ -319,28 +440,33 @@ function Reader() {
               }
             >
               <Maximize2 className="h-5 w-5" />
-            </button>
+            </Button>
             <Link to="/" className={iconBtn} aria-label="Início">
               <Home className="h-5 w-5" />
             </Link>
           </div>
         </div>
       </header>
+      )}
 
-      <main className="mx-auto max-w-3xl">
+      <main className={`mx-auto ${isNovel ? novelWidth : "max-w-3xl"}`}>
         {isNovel ? (
-          <article className="px-5 py-10 sm:px-8">
-            {current.title ? (
-              <h2 className="mb-8 text-center font-display text-xl font-extrabold">{current.title}</h2>
-            ) : null}
+          <article className="px-5 pb-16 pt-10 sm:px-8 sm:pt-14">
+            <header className="mb-10 border-b border-border/70 pb-7 text-center">
+              <p className="mb-3 text-xs font-bold uppercase text-primary">{obra.title}</p>
+              <h1 className="font-display text-2xl font-extrabold sm:text-3xl">
+                Capítulo {formatChapter(current.number)}
+              </h1>
+              {current.title ? <p className="mt-3 text-sm text-muted-foreground">{current.title}</p> : null}
+            </header>
             {paragraphs.length === 0 ? (
               <p className="py-10 text-center text-sm text-muted-foreground">
                 Este capítulo ainda não tem texto.
               </p>
             ) : (
               <div
-                className="space-y-6 leading-relaxed text-foreground/90"
-                style={{ fontSize: `${fontSize}px`, lineHeight: 1.9 }}
+                className="space-y-6 text-foreground/90 [&_p]:text-justify"
+                style={{ fontSize: `${fontSize}px`, lineHeight }}
               >
                 {paragraphs.map((paragraph, paragraphIndex) => (
                   <p key={paragraphIndex}>{paragraph}</p>
@@ -365,7 +491,7 @@ function Reader() {
         )}
       </main>
 
-      <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-8">
+      <div className={`mx-auto flex ${isNovel ? novelWidth : "max-w-3xl"} items-center justify-between gap-3 border-t border-border/70 px-4 py-8`}>
         <Button variant="outline" disabled={!prev} onClick={() => go("prev")} className="font-semibold">
           <ChevronLeft className="mr-1 h-4 w-4" /> Anterior
         </Button>

@@ -13,3 +13,4 @@
 - The sitemap includes only public static pages, published works, and public community lists; private and authenticated areas stay excluded.
 - Keep work rankings at `/ranking` and reader XP rankings at `/ranking-leitores` so each audience has a focused page.
 - Use Sora for headings and Manrope for body text; the profile follows a dark cyan bento layout so dense achievements stay contained and scannable.
+- Keep novels on the shared work details route, but give them a dedicated text reader while manga/comics retain the image reader, so both formats share catalog data without compromising reading ergonomics.
