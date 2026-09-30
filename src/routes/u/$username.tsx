@@ -662,9 +662,9 @@ function OwnerOverview({ collectionCount, readingCount, readCount, favoritesCoun
     { label: "Seguidores", value: followersCount, icon: Users },
   ];
   return (
-    <section className="relative z-20 mx-auto -mt-6 grid max-w-7xl gap-8 px-4 pb-8 sm:px-6 lg:-mt-[40rem] lg:grid-cols-12 lg:pb-32">
+    <section className="pointer-events-none relative z-20 mx-auto -mt-6 grid max-w-7xl gap-8 px-4 pb-8 sm:px-6 lg:-mt-[40rem] lg:grid-cols-12 lg:pb-32">
       <div className="pointer-events-none hidden lg:col-span-3 lg:block" />
-      <div className="min-w-0 lg:col-span-9">
+      <div className="pointer-events-auto min-w-0 lg:col-span-9">
         <nav className="flex items-center gap-1 overflow-x-auto border-b border-border py-2 no-scrollbar">
           <Button variant="ghost" className="relative rounded-none text-primary after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:rounded-full after:bg-primary"><LayoutGrid className="h-4 w-4" /> Visão geral</Button>
           <Button asChild variant="ghost" className="rounded-none text-muted-foreground"><Link to="/biblioteca"><Library className="h-4 w-4" /> Coleção</Link></Button>
