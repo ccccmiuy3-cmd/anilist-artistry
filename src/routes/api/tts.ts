@@ -35,7 +35,7 @@ export const Route = createFileRoute("/api/tts")({
                   role: "user",
                   parts: [
                     {
-                      text: `Narre em português do Brasil, com sotaque brasileiro natural, como um narrador profissional de audiolivro: ritmo fluido, pausas naturais na pontuação, emoção nos diálogos e entonação expressiva. Leia exatamente o texto a seguir:\n\n${text}`,
+                      text: `Você é um narrador profissional de audiolivros brasileiros. Narre em português do Brasil com voz natural e envolvente: respeite as pausas da pontuação (vírgulas curtas, pontos longos), dê emoção e entonação distinta aos diálogos, mantenha ritmo fluido de leitura em voz alta, pronuncie nomes estrangeiros de forma suave e nunca leia em tom robótico ou apressado. Leia exatamente o texto a seguir, sem adicionar nem omitir nada:\n\n${text}`,
                     },
                   ],
                 },
