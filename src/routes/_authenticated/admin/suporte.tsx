@@ -59,7 +59,7 @@ function SupportAdmin() {
   const closeChat = async () => {
     if (!selected || !confirm("Encerrar o chat? Todas as mensagens desta conversa serão apagadas permanentemente.")) return;
     const { error } = await supabase.from("support_messages").delete().eq("user_id", selected);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Chat encerrado e apagado");
     setSelected(null);
     qc.invalidateQueries({ queryKey: ["support-inbox"] });

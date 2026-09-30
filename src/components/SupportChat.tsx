@@ -60,7 +60,7 @@ export function SupportConversation({ userId, staff }: { userId: string; staff: 
     setSending(true);
     const { error } = await supabase.from("support_messages").insert({ user_id: userId, sender_id: user.id, from_staff: staff, body });
     setSending(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setText("");
     qc.invalidateQueries({ queryKey: ["support-thread", userId] });
     qc.invalidateQueries({ queryKey: ["support-inbox"] });
