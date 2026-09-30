@@ -735,6 +735,13 @@ export type Database = {
         Returns: undefined
       }
       claim_event_badge: { Args: { _event: string }; Returns: undefined }
+      comment_vote_counts: {
+        Args: { _comment_id: string }
+        Returns: {
+          dislikes: number
+          likes: number
+        }[]
+      }
       event_badge_progress: { Args: { _event: string }; Returns: number }
       has_role: {
         Args: {
