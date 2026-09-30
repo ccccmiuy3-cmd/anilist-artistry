@@ -99,6 +99,7 @@ export type Database = {
       }
       chapters: {
         Row: {
+          content: string | null
           created_at: string
           id: string
           number: number
@@ -108,6 +109,7 @@ export type Database = {
           title: string | null
         }
         Insert: {
+          content?: string | null
           created_at?: string
           id?: string
           number: number
@@ -117,6 +119,7 @@ export type Database = {
           title?: string | null
         }
         Update: {
+          content?: string | null
           created_at?: string
           id?: string
           number?: number
