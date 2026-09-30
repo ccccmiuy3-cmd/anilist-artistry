@@ -27,7 +27,7 @@ const ITEMS = [
   { to: "/catalogo", label: "Pesquisar", icon: Search, exact: false },
   { to: "/biblioteca", label: "Coleção", icon: BookOpen, exact: false },
   { to: "/listas", label: "Listas", icon: Layers, exact: false },
-  { to: "/ranking", label: "Ranking", icon: Trophy, exact: false },
+  { to: "/ranking", label: "Obras", icon: Trophy, exact: true },
 ] as const;
 
 export function MobileNav() {
@@ -107,6 +107,11 @@ export function MobileNav() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="end" className="w-48">
+              <DropdownMenuItem asChild>
+                <Link to="/ranking-leitores" className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4" /> Ranking de leitores
+                </Link>
+              </DropdownMenuItem>
               {user ? (
                 <>
                   <DropdownMenuItem asChild>
