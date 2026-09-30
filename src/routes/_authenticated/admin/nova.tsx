@@ -118,6 +118,32 @@ function NovaObra() {
         </Button>
         <h1 className="font-display text-2xl font-extrabold">Nova obra</h1>
 
+        <section className="mt-4 rounded-2xl border border-border bg-surface p-5">
+          <h2 className="flex items-center gap-2 font-display text-base font-extrabold">
+            <Download className="h-4 w-4 text-primary" /> Preencher com um link do AniList
+          </h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (link.trim()) fill.mutate();
+            }}
+            className="mt-3 flex flex-wrap gap-3"
+          >
+            <Input
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              placeholder="https://anilist.co/manga/204974/Psychopath-in-Murim"
+              className="h-10 min-w-56 flex-1 bg-background"
+            />
+            <Button type="submit" disabled={fill.isPending} className="h-10 px-5 font-semibold">
+              {fill.isPending ? "Buscando…" : "Preencher"}
+            </Button>
+          </form>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Cole o link da obra no AniList (mangá, manhwa ou anime) e os campos abaixo preenchem sozinhos. Também aceita link de busca do AniList.
+          </p>
+        </section>
+
         <form
           className="mt-6 space-y-4 rounded-2xl border border-border bg-surface p-5"
           onSubmit={(event) => {
