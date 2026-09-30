@@ -235,6 +235,66 @@ function Reader() {
           Próximo <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </div>
+
+      <section className="mx-auto max-w-3xl px-4 pb-16">
+        <h2 className="section-title">
+          <MessageCircle className="h-5 w-5" /> Comentários do capítulo
+        </h2>
+        {user ? (
+          <div className="mt-4 rounded-xl border border-dashed border-border bg-surface p-4">
+            <Textarea
+              value={body}
+              onChange={(event) => setBody(event.target.value)}
+              placeholder="Escreva seu comentário…"
+              maxLength={350}
+              className="min-h-24 border-none bg-transparent p-0 focus-visible:ring-0"
+            />
+            <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+              <span className="text-xs text-muted-foreground">{body.length}/350</span>
+              <Button
+                className="font-semibold"
+                disabled={body.trim().length === 0 || postComment.isPending}
+                onClick={() => postComment.mutate()}
+              >
+                <Send className="mr-2 h-4 w-4" /> Comentar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-muted-foreground">
+            <Link to="/auth" className="text-primary">
+              Entre
+            </Link>{" "}
+            para comentar.
+          </p>
+        )}
+
+        <ul className="mt-6 space-y-5">
+          {(comments.data ?? []).map((comment) => (
+            <li key={comment.id} className="flex gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-2 text-sm font-bold">
+                {comment.author?.avatar_url ? (
+                  <img src={comment.author.avatar_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  (comment.author?.username ?? "?").slice(0, 1).toUpperCase()
+                )}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-bold">{comment.author?.username ?? "leitor"}</span>
+                  <span className="text-xs text-muted-foreground">{timeAgo(comment.created_at)}</span>
+                </div>
+                <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{comment.body}</p>
+              </div>
+            </li>
+          ))}
+          {(comments.data ?? []).length === 0 && !comments.isLoading ? (
+            <li className="py-6 text-center text-sm text-muted-foreground">
+              Seja o primeiro a comentar este capítulo.
+            </li>
+          ) : null}
+        </ul>
+      </section>
     </div>
   );
 }
