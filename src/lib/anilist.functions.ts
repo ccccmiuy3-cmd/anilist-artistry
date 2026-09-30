@@ -66,8 +66,15 @@ export const searchAnilist = createServerFn({ method: "POST" })
         if (!ids.length) throw new Error("Esse anime não tem mangá de origem no AniList.");
         variables = { ids };
       } else {
-        const q = new URL(raw.startsWith("http") ? raw : `https://${raw}`).searchParams.get("search");
-        variables = q ? { search: q, sort: ["SEARCH_MATCH"] } : { sort: ["TRENDING_DESC"] };
+        // Link de busca do AniList (ex.: /search/manga?search=Naruto)
+        const params = new URL(raw.startsWith("http") ? raw : `https://${raw}`).searchParams;
+        const q = params.get("search") ?? params.get("query");
+        if (!q) {
+          throw new Error(
+            "Esse link é só a página de busca do AniList. Abra a obra lá e cole o link dela (ex.: https://anilist.co/manga/30656/Vagabond).",
+          );
+        }
+        variables = { search: q, sort: ["SEARCH_MATCH"] };
       }
     }
     const response = await gql(QUERY, variables);
