@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ArrowUpRight,
   Camera,
+  ChevronLeft,
   ChevronRight,
   Crown,
   FileText,
@@ -399,6 +400,7 @@ function EditProfile({
     is_private: profile.is_private,
   });
   const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
+  const [framePage, setFramePage] = useState(0);
   const { data: frames } = useQuery({
     queryKey: ["avatar-frames"],
     queryFn: async () => {
@@ -637,25 +639,60 @@ function EditProfile({
         {screen === "moldura" ? (
           <div className="space-y-4 px-6 py-5">
             <p className="text-xs font-bold tracking-widest text-muted-foreground">MOLDURA</p>
-            <div className="grid grid-cols-3 gap-3">
-              <button
-                onClick={() => save.mutate({ avatar_frame: "" })}
-                className={`flex aspect-square flex-col items-center justify-center gap-2 rounded-xl border p-2 text-xs ${!form.avatar_frame ? "border-primary bg-surface-2" : "border-border bg-surface"}`}
-              >
-                <span className="h-12 w-12 rounded-full border-2 border-dashed border-border" />
-                Sem moldura
-              </button>
-              {(frames ?? []).map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => save.mutate({ avatar_frame: f.image_url })}
-                  className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border p-2 text-xs ${form.avatar_frame === f.image_url ? "border-primary bg-surface-2" : "border-border bg-surface"}`}
-                >
-                  <img src={f.image_url} alt="" loading="lazy" className="h-16 w-16 object-contain" />
-                  <span className="line-clamp-1">{f.name}</span>
-                </button>
-              ))}
-            </div>
+            {(() => {
+              const all = [
+                { id: "none", name: "Sem moldura", image_url: "" },
+                ...(frames ?? []),
+              ];
+              const perPage = 9;
+              const pageCount = Math.max(1, Math.ceil(all.length / perPage));
+              const page = Math.min(framePage, pageCount - 1);
+              const items = all.slice(page * perPage, page * perPage + perPage);
+              return (
+                <>
+                  <div className="grid grid-cols-3 gap-3">
+                    {items.map((f) => (
+                      <button
+                        key={f.id}
+                        onClick={() => save.mutate({ avatar_frame: f.image_url })}
+                        className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 p-2 text-xs transition ${form.avatar_frame === f.image_url || (!form.avatar_frame && !f.image_url) ? "border-primary bg-surface-2" : "border-border bg-surface hover:border-muted-foreground/40"}`}
+                      >
+                        {f.image_url ? (
+                          <img src={f.image_url} alt="" loading="lazy" className="h-16 w-16 object-contain" />
+                        ) : (
+                          <span className="h-16 w-16 rounded-full border-2 border-dashed border-border" />
+                        )}
+                        <span className="line-clamp-1">{f.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-center gap-4">
+                    <button
+                      onClick={() => setFramePage(Math.max(0, page - 1))}
+                      disabled={page === 0}
+                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface disabled:opacity-40"
+                      aria-label="Página anterior"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-bold tabular-nums">
+                      {page + 1} / {pageCount}
+                    </span>
+                    <button
+                      onClick={() => setFramePage(Math.min(pageCount - 1, page + 1))}
+                      disabled={page >= pageCount - 1}
+                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface disabled:opacity-40"
+                      aria-label="Próxima página"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <Button variant="outline" className="w-full" onClick={() => setScreen("main")}>
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+                  </Button>
+                </>
+              );
+            })()}
           </div>
         ) : null}
 
