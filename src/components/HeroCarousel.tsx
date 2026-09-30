@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { BookOpen, ChevronLeft, ChevronRight, Play, Star } from "lucide-react";
 import type { SeriesRow } from "@/lib/queries";
+import { KINDS } from "@/lib/queries";
 import { coverUrl, formatChapter } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 
 const INTERVAL = 6000;
-const CATEGORY_LABELS = ["Comic", "Comic2", "Shoujo", "Shoujo2", "Manga", "Yaoi", "Yuri", "Hentai", "English", "Novel"];
+const CATEGORY_LABELS = [...KINDS];
 
 export function HeroCarousel({ items }: { items: SeriesRow[] }) {
   const allSlides = items.slice(0, 10);
