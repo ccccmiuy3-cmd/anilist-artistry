@@ -233,7 +233,7 @@ function SeriesPage() {
             alt=""
             className="h-full w-full object-cover opacity-40"
           />
-          <span className="cover-fade" />
+          <span className="cover-fade pointer-events-none" />
         </div>
 
         <main className="relative z-10 mx-auto -mt-28 max-w-6xl px-4 pb-10">
