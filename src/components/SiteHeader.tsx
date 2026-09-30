@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { BookMarked, LogOut, Search, Shield, User2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRoles, useSession } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +27,6 @@ export function SiteHeader() {
   const { isStaff } = useRoles(user?.id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [term, setTerm] = useState("");
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -40,16 +37,18 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-24 max-w-7xl items-center gap-4 px-4">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 gap-y-0 px-3 py-2 sm:h-24 sm:flex-nowrap sm:gap-4 sm:px-4 sm:py-0">
         <Link to="/" className="flex shrink-0 items-center" aria-label="Better Mangá — início">
           <img
             src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
             alt="Better Mangá"
-            className="h-16 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-20"
+            className="h-11 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-20"
           />
         </Link>
 
-        <nav className="no-scrollbar flex flex-1 items-center gap-1 overflow-x-auto text-sm font-semibold">
+        <div className="flex-1 sm:hidden" />
+
+        <nav className="no-scrollbar order-last flex w-full items-center justify-between gap-0.5 overflow-x-auto text-xs font-semibold sm:order-none sm:w-auto sm:min-w-0 sm:flex-1 sm:justify-start sm:gap-1 sm:text-sm">
           {NAV.map((item) => (
             <Link
               key={item.to}
@@ -57,28 +56,24 @@ export function SiteHeader() {
               activeOptions={{ exact: item.to === "/" }}
               activeProps={{ className: "text-primary" }}
               inactiveProps={{ className: "text-muted-foreground hover:text-foreground" }}
-              className="whitespace-nowrap rounded-md px-3 py-2 transition-colors"
+              className="whitespace-nowrap rounded-md px-2 py-2 transition-colors sm:px-3"
             >
               {item.label}
             </Link>
           ))}
         </nav>
 
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            navigate({ to: "/catalogo", search: { q: term, kind: "Todos" } });
-          }}
-          className="relative hidden md:block"
+        <Button
+          asChild
+          size="icon"
+          variant="outline"
+          className="h-9 w-9 shrink-0 rounded-full border-border bg-surface"
+          aria-label="Pesquisar"
         >
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={term}
-            onChange={(event) => setTerm(event.target.value)}
-            placeholder="Pesquisar"
-            className="w-52 rounded-full border-border bg-surface pl-9"
-          />
-        </form>
+          <Link to="/catalogo" search={{ q: "", kind: "Todos" }}>
+            <Search className="h-4 w-4" />
+          </Link>
+        </Button>
 
         {user ? (
           <DropdownMenu>
