@@ -18,6 +18,7 @@ import { Route as RankingLeitoresRouteImport } from './routes/ranking-leitores'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedBibliotecaRouteImport } from './routes/_authenticated/biblioteca'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
+import { Route as ApiElevenlabsTtsRouteImport } from './routes/api/elevenlabs-tts'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ListasIndexRouteImport } from './routes/listas/index'
 import { Route as ListasIdRouteImport } from './routes/listas/$id'
@@ -77,6 +78,11 @@ const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
   id: '/historico',
   path: '/historico',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiElevenlabsTtsRoute = ApiElevenlabsTtsRouteImport.update({
+  id: '/api/elevenlabs-tts',
+  path: '/api/elevenlabs-tts',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
   id: '/api/tts',
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/historico': typeof AuthenticatedHistoricoRoute
+  '/api/elevenlabs-tts': typeof ApiElevenlabsTtsRoute
   '/api/tts': typeof ApiTtsRoute
   '/listas/$id': typeof ListasIdRoute
   '/u/$username': typeof UUsernameRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/historico': typeof AuthenticatedHistoricoRoute
+  '/api/elevenlabs-tts': typeof ApiElevenlabsTtsRoute
   '/api/tts': typeof ApiTtsRoute
   '/listas/$id': typeof ListasIdRoute
   '/u/$username': typeof UUsernameRoute
@@ -219,6 +227,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
+  '/api/elevenlabs-tts': typeof ApiElevenlabsTtsRoute
   '/api/tts': typeof ApiTtsRoute
   '/listas/$id': typeof ListasIdRoute
   '/u/$username': typeof UUsernameRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/biblioteca'
     | '/historico'
+    | '/api/elevenlabs-tts'
     | '/api/tts'
     | '/listas/$id'
     | '/u/$username'
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/biblioteca'
     | '/historico'
+    | '/api/elevenlabs-tts'
     | '/api/tts'
     | '/listas/$id'
     | '/u/$username'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/biblioteca'
     | '/_authenticated/historico'
+    | '/api/elevenlabs-tts'
     | '/api/tts'
     | '/listas/$id'
     | '/u/$username'
@@ -322,6 +334,7 @@ export interface RootRouteChildren {
   RankingRoute: typeof RankingRoute
   RankingLeitoresRoute: typeof RankingLeitoresRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiElevenlabsTtsRoute: typeof ApiElevenlabsTtsRoute
   ApiTtsRoute: typeof ApiTtsRoute
   ListasIdRoute: typeof ListasIdRoute
   UUsernameRoute: typeof UUsernameRoute
@@ -394,6 +407,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/historico'
       preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/elevenlabs-tts': {
+      id: '/api/elevenlabs-tts'
+      path: '/api/elevenlabs-tts'
+      fullPath: '/api/elevenlabs-tts'
+      preLoaderRoute: typeof ApiElevenlabsTtsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/tts': {
       id: '/api/tts'
@@ -542,6 +562,7 @@ const rootRouteChildren: RootRouteChildren = {
   RankingRoute: RankingRoute,
   RankingLeitoresRoute: RankingLeitoresRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiElevenlabsTtsRoute: ApiElevenlabsTtsRoute,
   ApiTtsRoute: ApiTtsRoute,
   ListasIdRoute: ListasIdRoute,
   UUsernameRoute: UUsernameRoute,
