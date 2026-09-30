@@ -20,13 +20,15 @@ import {
 import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchComments, fetchSeriesBySlug } from "@/lib/queries";
 import { coverUrl, formatChapter, timeAgo } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 import { AddToListButton, StatusButton } from "@/components/SeriesActions";
 import { CommentLikeButton } from "@/components/CommentLikeButton";
+import { CommentComposer, type CommentDraft } from "@/components/CommentComposer";
+import { CommentContent } from "@/components/CommentContent";
+import { uploadCommentImage } from "@/lib/comments";
 
 export const Route = createFileRoute("/obra/$slug/")({
   head: () => ({
@@ -47,7 +49,6 @@ function SeriesPage() {
   const { slug } = Route.useParams();
   const { user } = useSession();
   const queryClient = useQueryClient();
-  const [body, setBody] = useState("");
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [expanded, setExpanded] = useState(false);
 
@@ -201,16 +202,21 @@ function SeriesPage() {
   });
 
   const postComment = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (draft: CommentDraft) => {
       if (!user || !series.data) throw new Error("Entre para comentar.");
-      const { error } = await supabase
-        .from("comments")
-        .insert({ series_id: series.data.id, user_id: user.id, body: body.trim() });
+      const imageUrl = draft.image ? await uploadCommentImage(user.id, draft.image) : null;
+      const { error } = await supabase.from("comments").insert({
+        series_id: series.data.id,
+        user_id: user.id,
+        body: draft.body,
+        is_spoiler: draft.isSpoiler,
+        image_url: imageUrl,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
-      setBody("");
       queryClient.invalidateQueries({ queryKey: ["comments", series.data?.id] });
+      toast.success("Comentário publicado!");
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
   });
@@ -664,24 +670,11 @@ function SeriesPage() {
               <MessageCircle className="h-5 w-5" /> Comentários
             </h2>
             {user ? (
-              <div className="mt-4 rounded-xl border border-dashed border-border bg-surface p-4">
-                <Textarea
-                  value={body}
-                  onChange={(event) => setBody(event.target.value)}
-                  placeholder="Escreva seu comentário…"
-                  maxLength={350}
-                  className="min-h-24 border-none bg-transparent p-0 focus-visible:ring-0"
+              <div className="mt-4">
+                <CommentComposer
+                  pending={postComment.isPending}
+                  onSubmit={(draft) => postComment.mutate(draft)}
                 />
-                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-                  <span className="text-xs text-muted-foreground">{body.length}/350</span>
-                  <Button
-                    className="font-semibold"
-                    disabled={body.trim().length === 0 || postComment.isPending}
-                    onClick={() => postComment.mutate()}
-                  >
-                    <Send className="mr-2 h-4 w-4" /> Comentar
-                  </Button>
-                </div>
               </div>
             ) : (
               <p className="mt-4 text-sm text-muted-foreground">
@@ -715,9 +708,7 @@ function SeriesPage() {
                         {timeAgo(comment.created_at)}
                       </span>
                     </div>
-                    <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
-                      {comment.body}
-                    </p>
+                    <CommentContent body={comment.body} isSpoiler={comment.is_spoiler} imageUrl={comment.image_url} />
                     <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
                       <CommentLikeButton commentId={comment.id} userId={user?.id} />
                     </div>
