@@ -13,14 +13,18 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
     () => Array.from(new Set(allSlides.map((item) => item.kind).filter(Boolean))),
     [allSlides],
   );
-  const [kind, setKind] = useState("Todos");
+  const [kind, setKind] = useState("");
   const slides = useMemo(
-    () => (kind === "Todos" ? allSlides : allSlides.filter((item) => item.kind === kind)),
+    () => (kind ? allSlides.filter((item) => item.kind === kind) : allSlides),
     [allSlides, kind],
   );
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (kinds.length > 0 && !kinds.includes(kind)) setKind(kinds[0] ?? "");
+  }, [kind, kinds]);
 
   useEffect(() => setIndex(0), [kind]);
 
@@ -53,9 +57,10 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="mx-auto mb-4 flex w-full max-w-7xl justify-start px-4 md:mb-5 md:justify-center md:px-6">
-        <div className="no-scrollbar inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full border border-foreground/10 bg-card/70 px-1.5 py-1 backdrop-blur-sm">
-          {["Todos", ...kinds].map((label) => (
+      {kinds.length > 0 ? (
+        <div className="mx-auto mb-5 hidden w-full max-w-[1400px] justify-center px-6 md:flex">
+          <div className="no-scrollbar inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full border border-foreground/10 bg-card/70 px-1.5 py-1 backdrop-blur-sm">
+          {kinds.map((label) => (
             <Button
               key={label}
               type="button"
@@ -71,8 +76,9 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
               {label}
             </Button>
           ))}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="mx-auto max-w-7xl px-4 md:px-6">
         <div className="relative overflow-hidden md:min-h-[25rem]">

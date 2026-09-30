@@ -6,3 +6,4 @@
 - [x] Corrigir estouro e organização dos selos no perfil
 - [x] Reorganizar perfil do proprietário no layout escuro elegante escolhido
 - [x] Aplicar Sora e Manrope e validar desktop/celular
+- [x] Copiar a barra de categorias enviada para o topo do slide
