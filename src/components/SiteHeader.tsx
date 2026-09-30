@@ -56,7 +56,7 @@ export function SiteHeader() {
               <Link
                 key={item.to}
                 to={item.to}
-                activeOptions={{ exact: item.to === "/" }}
+                activeOptions={{ exact: false }}
                 className="group relative flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 transition-all"
                 activeProps={{ className: "text-foreground" }}
                 inactiveProps={{ className: "text-muted-foreground hover:bg-foreground/5 hover:text-foreground" }}
