@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchComments, fetchSeriesBySlug } from "@/lib/queries";
 import { coverUrl, formatChapter, timeAgo } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
+import { AddToListButton, StatusButton } from "@/components/SeriesActions";
 
 export const Route = createFileRoute("/obra/$slug/")({
   head: () => ({
@@ -341,15 +342,8 @@ function SeriesPage() {
                       />
                       {favorite.data ? "Favoritado" : "Favoritar"}
                     </Button>
-                    <Button variant="outline" className="font-semibold" asChild>
-                      <Link to="/biblioteca">
-                        <ListPlus className="mr-2 h-4 w-4" /> Adicionar a listas
-                      </Link>
-                    </Button>
-                    <Button variant="outline" className="font-semibold">
-                      <BookOpen className="mr-2 h-4 w-4" /> Lendo
-                      <ChevronDown className="ml-1 h-4 w-4" />
-                    </Button>
+                    <AddToListButton userId={user.id} seriesId={obra.id} />
+                    <StatusButton userId={user.id} seriesId={obra.id} />
                   </>
                 ) : (
                   <Button asChild variant="outline" className="font-semibold">
