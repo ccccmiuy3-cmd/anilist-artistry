@@ -116,6 +116,54 @@ export async function fetchHistory(userId: string) {
   }>;
 }
 
+export type CommentAuthorInfo = {
+  username: string;
+  avatar_url: string | null;
+  level: number;
+  avatar_frame: string | null;
+  subscription_tier: string;
+  is_admin: boolean;
+  badges: Array<{ id: string; name: string; image_url: string }>;
+};
+
+export async function fetchCommentAuthors(ids: string[]) {
+  const authors = new Map<string, CommentAuthorInfo>();
+  if (ids.length === 0) return authors;
+  const [profilesRes, rolesRes, badgesRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, username, avatar_url, level, avatar_frame, subscription_tier")
+      .in("id", ids),
+    supabase.from("user_roles").select("user_id, role").in("user_id", ids),
+    supabase
+      .from("profile_badges")
+      .select("id, user_id, name, image_url")
+      .in("user_id", ids)
+      .order("position", { ascending: true }),
+  ]);
+  const adminIds = new Set(
+    (rolesRes.data ?? []).filter((r) => r.role === "admin").map((r) => r.user_id),
+  );
+  const badgesByUser = new Map<string, Array<{ id: string; name: string; image_url: string }>>();
+  for (const badge of badgesRes.data ?? []) {
+    const list = badgesByUser.get(badge.user_id) ?? [];
+    list.push({ id: badge.id, name: badge.name, image_url: badge.image_url });
+    badgesByUser.set(badge.user_id, list);
+  }
+  for (const profile of profilesRes.data ?? []) {
+    authors.set(profile.id, {
+      username: profile.username,
+      avatar_url: profile.avatar_url,
+      level: profile.level,
+      avatar_frame: profile.avatar_frame,
+      subscription_tier: profile.subscription_tier,
+      is_admin: adminIds.has(profile.id),
+      badges: badgesByUser.get(profile.id) ?? [],
+    });
+  }
+  return authors;
+}
+
 export async function fetchComments(seriesId: string) {
   const { data, error } = await supabase
     .from("comments")
@@ -126,30 +174,6 @@ export async function fetchComments(seriesId: string) {
   if (error) throw error;
   const rows = data ?? [];
   const ids = [...new Set(rows.map((row) => row.user_id))];
-  const authors = new Map<
-    string,
-    {
-      username: string;
-      avatar_url: string | null;
-      level: number;
-      avatar_frame: string | null;
-      subscription_tier: string;
-    }
-  >();
-  if (ids.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, username, avatar_url, level, avatar_frame, subscription_tier")
-      .in("id", ids);
-    for (const profile of profiles ?? []) {
-      authors.set(profile.id, {
-        username: profile.username,
-        avatar_url: profile.avatar_url,
-        level: profile.level,
-        avatar_frame: profile.avatar_frame,
-        subscription_tier: profile.subscription_tier,
-      });
-    }
-  }
+  const authors = await fetchCommentAuthors(ids);
   return rows.map((row) => ({ ...row, author: authors.get(row.user_id) ?? null }));
 }

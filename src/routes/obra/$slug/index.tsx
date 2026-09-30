@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import {
   ArrowDownWideNarrow,
   BookOpen,
@@ -75,7 +75,7 @@ function SeriesPage() {
   const [expanded, setExpanded] = useState(false);
   const [replyTo, setReplyTo] = useState<string | null>(null);
 
-  const series = useQuery({
+  const series = useSuspenseQuery({
     queryKey: ["series", slug],
     queryFn: () => fetchSeriesBySlug(slug),
   });
@@ -300,15 +300,6 @@ function SeriesPage() {
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
   });
-
-  if (series.isLoading) {
-    return (
-      <div className="min-h-screen">
-        <SiteHeader />
-        <p className="mx-auto max-w-5xl px-4 py-16 text-muted-foreground">Carregando…</p>
-      </div>
-    );
-  }
 
   const obra = series.data;
   if (!obra) {
