@@ -1,5 +1,13 @@
 import type { AnyRoute, AnyRouter, ParsedLocation } from "@tanstack/react-router";
 
+declare module "@tanstack/react-router" {
+  interface StaticDataRouteOption {
+    sitemap: boolean | "exclude-subtree";
+  }
+}
+
+export const sitemapRouteInventoryVersion = 1;
+
 export function isSitemapRouteIncluded(route: AnyRoute | undefined): boolean {
   if (!route || route.isRoot || route.options.staticData?.sitemap !== true) return false;
   for (let ancestor = route.parentRoute; ancestor; ancestor = ancestor.parentRoute) {
