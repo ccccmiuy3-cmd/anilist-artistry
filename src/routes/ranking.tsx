@@ -183,15 +183,17 @@ function Ranking() {
 
         {rows.length ? (
           <>
-            <div className="mx-auto mt-12 max-w-2xl">
-              <div className="flex items-end justify-center gap-3 sm:gap-6">
-                {podium(second, 2)}
-                {podium(first, 1)}
-                {podium(third, 3)}
+            <section className="mt-12" aria-label="Pódio top 3">
+              <div className="mx-auto w-full max-w-lg md:max-w-2xl">
+                <div className="flex items-end justify-center gap-1.5 px-1 sm:gap-3 md:gap-5">
+                  {podium(second, 2)}
+                  {podium(first, 1)}
+                  {podium(third, 3)}
+                </div>
+                <div className="mx-1 mt-0 h-2 rounded-b-lg bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 shadow-inner md:mx-2" aria-hidden="true" />
+                <p className="mt-2 text-center text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-600">Pódio</p>
               </div>
-              <div className="h-2 rounded-full bg-surface-2" />
-              <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Pódio</p>
-            </div>
+            </section>
 
             <ol className="mt-12 space-y-2.5">
               {rest.map((r, i) => (
