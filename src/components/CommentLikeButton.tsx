@@ -8,7 +8,7 @@ export function CommentLikeButton({
   userId,
 }: {
   commentId: string;
-  userId?: string;
+  userId?: string | undefined;
 }) {
   const queryClient = useQueryClient();
 
