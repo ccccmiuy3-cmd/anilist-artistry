@@ -214,7 +214,13 @@ function Home() {
             <HScroll>
               {recent.data!.map((item) => (
                 <div key={item.id} className="w-[140px] shrink-0">
-                  <SeriesCard slug={item.slug} title={item.title} cover={item.cover_url} />
+                  <SeriesCard
+                    slug={item.slug}
+                    title={item.title}
+                    cover={item.cover_url}
+                    favorite={favoriteIds.has(item.id)}
+                    seriesId={item.id}
+                  />
                 </div>
               ))}
             </HScroll>
