@@ -76,10 +76,10 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
 
       <div className="mx-auto max-w-7xl px-4 md:px-6">
         <div className="relative overflow-hidden md:min-h-[25rem]">
-          <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(55%_65%_at_24%_50%,color-mix(in_oklab,var(--primary)_24%,transparent),transparent_72%)] md:block" />
+          <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(70%_80%_at_30%_50%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_75%)] md:block" />
 
-          <div key={active.id} className="relative z-10 flex flex-col items-center gap-4 py-2 md:min-h-[25rem] md:flex-row md:gap-10 md:py-8 lg:gap-12">
-            <div className="relative w-[11.25rem] shrink-0 overflow-hidden rounded-xl shadow-[var(--shadow-hero)] ring-1 ring-primary/30 md:w-[13.75rem] lg:w-[16.25rem]">
+          <div key={active.id} className="relative z-10 flex flex-col items-center gap-4 py-2 md:min-h-[25rem] md:flex-row md:gap-8 md:py-8 lg:gap-10">
+            <div className="relative w-[11.25rem] shrink-0 overflow-hidden rounded-xl shadow-[var(--shadow-hero)] ring-1 ring-primary/30 md:w-[14.5rem] lg:w-[17rem]">
               <img
                 src={coverUrl(active.cover_url)}
                 alt={`Capa de ${active.title}`}
