@@ -5,7 +5,7 @@ import { BookOpen, ChevronLeft, ChevronRight, ChevronsDown, Home, Infinity, Maxi
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchCommentAuthors, fetchSeriesBySlug } from "@/lib/queries";
+import { fetchCommentAuthors, fetchCommentParents, fetchSeriesBySlug } from "@/lib/queries";
 import { formatChapter, timeAgo } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 import { CommentItem } from "@/components/CommentItem";
@@ -334,7 +334,7 @@ function Reader() {
             <CommentComposer
               pending={postComment.isPending}
               onSubmit={(draft) => postComment.mutate(draft)}
-              replyTo={replyTo}
+              replyTo={replyTo?.username ?? null}
               onCancelReply={() => setReplyTo(null)}
             />
           </div>
@@ -353,7 +353,7 @@ function Reader() {
               key={comment.id}
               comment={comment}
               userId={user?.id}
-              onReply={user ? (name) => setReplyTo(name) : undefined}
+              onReply={user ? (c) => setReplyTo({ id: c.id, username: c.author?.username ?? "leitor" }) : undefined}
             />
           ))}
           {(comments.data ?? []).length === 0 && !comments.isLoading ? (
