@@ -8,3 +8,4 @@
 - [x] Aplicar Sora e Manrope e validar desktop/celular
 - [x] Copiar a barra de categorias enviada para o topo do slide
 - [x] Atualizar as categorias de cadastro, edição e importação no painel
+- [x] Criar modo de leitura dedicado para novels com controles de texto responsivos
