@@ -386,10 +386,11 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         value={engine}
         onChange={(e) => {
           stop();
-          setEngine(e.target.value as "ai" | "device");
+          setEngine(e.target.value as "ai" | "elevenlabs" | "device");
         }}
         aria-label="Tipo de voz"
       >
+        <option value="elevenlabs">Voz premium (ElevenLabs)</option>
         <option value="ai">Voz realista (IA)</option>
         <option value="device">Voz do aparelho</option>
       </select>
@@ -399,7 +400,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         onChange={(e) => {
           const r = Number(e.target.value);
           setRate(r);
-          if (engine === "ai") {
+          if (engine !== "device") {
             if (ai.current.source) ai.current.source.playbackRate.value = r;
           } else restartIfPlaying();
         }}
