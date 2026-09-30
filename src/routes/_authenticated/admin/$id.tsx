@@ -52,6 +52,22 @@ async function uploadFiles(seriesId: string, chapterNumber: string, files: File[
 
 function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) => void }) {
   const [over, setOver] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const handle = async (list: File[]) => {
+    if (!list.length) return;
+    setBusy(true);
+    try {
+      const { extractPages } = await import("@/lib/extract-pages");
+      const imgs = await extractPages(list);
+      if (!imgs.length) throw new Error("Nenhuma imagem encontrada no arquivo.");
+      setFiles(imgs);
+      toast.success(`${imgs.length} imagem(ns) extraída(s)`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao extrair arquivo");
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <label
       onDragOver={(e) => {
@@ -62,16 +78,28 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
       onDrop={(e) => {
         e.preventDefault();
         setOver(false);
-        setFiles(Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/")));
+        void handle(Array.from(e.dataTransfer.files));
       }}
       className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
         over ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/60"
       }`}
     >
       <Upload className="h-7 w-7 text-primary" />
-      <p className="text-sm font-semibold">{files.length ? `${files.length} imagem(ns) selecionada(s)` : "Arraste as páginas ou clique para escolher"}</p>
-      <p className="text-xs text-muted-foreground">Ordenadas pelo nome do arquivo (01.jpg, 02.jpg…)</p>
-      <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => setFiles(Array.from(e.target.files ?? []))} />
+      <p className="text-sm font-semibold">
+        {busy ? "Extraindo imagens…" : files.length ? `${files.length} imagem(ns) selecionada(s)` : "Arraste imagens, .zip ou .pdf ou clique para escolher"}
+      </p>
+      <p className="text-xs text-muted-foreground">ZIP/PDF: as imagens são extraídas e só elas são salvas. Ordem pelo nome (01.jpg, 02.jpg…)</p>
+      <input
+        type="file"
+        accept="image/*,.zip,application/zip,application/x-zip-compressed,.pdf,application/pdf"
+        multiple
+        className="hidden"
+        disabled={busy}
+        onChange={(e) => {
+          void handle(Array.from(e.target.files ?? []));
+          e.target.value = "";
+        }}
+      />
     </label>
   );
 }
