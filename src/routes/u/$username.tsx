@@ -8,6 +8,7 @@ import {
   BookmarkPlus,
   BookOpen,
   Camera,
+  CalendarDays,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -241,70 +242,94 @@ function Perfil() {
     : collectionTab === "continuando"
       ? continuedSeries
       : (stats.data?.readingStatuses ?? []).filter((row) => row.status === collectionTab).map((row) => row.series);
+  const readCount = (stats.data?.readingStatuses ?? []).filter((row) => row.status === "lido").length;
+  const joinedAt = new Date(p.created_at).toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
 
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <main className="mx-auto max-w-7xl px-0 pb-10 sm:px-4">
-        <div className="relative h-52 overflow-hidden bg-surface sm:h-72 sm:rounded-b-lg">
+      <main className="pb-10">
+        <div className="relative h-48 overflow-hidden bg-surface sm:h-80">
           {p.banner_url ? (
             <img src={p.banner_url} alt="" className="h-full w-full object-cover" />
           ) : (
             <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,var(--primary),transparent_70%)] opacity-30" />
           )}
-          <span className="absolute inset-0 bg-gradient-to-t from-background via-background/25 to-transparent" />
+          <span className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+          <Button asChild variant="secondary" size="icon" className="absolute left-4 top-4 rounded-full bg-background/40 backdrop-blur-md sm:left-6 sm:top-6">
+            <Link to="/" aria-label="Voltar"><ArrowLeft className="h-5 w-5" /></Link>
+          </Button>
         </div>
 
-        <section className="relative -mt-16 border-b border-border bg-background/90 px-4 pb-6 backdrop-blur-xl sm:mx-4 sm:-mt-20 sm:rounded-lg sm:border">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
-            <FramedAvatar src={p.avatar_url} frame={p.avatar_frame} size={144} className="self-start" />
-            <div className="min-w-0 flex-1 pb-1">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <h1 className="font-display text-2xl font-extrabold sm:text-3xl" style={{ color: p.accent_color ?? "var(--primary)" }}>
-                  {p.display_name || p.username}
-                </h1>
-                <UserBadges tier={p.subscription_tier} badges={stats.data?.badges} isAdmin={stats.data?.isAdmin} size={36} />
-              </div>
-              <p className="mt-0.5 text-sm font-medium text-muted-foreground">@{p.username}</p>
-              {p.bio ? <p className="mt-2 max-w-2xl text-sm text-foreground/90">{p.bio}</p> : null}
-              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-                <span><b className="text-foreground">{stats.data?.followers ?? 0}</b> seguidores</span>
-                <span><b className="text-foreground">{stats.data?.following ?? 0}</b> seguindo</span>
-                <Link to="/ranking-leitores" className="inline-flex items-center gap-1 hover:text-primary"><Trophy className="h-3.5 w-3.5" /> #{stats.data?.totalRank || "—"} global</Link>
-                <Link to="/ranking-leitores" className="inline-flex items-center gap-1 hover:text-primary"><Sparkles className="h-3.5 w-3.5" /> #{stats.data?.weeklyRank || "—"} semanal</Link>
-              </div>
+        <section className="relative z-10 mx-auto -mt-20 max-w-7xl px-4 sm:px-6">
+          <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-end sm:gap-10 lg:gap-14">
+            <div className="relative shrink-0 rounded-full bg-background p-1.5">
+              <FramedAvatar src={p.avatar_url} frame={p.avatar_frame} size={152} />
+              <span className="absolute -bottom-2 left-1/2 z-30 inline-flex -translate-x-1/2 items-center gap-1 rounded-full border border-primary/40 bg-background px-2.5 py-1 text-[11px] font-black text-primary shadow-[var(--shadow-card)]">
+                <span className="h-1 w-1 rounded-full bg-primary" /> {p.level}
+              </span>
             </div>
-            <div className="flex shrink-0 gap-2 sm:pb-1">
-              {!isMe && user ? (
-                <Button variant={stats.data?.iFollow ? "outline" : "default"} onClick={() => follow.mutate()}>
-                  <UserPlus className="mr-2 h-4 w-4" /> {stats.data?.iFollow ? "Seguindo" : "Seguir"}
-                </Button>
-              ) : null}
-              {isMe ? <Button variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-2 h-4 w-4" /> Editar perfil</Button> : null}
+
+            <div className="min-w-0 w-full flex-1 pb-1 text-center sm:text-left">
+              <div className="flex flex-col items-center justify-between gap-4 sm:flex-row sm:items-end">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-end sm:gap-4">
+                    <h1 className="max-w-full break-words font-display text-2xl font-extrabold sm:text-3xl" style={{ color: p.accent_color ?? "var(--foreground)" }}>
+                      {p.display_name || p.username}
+                    </h1>
+                    <UserBadges tier={p.subscription_tier} badges={stats.data?.badges} isAdmin={stats.data?.isAdmin} size={40} />
+                  </div>
+                  <p className="mt-1 text-base text-muted-foreground sm:text-lg">@{p.username}</p>
+                  {p.bio ? <p className="mx-auto mt-2 max-w-2xl text-sm text-foreground/80 sm:mx-0">{p.bio}</p> : null}
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-muted-foreground sm:justify-start sm:gap-x-8">
+                    <span><b className="text-foreground">{stats.data?.followers ?? 0}</b> seguidores</span>
+                    <span className="hidden text-border sm:inline">•</span>
+                    <span><b className="text-foreground">{stats.data?.following ?? 0}</b> seguindo</span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+                    <Link to="/ranking-leitores" className="rounded-md border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-foreground/75 transition hover:border-primary/40 hover:text-primary">Global #{stats.data?.totalRank || "—"}</Link>
+                    <Link to="/ranking-leitores" className="rounded-md border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-foreground/75 transition hover:border-primary/40 hover:text-primary">Semanal #{stats.data?.weeklyRank || "—"}</Link>
+                  </div>
+                  <div className="mx-auto mt-3 w-full max-w-[220px] sm:mx-0">
+                    <div className="mb-1 flex justify-between text-[10px] font-bold uppercase text-muted-foreground">
+                      <span>Nível {p.level}</span><span>{p.xp.toLocaleString("pt-BR")} XP</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full border border-border bg-surface-2">
+                      <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, (xpInLevel / xpGoal) * 100)}%` }} />
+                    </div>
+                    <div className="mt-1 flex justify-between text-[10px] font-medium text-muted-foreground"><span>XP</span><span>{Math.round((xpInLevel / xpGoal) * 100)}%</span></div>
+                  </div>
+                </div>
+
+                <div className="w-full shrink-0 sm:w-auto sm:pb-1">
+                  {!isMe && user ? (
+                    <Button className="min-w-36 rounded-full" variant={stats.data?.iFollow ? "outline" : "secondary"} onClick={() => follow.mutate()}>
+                      <UserPlus className="h-4 w-4" /> {stats.data?.iFollow ? "Seguindo" : "Seguir"}
+                    </Button>
+                  ) : null}
+                  {isMe ? <Button className="min-w-36 rounded-full" variant="secondary" onClick={() => setEditing(true)}><Pencil className="h-4 w-4" /> Editar perfil</Button> : null}
+                </div>
+              </div>
+
+              <div className="mt-5 hidden items-center gap-10 border-t border-border pt-4 sm:flex lg:gap-14">
+                <div><b className="block text-xl">{stats.data?.publicLists.length ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Na lista</span></div>
+                <div><b className="block text-xl">{readCount}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Lidos</span></div>
+                <div><b className="block text-xl">{stats.data?.favorites.length ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Favoritos</span></div>
+                <div><b className="block text-xl">{stats.data?.comments ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Comentários</span></div>
+                <span className="ml-auto inline-flex items-center gap-2 text-xs text-muted-foreground"><CalendarDays className="h-3.5 w-3.5" /> Entrou em {joinedAt}</span>
+              </div>
             </div>
           </div>
 
-          <div className="mt-6 grid gap-5 border-t border-border pt-5 lg:grid-cols-[minmax(260px,1fr)_2fr]">
-            <div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="inline-flex items-center gap-1.5 font-bold"><ShieldCheck className="h-4 w-4 text-primary" /> Nível {p.level}</span>
-                <span className="text-xs tabular-nums text-muted-foreground">{xpInLevel.toLocaleString("pt-BR")}/{xpGoal.toLocaleString("pt-BR")} XP</span>
-              </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, (xpInLevel / xpGoal) * 100)}%` }} />
-              </div>
-            </div>
-            <div className="grid grid-cols-4 divide-x divide-border text-center">
-              <div><b className="block text-lg">{stats.data?.publicLists.length ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Listas</span></div>
-              <div><b className="block text-lg">{stats.data?.favorites.length ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Favoritos</span></div>
-              <div><b className="block text-lg">{stats.data?.comments ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Comentários</span></div>
-              <div><b className="block text-lg">{stats.data?.badges.length ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Selos</span></div>
-            </div>
+          <div className="mt-6 grid grid-cols-2 gap-2 sm:hidden">
+            <div className="rounded-lg border border-border bg-surface/50 p-3 text-center"><b className="block text-xl">{stats.data?.publicLists.length ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Lista</span></div>
+            <div className="rounded-lg border border-border bg-surface/50 p-3 text-center"><b className="block text-xl">{readCount}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Lidos</span></div>
+            <div className="rounded-lg border border-border bg-surface/50 p-3 text-center"><b className="block text-xl">{stats.data?.favorites.length ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Favs</span></div>
+            <div className="rounded-lg border border-border bg-surface/50 p-3 text-center"><b className="block text-xl">{stats.data?.comments ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Msg</span></div>
           </div>
-          <p className="mt-4 text-xs text-muted-foreground">Membro desde {new Date(p.created_at).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</p>
         </section>
 
-        <div className="grid gap-8 px-4 lg:grid-cols-[280px_1fr] sm:px-4">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 lg:grid-cols-[280px_1fr] sm:px-6">
           <aside className="pt-6">
             {isMe ? (
               <nav className="overflow-hidden rounded-lg border border-border bg-surface">
