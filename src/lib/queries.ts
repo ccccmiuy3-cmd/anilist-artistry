@@ -120,7 +120,13 @@ export async function fetchComments(seriesId: string) {
   const ids = [...new Set(rows.map((row) => row.user_id))];
   const authors = new Map<
     string,
-    { username: string; avatar_url: string | null; level: number; avatar_frame: string | null }
+    {
+      username: string;
+      avatar_url: string | null;
+      level: number;
+      avatar_frame: string | null;
+      subscription_tier: string;
+    }
   >();
   if (ids.length > 0) {
     const { data: profiles } = await supabase
