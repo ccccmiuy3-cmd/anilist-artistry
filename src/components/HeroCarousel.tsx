@@ -6,13 +6,11 @@ import { coverUrl, formatChapter } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 
 const INTERVAL = 6000;
+const CATEGORY_LABELS = ["Comic", "Comic2", "Shoujo", "Shoujo2", "Manga", "Yaoi", "Yuri", "Hentai", "English", "Novel"];
 
 export function HeroCarousel({ items }: { items: SeriesRow[] }) {
   const allSlides = items.slice(0, 10);
-  const kinds = useMemo(
-    () => Array.from(new Set(allSlides.map((item) => item.kind).filter(Boolean))),
-    [allSlides],
-  );
+  const kinds = useMemo(() => new Set(allSlides.map((item) => item.kind).filter(Boolean)), [allSlides]);
   const [kind, setKind] = useState("");
   const slides = useMemo(
     () => (kind ? allSlides.filter((item) => item.kind === kind) : allSlides),
@@ -23,7 +21,9 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (kinds.length > 0 && !kinds.includes(kind)) setKind(kinds[0] ?? "");
+    if (kinds.size > 0 && !kinds.has(kind)) {
+      setKind(CATEGORY_LABELS.find((label) => kinds.has(label)) ?? "");
+    }
   }, [kind, kinds]);
 
   useEffect(() => setIndex(0), [kind]);
@@ -57,19 +57,20 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {kinds.length > 0 ? (
+      {kinds.size > 0 ? (
         <div className="mx-auto mb-5 hidden w-full max-w-[1400px] justify-center px-6 md:flex">
-          <div className="no-scrollbar inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full border border-foreground/10 bg-card/70 px-1.5 py-1 backdrop-blur-sm">
-          {kinds.map((label) => (
+          <div className="no-scrollbar inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full border border-foreground/10 bg-card/70 px-1 py-1 backdrop-blur-sm">
+          {CATEGORY_LABELS.map((label) => (
             <Button
               key={label}
               type="button"
               size="sm"
               variant="ghost"
+              disabled={!kinds.has(label)}
               onClick={() => setKind(label)}
-              className={`h-7 shrink-0 rounded-full px-3.5 text-[11px] font-semibold whitespace-nowrap transition-all duration-200 ease-out active:scale-[0.97] ${
+              className={`h-8 shrink-0 rounded-full px-4 text-[11px] font-semibold whitespace-nowrap transition-all duration-200 ease-out active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45 ${
                 kind === label
-                  ? "bg-primary text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary"
+                  ? "ring-1 ring-foreground/80 bg-primary text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary"
                   : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
               }`}
             >
