@@ -178,6 +178,37 @@ function SeriesPage() {
     onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
   });
 
+  const toggleRead = useMutation({
+    mutationFn: async (chapter: { id: string; isRead: boolean }) => {
+      if (!user || !series.data) throw new Error("Entre para marcar como lido.");
+      if (chapter.isRead) {
+        const { error } = await supabase
+          .from("reading_history")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("series_id", series.data.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("reading_history").upsert(
+          {
+            user_id: user.id,
+            series_id: series.data.id,
+            chapter_id: chapter.id,
+            progress: 100,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,series_id" },
+        );
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["history", slug, user?.id] });
+      toast.success("Atualizado!");
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
+  });
+
   if (series.isLoading) {
     return (
       <div className="min-h-screen">
@@ -435,11 +466,11 @@ function SeriesPage() {
               {chapters.map((chapter) => {
                 const isRead = readNumbers.has(chapter.number);
                 return (
-                  <li key={chapter.id}>
+                  <li key={chapter.id} className="flex items-center">
                     <Link
                       to="/obra/$slug/$chapter"
                       params={{ slug: obra.slug, chapter: formatChapter(chapter.number) }}
-                      className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2/60"
+                      className="flex min-w-0 flex-1 items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2/60"
                     >
                       <span
                         className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg text-sm font-bold ${
