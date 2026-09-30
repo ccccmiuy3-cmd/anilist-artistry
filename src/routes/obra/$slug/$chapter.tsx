@@ -52,6 +52,7 @@ function Reader() {
   }, [current]);
 
   const queryClient = useQueryClient();
+  const [replyTo, setReplyTo] = useState<string | null>(null);
 
   const comments = useQuery({
     queryKey: ["chapter-comments", current?.id],
