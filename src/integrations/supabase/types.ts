@@ -38,6 +38,33 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_events: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string
+          name?: string
+        }
+        Relationships: []
+      }
       chapter_reads: {
         Row: {
           chapter_id: string
@@ -294,6 +321,7 @@ export type Database = {
       profile_badges: {
         Row: {
           created_at: string
+          event_id: string | null
           id: string
           image_url: string
           name: string
@@ -302,6 +330,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          event_id?: string | null
           id?: string
           image_url: string
           name: string
@@ -310,6 +339,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          event_id?: string | null
           id?: string
           image_url?: string
           name?: string
@@ -317,6 +347,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profile_badges_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "badge_events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profile_badges_user_id_fkey"
             columns: ["user_id"]
@@ -664,6 +701,7 @@ export type Database = {
         Args: { _amount: number; _reason: string; _ref: string; _user: string }
         Returns: undefined
       }
+      claim_event_badge: { Args: { _event: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

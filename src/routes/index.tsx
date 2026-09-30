@@ -14,6 +14,7 @@ import { HScroll, SectionRow } from "@/components/SectionRow";
 import { Button } from "@/components/ui/button";
 import { fetchFavorites, fetchHistory, fetchSeries, KINDS } from "@/lib/queries";
 import { useSession } from "@/hooks/useAuth";
+import { EventBadges } from "@/components/EventBadges";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
@@ -147,6 +148,8 @@ function Home() {
         </SectionRow>
 
         {(releases.data?.length ?? 0) > 0 ? <Releases rows={releases.data!} /> : null}
+
+        <EventBadges />
 
         {user && (favorites.data?.length ?? 0) > 0 ? (
           <FavoritesUpdated rows={favorites.data!} />

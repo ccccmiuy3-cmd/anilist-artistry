@@ -1,0 +1,71 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Award, Check } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/hooks/useAuth";
+
+/** Selos de evento abertos que o usuário pode resgatar. */
+export function EventBadges() {
+  const { user } = useSession();
+  const qc = useQueryClient();
+  const events = useQuery({
+    queryKey: ["badge-events-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("badge_events").select("*").eq("active", true).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+  const mine = useQuery({
+    queryKey: ["my-event-badges", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profile_badges").select("event_id").eq("user_id", user!.id);
+      if (error) throw error;
+      return new Set((data ?? []).map((r) => r.event_id).filter(Boolean) as string[]);
+    },
+  });
+  const claim = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc("claim_event_badge", { _event: id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Selo resgatado!");
+      qc.invalidateQueries({ queryKey: ["my-event-badges"] });
+      qc.invalidateQueries({ queryKey: ["comments"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao resgatar"),
+  });
+
+  if (!events.data?.length) return null;
+  return (
+    <section className="rounded-xl border border-primary/30 bg-card/60 p-4">
+      <h2 className="mb-3 flex items-center gap-2 text-lg font-bold">
+        <Award className="h-5 w-5 text-primary" /> Evento de selos
+      </h2>
+      <div className="flex flex-wrap gap-3">
+        {events.data.map((ev) => {
+          const owned = mine.data?.has(ev.id);
+          return (
+            <div key={ev.id} className="flex items-center gap-3 rounded-lg border border-border bg-background/60 p-3">
+              <img src={ev.image_url} alt={ev.name} className="h-12 w-12 object-contain" />
+              <div className="min-w-0">
+                <p className="font-semibold">{ev.name}</p>
+                {ev.description ? <p className="text-xs text-muted-foreground">{ev.description}</p> : null}
+              </div>
+              {!user ? (
+                <span className="text-xs text-muted-foreground">Entre para resgatar</span>
+              ) : owned ? (
+                <span className="flex items-center gap-1 text-xs text-primary"><Check className="h-4 w-4" /> Resgatado</span>
+              ) : (
+                <Button size="sm" disabled={claim.isPending} onClick={() => claim.mutate(ev.id)}>Resgatar</Button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
