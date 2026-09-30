@@ -91,17 +91,6 @@ export function SiteHeader() {
             </Link>
           </Button>
 
-          <Button
-            asChild
-            size="icon"
-            variant="outline"
-            className="h-9 w-9 shrink-0 rounded-full border-border bg-surface lg:hidden"
-            aria-label="Pesquisar"
-          >
-            <Link to="/catalogo" search={{ q: "", kind: "Todos" }}>
-              <Search className="h-4 w-4" />
-            </Link>
-          </Button>
 
           <Button
             type="button"
