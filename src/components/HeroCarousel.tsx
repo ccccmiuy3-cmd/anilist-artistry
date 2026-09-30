@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { BookOpen, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, Play, Star } from "lucide-react";
 import type { SeriesRow } from "@/lib/queries";
 import { coverUrl, formatChapter } from "@/lib/media";
 import { Button } from "@/components/ui/button";
@@ -76,10 +76,10 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
 
       <div className="mx-auto max-w-7xl px-4 md:px-6">
         <div className="relative overflow-hidden md:min-h-[25rem]">
-          <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(55%_65%_at_24%_50%,color-mix(in_oklab,var(--primary)_24%,transparent),transparent_72%)] md:block" />
+          <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(70%_80%_at_30%_50%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_75%)] md:block" />
 
-          <div key={active.id} className="relative z-10 flex flex-col items-center gap-4 py-2 md:min-h-[25rem] md:flex-row md:gap-10 md:py-8 lg:gap-12">
-            <div className="relative w-[11.25rem] shrink-0 overflow-hidden rounded-xl shadow-[var(--shadow-hero)] ring-1 ring-primary/30 md:w-[13.75rem] lg:w-[16.25rem]">
+          <div key={active.id} className="relative z-10 flex flex-col items-center gap-4 py-2 md:min-h-[25rem] md:flex-row md:gap-8 md:py-8 lg:gap-10">
+            <div className="relative w-[11.25rem] shrink-0 overflow-hidden rounded-xl shadow-[var(--shadow-hero)] ring-1 ring-primary/30 md:w-[14.5rem] lg:w-[17rem]">
               <img
                 src={coverUrl(active.cover_url)}
                 alt={`Capa de ${active.title}`}
@@ -89,7 +89,7 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
               <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-foreground/10" />
             </div>
 
-            <div className="flex w-full max-w-xl min-w-0 flex-1 flex-col items-center gap-3 text-center md:items-start md:gap-4 md:text-left">
+            <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-3 text-center md:items-start md:gap-4 md:text-left lg:max-w-none">
               <div className="flex flex-wrap justify-center gap-1.5 md:justify-start">
                 {[active.kind, ...(active.genres ?? []).slice(0, 3)].filter(Boolean).map((label, genreIndex) => (
                   <span
@@ -141,6 +141,30 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
                     Ver detalhes
                   </Link>
                 </Button>
+              </div>
+            </div>
+
+            <div className="hidden w-56 shrink-0 flex-col gap-2.5 xl:flex">
+              <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">Nota</span>
+                <span className="flex items-center gap-1 font-display text-base font-black text-primary">
+                  <Star className="h-4 w-4 fill-current" />
+                  {active.rating.toFixed(1)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">Status</span>
+                <span className="text-xs font-bold capitalize text-foreground/90">{active.status}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">Capítulos</span>
+                <span className="text-xs font-bold text-foreground/90">{active.chapters.length}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">Views</span>
+                <span className="text-xs font-bold text-foreground/90">
+                  {new Intl.NumberFormat("pt-BR", { notation: "compact" }).format(active.views ?? 0)}
+                </span>
               </div>
             </div>
 
