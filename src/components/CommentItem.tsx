@@ -57,7 +57,7 @@ export function CommentItem({
         >
           <FramedAvatar
             src={author?.avatar_url ?? null}
-            frame={author?.avatar_frame}
+            frame={author?.avatar_frame ?? null}
             size={40}
             className="transition-all hover:ring-2 hover:ring-primary/50 rounded-full"
           />
