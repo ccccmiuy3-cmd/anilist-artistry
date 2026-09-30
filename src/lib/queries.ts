@@ -98,7 +98,7 @@ export async function fetchHistory(userId: string) {
   const { data, error } = await supabase
     .from("reading_history")
     .select(
-      `progress, updated_at, chapter_id, chapters(id, number), series!inner(id, slug, title, cover_url)`,
+      `progress, updated_at, chapter_id, chapters(id, number), series!inner(id, slug, title, cover_url, chapters(id))`,
     )
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
@@ -109,7 +109,7 @@ export async function fetchHistory(userId: string) {
     updated_at: string;
     chapter_id: string | null;
     chapters: { id: string; number: number } | null;
-    series: { id: string; slug: string; title: string; cover_url: string | null };
+    series: { id: string; slug: string; title: string; cover_url: string | null; chapters: Array<{ id: string }> };
   }>;
 }
 
