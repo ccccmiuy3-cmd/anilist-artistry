@@ -170,28 +170,155 @@ export function SiteHeader() {
   );
 }
 
+export const SITE_LOGO =
+  "https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp";
+
 export function SiteFooter() {
+  const year = new Date().getFullYear();
   return (
-    <footer className="mt-16 border-t border-border/70 bg-surface/50">
-      <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <img
-            src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
-            alt="Better Mangá"
-            className="h-16 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-20"
-          />
-          <p>© {new Date().getFullYear()} — leitura de mangás, manhwas e comics</p>
+    <footer className="border-t border-border/70 bg-background pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+      <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 md:px-8">
+        <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-4">
+          <div className="space-y-4">
+            <Link to="/" className="group flex w-fit items-center gap-3">
+              <img
+                src={SITE_LOGO}
+                alt="Better Mangá"
+                className="h-11 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] transition-transform duration-200 group-hover:scale-105 sm:h-12"
+              />
+            </Link>
+            <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
+              Organize sua coleção e acompanhe o que você curte — leia mangás,
+              manhwas e comics num só lugar.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-foreground">
+              Navegação
+            </h3>
+            <nav className="flex flex-col gap-2.5">
+              <Link
+                to="/"
+                className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                Início
+              </Link>
+              <Link
+                to="/catalogo"
+                search={{ q: "", kind: "Todos" }}
+                className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                Pesquisar
+              </Link>
+              <Link
+                to="/biblioteca"
+                className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                Minha Coleção
+              </Link>
+              <Link
+                to="/listas"
+                className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                Listas
+              </Link>
+            </nav>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-foreground">
+              Comunidade
+            </h3>
+            <nav className="flex flex-col gap-2.5">
+              <Link
+                to="/ranking"
+                className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                Ranking
+              </Link>
+              <Link
+                to="/historico"
+                className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                Histórico
+              </Link>
+              <Link
+                to="/catalogo"
+                search={{ q: "", kind: "Todos" }}
+                className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                Explorar obras
+              </Link>
+            </nav>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-foreground">
+              Conta
+            </h3>
+            <nav className="flex flex-col gap-2.5">
+              <Link
+                to="/auth"
+                className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                Entrar / Criar conta
+              </Link>
+              <Link
+                to="/biblioteca"
+                className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                Continuar lendo
+              </Link>
+              <Link
+                to="/historico"
+                className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                Histórico
+              </Link>
+            </nav>
+          </div>
         </div>
-        <div className="flex gap-4">
-          <Link to="/catalogo" search={{ q: "", kind: "Todos" }} className="hover:text-foreground">
-            Coleção
-          </Link>
-          <Link to="/ranking" className="hover:text-foreground">
-            Ranking
-          </Link>
+
+        <div className="relative border-t border-border/70 pt-6">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            <p className="text-xs font-bold text-muted-foreground">
+              © {year} Better Mangá. Todos os direitos reservados.
+            </p>
+            <div className="flex items-center gap-5 text-xs font-bold text-muted-foreground">
+              <Link
+                to="/catalogo"
+                search={{ q: "", kind: "Todos" }}
+                className="transition-colors hover:text-primary"
+              >
+                Catálogo
+              </Link>
+              <Link
+                to="/ranking"
+                className="transition-colors hover:text-primary"
+              >
+                Ranking
+              </Link>
+              <Link
+                to="/listas"
+                className="transition-colors hover:text-primary"
+              >
+                Listas
+              </Link>
+            </div>
+          </div>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute bottom-0 right-0 opacity-10"
+          >
+            <img
+              src={SITE_LOGO}
+              alt=""
+              className="h-[200px] w-[200px] object-contain"
+            />
+          </div>
         </div>
       </div>
-      <div aria-hidden className="h-[calc(4rem+env(safe-area-inset-bottom))] lg:hidden" />
     </footer>
   );
 }
