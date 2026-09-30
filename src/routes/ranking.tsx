@@ -63,7 +63,7 @@ function RankCard({ obra, place }: { obra: ObraRank; place: number }) {
             ) : null}
             <span
               className="pointer-events-none absolute bottom-2 left-2 z-[2] inline-flex items-center gap-1 rounded-full border border-white/20 bg-black/50 px-2 py-0.5 shadow-[0_2px_12px_rgba(0,0,0,0.45)] backdrop-blur-md"
-              title={`Média ${fmtRating(obra.rating)} (${METRICS.find((m) => m.key)?.label ?? ""})`}
+              title={`Média ${fmtRating(obra.rating)}`}
             >
               <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-400" strokeWidth={2.75} aria-hidden="true" />
               <span className="text-[11px] font-black leading-none tracking-tight tabular-nums text-amber-50">{fmtRating(obra.rating)}</span>
