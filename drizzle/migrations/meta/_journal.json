@@ -141,6 +141,13 @@
       "when": 1790739290331,
       "tag": "0019_tighten_comment_likes_and_storage_read",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790773127177,
+      "tag": "0020_series_in_slider",
+      "breakpoints": true
     }
   ]
 }
