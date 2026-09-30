@@ -89,7 +89,7 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
               <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-foreground/10" />
             </div>
 
-            <div className="flex w-full max-w-xl min-w-0 flex-1 flex-col items-center gap-3 text-center md:items-start md:gap-4 md:text-left">
+            <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-3 text-center md:items-start md:gap-4 md:text-left lg:max-w-none">
               <div className="flex flex-wrap justify-center gap-1.5 md:justify-start">
                 {[active.kind, ...(active.genres ?? []).slice(0, 3)].filter(Boolean).map((label, genreIndex) => (
                   <span
