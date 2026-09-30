@@ -75,8 +75,11 @@
   --gold: oklch(0.83 0.16 88);
   --gradient-primary: linear-gradient(135deg, oklch(0.84 0.13 210), oklch(0.7 0.16 230));
   --gradient-fade: linear-gradient(to top, oklch(0.16 0.008 60) 4%, transparent 70%);
+  --gradient-hero-vertical: linear-gradient(to top, var(--background) 3%, color-mix(in oklab, var(--background) 86%, transparent) 34%, color-mix(in oklab, var(--background) 24%, transparent) 72%, color-mix(in oklab, var(--background) 62%, transparent) 100%);
+  --gradient-hero-horizontal: linear-gradient(to right, color-mix(in oklab, var(--background) 94%, transparent) 0%, color-mix(in oklab, var(--background) 54%, transparent) 55%, color-mix(in oklab, var(--background) 12%, transparent) 100%);
   --shadow-card: 0 12px 30px -14px oklch(0 0 0 / 0.75);
   --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--primary) 45%, transparent), 0 14px 40px -18px color-mix(in oklab, var(--primary) 55%, transparent);
+  --shadow-hero: 0 28px 70px -34px oklch(0 0 0 / 0.9);
 }
 
 @layer base {
