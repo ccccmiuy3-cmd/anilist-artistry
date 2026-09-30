@@ -34,7 +34,7 @@ function FramesAdmin() {
     qc.invalidateQueries({ queryKey: ["avatar-frames"] });
   };
 
-  const add = async (image_url: string, n?: string) => {
+  const add = async (image_url: string, n?: string): Promise<void> => {
     const { error } = await supabase.from("avatar_frames").insert({ name: (n ?? name).trim() || "Moldura", image_url });
     if (error) { toast.error(error.message); return; }
     toast.success("Moldura adicionada!");
