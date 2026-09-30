@@ -57,6 +57,13 @@
       "when": 1790733168453,
       "tag": "0007_protect_profile_xp",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790733388913,
+      "tag": "0008_admin_account_management",
+      "breakpoints": true
     }
   ]
 }
