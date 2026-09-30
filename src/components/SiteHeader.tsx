@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { BookMarked, LogOut, Search, Shield, User2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRoles, useSession } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +27,6 @@ export function SiteHeader() {
   const { isStaff } = useRoles(user?.id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [term, setTerm] = useState("");
 
   async function signOut() {
     await queryClient.cancelQueries();
