@@ -39,6 +39,7 @@ type Props = {
 };
 
 const MAX_CHUNK = 180;
+const ctxReady = () => typeof window !== "undefined" && "AudioContext" in window;
 
 // Split long paragraphs into short sentence chunks: browsers (Chrome) silently
 // stop long utterances after ~15s, so short pieces keep narration reliable.
@@ -128,6 +129,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
     }
     ai.current.source = null;
     ai.current.cache.clear();
+    if (ctxReady() && getAudioContext().state === "suspended") void getAudioContext().resume();
     setLoading(false);
   }, []);
 
