@@ -71,6 +71,13 @@
       "when": 1790734358174,
       "tag": "0009_tighten_public_read_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790735148702,
+      "tag": "0010_profile_customization",
+      "breakpoints": true
     }
   ]
 }
