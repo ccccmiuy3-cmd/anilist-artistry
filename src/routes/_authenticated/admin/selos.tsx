@@ -19,6 +19,22 @@ function BadgesAdmin() {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [url, setUrl] = useState("");
+  const [days, setDays] = useState("7");
+  const [chapters, setChapters] = useState("0");
+  const [busy, setBusy] = useState(false);
+  const upload = async (file: File) => {
+    setBusy(true);
+    try {
+      const path = `badges/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
+      const { error } = await supabase.storage.from("manga").upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      const { data, error: e2 } = await supabase.storage.from("manga").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (e2 || !data) throw e2;
+      setUrl(data.signedUrl);
+      if (!name) setName(file.name.replace(/\.\w+$/, ""));
+      toast.success("Imagem enviada");
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Falha no upload"); } finally { setBusy(false); }
+  };
   const [grant, setGrant] = useState<Record<string, string>>({});
 
   const { data: events } = useQuery({
@@ -40,10 +56,12 @@ function BadgesAdmin() {
   const create = useMutation({
     mutationFn: async () => {
       if (!name.trim() || !url.trim()) throw new Error("Informe nome e imagem");
-      const { error } = await supabase.from("badge_events").insert({ name: name.trim(), description: desc.trim() || null, image_url: url.trim() });
+      const { error } = await supabase.from("badge_events").insert({ name: name.trim(), description: desc.trim() || null, image_url: url.trim(),
+        required_chapters: Math.max(0, parseInt(chapters) || 0),
+        ends_at: Number(days) > 0 ? new Date(Date.now() + Number(days) * 86400000).toISOString() : null });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Evento criado e aberto!"); setName(""); setDesc(""); setUrl(""); refresh(); },
+    onSuccess: () => { toast.success("Evento criado e aberto!"); setName(""); setDesc(""); setUrl(""); setChapters("0"); setDays("7"); refresh(); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
   const toggle = useMutation({
@@ -74,11 +92,17 @@ function BadgesAdmin() {
 
   return (
     <AdminShell title="Selos de evento" subtitle="Crie selos, abra/encerre eventos e entregue selos a usuários." adminOnly>
-      <div className="mb-6 grid gap-2 rounded-xl border border-border bg-card p-4 md:grid-cols-[1fr_1fr_1.5fr_auto]">
-        <Input placeholder="Nome (ex: NATAL 2026)" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input placeholder="Descrição (opcional)" value={desc} onChange={(e) => setDesc(e.target.value)} />
-        <Input placeholder="URL da imagem do selo" value={url} onChange={(e) => setUrl(e.target.value)} />
-        <Button onClick={() => create.mutate()} disabled={create.isPending}>Criar evento</Button>
+      <div className="mb-6 grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-2">
+        <label className="text-sm">Nome<Input placeholder="ex: NATAL 2026" value={name} onChange={(e) => setName(e.target.value)} /></label>
+        <label className="text-sm">Descrição (opcional)<Input value={desc} onChange={(e) => setDesc(e.target.value)} /></label>
+        <label className="text-sm">Imagem do selo (link)<Input placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)} /></label>
+        <label className="text-sm">Ou enviar arquivo<Input type="file" accept="image/*" disabled={busy} onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} /></label>
+        <label className="text-sm">Duração do evento (dias, 0 = sem fim)<Input type="number" min={0} value={days} onChange={(e) => setDays(e.target.value)} /></label>
+        <label className="text-sm">Capítulos que precisa ler<Input type="number" min={0} value={chapters} onChange={(e) => setChapters(e.target.value)} /></label>
+        <div className="flex items-center gap-3 md:col-span-2">
+          {url ? <img src={url} alt="prévia" className="h-12 w-12 object-contain" /> : null}
+          <Button onClick={() => create.mutate()} disabled={create.isPending || busy}>Criar evento</Button>
+        </div>
       </div>
       <div className="grid gap-3">
         {(events ?? []).map((ev) => (
@@ -87,7 +111,7 @@ function BadgesAdmin() {
             <div className="min-w-40 flex-1">
               <p className="font-semibold">{ev.name}</p>
               <p className="text-xs text-muted-foreground">
-                {ev.active ? "Aberto — usuários podem resgatar" : "Encerrado"} · {ev.owners} donos
+                {ev.active && (!ev.ends_at || new Date(ev.ends_at) > new Date()) ? `Aberto${ev.ends_at ? ` até ${new Date(ev.ends_at).toLocaleString("pt-BR")}` : ""}` : "Encerrado"} · {ev.required_chapters} capítulos · {ev.owners} donos
               </p>
             </div>
             <Input className="w-44" placeholder="username" value={grant[ev.id] ?? ""} onChange={(e) => setGrant((g) => ({ ...g, [ev.id]: e.target.value }))} />

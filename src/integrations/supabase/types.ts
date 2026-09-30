@@ -43,25 +43,31 @@ export type Database = {
           active: boolean
           created_at: string
           description: string | null
+          ends_at: string | null
           id: string
           image_url: string
           name: string
+          required_chapters: number
         }
         Insert: {
           active?: boolean
           created_at?: string
           description?: string | null
+          ends_at?: string | null
           id?: string
           image_url: string
           name: string
+          required_chapters?: number
         }
         Update: {
           active?: boolean
           created_at?: string
           description?: string | null
+          ends_at?: string | null
           id?: string
           image_url?: string
           name?: string
+          required_chapters?: number
         }
         Relationships: []
       }
@@ -702,6 +708,7 @@ export type Database = {
         Returns: undefined
       }
       claim_event_badge: { Args: { _event: string }; Returns: undefined }
+      event_badge_progress: { Args: { _event: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

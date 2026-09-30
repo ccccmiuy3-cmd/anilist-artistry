@@ -14,7 +14,19 @@ export function EventBadges() {
     queryFn: async () => {
       const { data, error } = await supabase.from("badge_events").select("*").eq("active", true).order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data.filter((e) => !e.ends_at || new Date(e.ends_at) > new Date());
+    },
+  });
+  const progress = useQuery({
+    queryKey: ["event-progress", user?.id, events.data?.map((e) => e.id).join()],
+    enabled: !!user && !!events.data?.length,
+    queryFn: async () => {
+      const out: Record<string, number> = {};
+      for (const e of events.data!) {
+        const { data } = await supabase.rpc("event_badge_progress", { _event: e.id });
+        out[e.id] = data ?? 0;
+      }
+      return out;
     },
   });
   const mine = useQuery({
@@ -54,13 +66,18 @@ export function EventBadges() {
               <div className="min-w-0">
                 <p className="font-semibold">{ev.name}</p>
                 {ev.description ? <p className="text-xs text-muted-foreground">{ev.description}</p> : null}
+                <p className="text-xs text-muted-foreground">
+                  {ev.required_chapters > 0 ? `Leia ${ev.required_chapters} capítulos` : "Resgate grátis"}
+                  {user && ev.required_chapters > 0 ? ` · ${Math.min(progress.data?.[ev.id] ?? 0, ev.required_chapters)}/${ev.required_chapters}` : ""}
+                  {ev.ends_at ? ` · até ${new Date(ev.ends_at).toLocaleDateString("pt-BR")}` : ""}
+                </p>
               </div>
               {!user ? (
                 <span className="text-xs text-muted-foreground">Entre para resgatar</span>
               ) : owned ? (
                 <span className="flex items-center gap-1 text-xs text-primary"><Check className="h-4 w-4" /> Resgatado</span>
               ) : (
-                <Button size="sm" disabled={claim.isPending} onClick={() => claim.mutate(ev.id)}>Resgatar</Button>
+                <Button size="sm" disabled={claim.isPending || (progress.data?.[ev.id] ?? 0) < ev.required_chapters} onClick={() => claim.mutate(ev.id)}>Resgatar</Button>
               )}
             </div>
           );

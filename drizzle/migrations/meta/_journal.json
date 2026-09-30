@@ -162,6 +162,13 @@
       "when": 1790779796908,
       "tag": "0022_event_badges",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790780302445,
+      "tag": "0023_event_badges_rules",
+      "breakpoints": true
     }
   ]
 }
