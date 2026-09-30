@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -9,92 +9,184 @@ type Props = {
   onFinished?: () => void;
 };
 
+const MAX_CHUNK = 180;
+
+// Split long paragraphs into short sentence chunks: browsers (Chrome) silently
+// stop long utterances after ~15s, so short pieces keep narration reliable.
+function chunkText(text: string): string[] {
+  const sentences = text.match(/[^.!?…]+[.!?…]+["'”»)]*\s*|[^.!?…]+$/g) ?? [text];
+  const out: string[] = [];
+  for (const raw of sentences) {
+    let s = raw.trim();
+    while (s.length > MAX_CHUNK) {
+      let cut = s.lastIndexOf(",", MAX_CHUNK);
+      if (cut < 60) cut = s.lastIndexOf(" ", MAX_CHUNK);
+      if (cut < 60) cut = MAX_CHUNK;
+      out.push(s.slice(0, cut + 1).trim());
+      s = s.slice(cut + 1).trim();
+    }
+    if (s) out.push(s);
+  }
+  return out.filter((c) => /[\p{L}\p{N}]/u.test(c));
+}
+
 export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinished }: Props) {
   const [supported, setSupported] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [voiceUri, setVoiceUri] = useState("");
   const [rate, setRate] = useState(1);
   const [state, setState] = useState<"idle" | "playing" | "paused">("idle");
-  const indexRef = useRef(0);
-  const stoppedRef = useRef(false);
+
+  // Refs so callbacks always see fresh values (no stale closures).
+  const pos = useRef({ p: 0, c: 0 });
+  const session = useRef(0); // increments on every start/stop; old utterance events are ignored
+  const settings = useRef({ rate: 1, voice: undefined as SpeechSynthesisVoice | undefined });
+  const paragraphsRef = useRef(paragraphs);
+  const callbacks = useRef({ onActiveChange, onFinished });
+  callbacks.current = { onActiveChange, onFinished };
+  paragraphsRef.current = paragraphs;
+  settings.current = { rate, voice: voices.find((v) => v.voiceURI === voiceUri) };
 
   useEffect(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     setSupported(true);
+    try {
+      const saved = JSON.parse(localStorage.getItem("novel-tts") ?? "{}");
+      if (typeof saved.rate === "number") setRate(saved.rate);
+      if (typeof saved.voice === "string") setVoiceUri(saved.voice);
+    } catch {
+      /* ignore */
+    }
     const load = () => {
       const all = window.speechSynthesis.getVoices();
-      const pt = all.filter((v) => v.lang.toLowerCase().startsWith("pt"));
-      pt.sort((a, b) => Number(b.lang === "pt-BR") - Number(a.lang === "pt-BR"));
+      const pt = all.filter((v) => v.lang.toLowerCase().replace("_", "-").startsWith("pt"));
+      pt.sort((a, b) => Number(b.lang.includes("BR")) - Number(a.lang.includes("BR")));
       setVoices(pt);
-      setVoiceUri((cur) => cur || pt[0]?.voiceURI || "");
+      setVoiceUri((cur) => (pt.some((v) => v.voiceURI === cur) ? cur : pt[0]?.voiceURI || ""));
     };
     load();
     window.speechSynthesis.addEventListener("voiceschanged", load);
     return () => {
       window.speechSynthesis.removeEventListener("voiceschanged", load);
+      session.current++;
       window.speechSynthesis.cancel();
     };
   }, []);
 
   useEffect(() => {
-    // Chapter changed: stop narration
-    stoppedRef.current = true;
+    if (!supported) return;
+    localStorage.setItem("novel-tts", JSON.stringify({ rate, voice: voiceUri }));
+  }, [rate, voiceUri, supported]);
+
+  const stop = useCallback(() => {
+    session.current++;
     if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
     setState("idle");
-    onActiveChange(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paragraphs]);
+    callbacks.current.onActiveChange(null);
+  }, []);
 
-  const speakFrom = (start: number) => {
+  const play = useCallback((p: number, c = 0) => {
     const synth = window.speechSynthesis;
+    const id = ++session.current;
     synth.cancel();
-    stoppedRef.current = false;
-    const speakOne = (i: number) => {
-      if (stoppedRef.current) return;
-      if (i >= paragraphs.length) {
+    setState("playing");
+
+    const speak = (pi: number, ci: number) => {
+      if (id !== session.current) return;
+      const list = paragraphsRef.current;
+      if (pi >= list.length) {
+        session.current++;
         setState("idle");
-        onActiveChange(null);
-        onFinished?.();
+        callbacks.current.onActiveChange(null);
+        callbacks.current.onFinished?.();
         return;
       }
-      indexRef.current = i;
-      onActiveChange(i);
-      document.getElementById(`novel-p-${i}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-      const u = new SpeechSynthesisUtterance(paragraphs[i]);
-      u.lang = "pt-BR";
-      u.rate = rate;
-      const voice = voices.find((v) => v.voiceURI === voiceUri);
-      if (voice) u.voice = voice;
-      u.onend = () => speakOne(i + 1);
-      u.onerror = (e) => {
-        if (e.error !== "interrupted" && e.error !== "canceled") speakOne(i + 1);
+      const chunks = chunkText(list[pi] ?? "");
+      if (ci >= chunks.length) return speak(pi + 1, 0);
+      pos.current = { p: pi, c: ci };
+      if (ci === 0) {
+        callbacks.current.onActiveChange(pi);
+        document.getElementById(`novel-p-${pi}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      const u = new SpeechSynthesisUtterance(chunks[ci] ?? "");
+      u.lang = settings.current.voice?.lang ?? "pt-BR";
+      u.rate = settings.current.rate;
+      if (settings.current.voice) u.voice = settings.current.voice;
+      let done = false;
+      const next = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(watchdog);
+        speak(pi, ci + 1);
       };
-      synth.speak(u);
+      // Watchdog: some browsers never fire onend; move on after a generous timeout.
+      const watchdog = window.setTimeout(next, 4000 + ((chunks[ci]?.length ?? 0) * 160) / settings.current.rate);
+      u.onend = next;
+      u.onerror = (e) => {
+        if (e.error === "interrupted" || e.error === "canceled") {
+          done = true;
+          clearTimeout(watchdog);
+          return;
+        }
+        if (e.error === "not-allowed") {
+          done = true;
+          clearTimeout(watchdog);
+          if (id === session.current) {
+            session.current++;
+            setState("idle");
+          }
+          return;
+        }
+        next();
+      };
+      // Small delay after cancel() avoids Chrome dropping the first utterance.
+      window.setTimeout(() => id === session.current && synth.speak(u), ci === 0 && pi === p ? 60 : 0);
     };
-    setState("playing");
-    speakOne(start);
-  };
+    speak(p, c);
+  }, []);
+
+  // Chrome pauses forever after long idle; keep engine awake while playing.
+  useEffect(() => {
+    if (state !== "playing") return;
+    const t = window.setInterval(() => {
+      const s = window.speechSynthesis;
+      if (s.speaking && !s.paused) {
+        s.pause();
+        s.resume();
+      }
+    }, 10000);
+    return () => clearInterval(t);
+  }, [state]);
+
+  // Chapter changed: stop.
+  useEffect(() => {
+    stop();
+    pos.current = { p: 0, c: 0 };
+  }, [paragraphs, stop]);
+
+  // User tapped a paragraph while playing: jump there.
+  useEffect(() => {
+    if (activeIndex == null || state === "idle") return;
+    if (activeIndex !== pos.current.p) play(activeIndex, 0);
+  }, [activeIndex, state, play]);
 
   if (!supported || paragraphs.length === 0) return null;
 
+  // Pause = cancel + remember position (native pause/resume is broken on Android).
   const toggle = () => {
-    const synth = window.speechSynthesis;
     if (state === "playing") {
-      synth.pause();
+      session.current++;
+      window.speechSynthesis.cancel();
       setState("paused");
     } else if (state === "paused") {
-      synth.resume();
-      setState("playing");
+      play(pos.current.p, pos.current.c);
     } else {
-      speakFrom(activeIndex ?? 0);
+      play(activeIndex ?? 0, 0);
     }
   };
 
-  const stop = () => {
-    stoppedRef.current = true;
-    window.speechSynthesis.cancel();
-    setState("idle");
-    onActiveChange(null);
+  const restartIfPlaying = () => {
+    if (state === "playing") setTimeout(() => play(pos.current.p, pos.current.c), 0);
   };
 
   return (
@@ -115,7 +207,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         value={rate}
         onChange={(e) => {
           setRate(Number(e.target.value));
-          if (state === "playing") setTimeout(() => speakFrom(indexRef.current), 0);
+          restartIfPlaying();
         }}
         aria-label="Velocidade"
       >
@@ -127,7 +219,10 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         <select
           className="h-9 max-w-44 rounded-md border border-border bg-background px-2 text-xs"
           value={voiceUri}
-          onChange={(e) => setVoiceUri(e.target.value)}
+          onChange={(e) => {
+            setVoiceUri(e.target.value);
+            restartIfPlaying();
+          }}
           aria-label="Voz"
         >
           {voices.map((v) => (
@@ -135,7 +230,11 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
           ))}
         </select>
       ) : null}
-      <p className="w-full text-xs text-muted-foreground">Toque em um parágrafo para começar a ouvir a partir dele.</p>
+      <p className="w-full text-xs text-muted-foreground">
+        {voices.length === 0
+          ? "Nenhuma voz em português encontrada neste aparelho; será usada a voz padrão."
+          : "Toque em um parágrafo para ouvir a partir dele."}
+      </p>
     </div>
   );
 }
