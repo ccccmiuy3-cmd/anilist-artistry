@@ -7,6 +7,7 @@ import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { Chips, CollectionCard, PageTitle, STATUSES, TabButton } from "@/components/LibraryBits";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useAuth";
+import { Pager } from "@/components/Pager";
 
 export const Route = createFileRoute("/_authenticated/biblioteca")({
   head: () => ({
@@ -40,6 +41,7 @@ function Colecao() {
   const [tab, setTab] = useState<Tab>("favoritos");
   const [kind, setKind] = useState("Todos");
   const [sort, setSort] = useState("recent");
+  const [page, setPage] = useState(1);
 
   const favorites = useQuery({
     queryKey: ["col-fav", user?.id],
@@ -153,10 +155,10 @@ function Colecao() {
         <PageTitle icon={<Library className="h-7 w-7" />} title="Minha Coleção" subtitle="Favoritos e histórico de leitura" />
 
         <div className="flex flex-wrap gap-2">
-          <TabButton active={tab === "favoritos"} onClick={() => setTab("favoritos")} icon={<Heart className="h-4 w-4" />} label="Favoritos" count={favorites.data?.length} />
-          <TabButton active={tab === "continuando"} onClick={() => setTab("continuando")} icon={<Play className="h-4 w-4" />} label="Cont. lendo" />
+          <TabButton active={tab === "favoritos"} onClick={() => { setPage(1); setTab("favoritos"); }} icon={<Heart className="h-4 w-4" />} label="Favoritos" count={favorites.data?.length} />
+          <TabButton active={tab === "continuando"} onClick={() => { setPage(1); setTab("continuando"); }} icon={<Play className="h-4 w-4" />} label="Cont. lendo" />
           {STATUSES.map((s) => (
-            <TabButton key={s.key} active={tab === s.key} onClick={() => setTab(s.key)} icon={<s.icon className="h-4 w-4" />} label={s.label} count={countFor(s.key)} />
+            <TabButton key={s.key} active={tab === s.key} onClick={() => { setPage(1); setTab(s.key); }} icon={<s.icon className="h-4 w-4" />} label={s.label} count={countFor(s.key)} />
           ))}
         </div>
 
@@ -178,7 +180,7 @@ function Colecao() {
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {filtered.map((i) => (
+          {filtered.slice((page - 1) * 24, page * 24).map((i) => (
             <CollectionCard
               key={i.series.id}
               slug={i.series.slug}
@@ -192,6 +194,7 @@ function Colecao() {
             />
           ))}
         </div>
+        <Pager page={page} pages={Math.max(1, Math.ceil(filtered.length / 24))} onChange={setPage} />
         {filtered.length === 0 ? (
           <p className="mt-10 text-center text-sm text-muted-foreground">
             Nada por aqui ainda.{" "}
