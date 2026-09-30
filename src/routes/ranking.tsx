@@ -37,12 +37,13 @@ function LevelBadge({ level }: { level: number }) {
   const high = level >= 50;
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded border px-1.5 py-px text-[10px] font-bold ${
-        high ? "border-gold/50 bg-gold/10 text-gold" : "border-accent/50 bg-accent/15 text-accent-foreground"
+      title={high ? `Nível ${level} · Crítico` : `Nível ${level} · Viciado`}
+      className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-semibold tabular-nums leading-none ${
+        high ? "border-yellow-500/35 bg-yellow-500/10 text-yellow-100" : "border-purple-500/30 bg-purple-500/10 text-purple-200"
       }`}
     >
-      {high ? <Star className="h-2.5 w-2.5" /> : <Flame className="h-2.5 w-2.5" />}
-      Nv. {level}
+      {high ? <Star className="h-[11px] w-[11px] shrink-0 text-yellow-300" strokeWidth={2.5} /> : <Flame className="h-[11px] w-[11px] shrink-0 text-purple-300" strokeWidth={2.5} />}
+      <span>Nv.&nbsp;{level}</span>
     </span>
   );
 }
