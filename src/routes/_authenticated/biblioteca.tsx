@@ -155,10 +155,10 @@ function Colecao() {
         <PageTitle icon={<Library className="h-7 w-7" />} title="Minha Coleção" subtitle="Favoritos e histórico de leitura" />
 
         <div className="flex flex-wrap gap-2">
-          <TabButton active={tab === "favoritos"} onClick={() => { setPage(1); setTab("favoritos")} icon={<Heart className="h-4 w-4" />} label="Favoritos" count={favorites.data?.length} />
-          <TabButton active={tab === "continuando"} onClick={() => { setPage(1); setTab("continuando")} icon={<Play className="h-4 w-4" />} label="Cont. lendo" />
+          <TabButton active={tab === "favoritos"} onClick={() => { setPage(1); setTab("favoritos"); }} icon={<Heart className="h-4 w-4" />} label="Favoritos" count={favorites.data?.length} />
+          <TabButton active={tab === "continuando"} onClick={() => { setPage(1); setTab("continuando"); }} icon={<Play className="h-4 w-4" />} label="Cont. lendo" />
           {STATUSES.map((s) => (
-            <TabButton key={s.key} active={tab === s.key} onClick={() => { setPage(1); setTab(s.key)} icon={<s.icon className="h-4 w-4" />} label={s.label} count={countFor(s.key)} />
+            <TabButton key={s.key} active={tab === s.key} onClick={() => { setPage(1); setTab(s.key); }} icon={<s.icon className="h-4 w-4" />} label={s.label} count={countFor(s.key)} />
           ))}
         </div>
 
