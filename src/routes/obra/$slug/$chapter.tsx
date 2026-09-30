@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, ChevronLeft, ChevronRight, ChevronsDown, Home, Infinity, Maximize2, MessageCircle, Palette } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, ChevronsDown, Home, Infinity, Maximize2, MessageCircle, Minus, Palette, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -281,6 +281,27 @@ function Reader() {
             >
               <Palette className="h-5 w-5" />
             </button>
+            {isNovel ? (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  className={iconBtn}
+                  aria-label="Diminuir fonte"
+                  onClick={() => setFontSize((s) => Math.max(14, s - 2))}
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-8 text-center text-xs font-bold text-muted-foreground">{fontSize}</span>
+                <button
+                  type="button"
+                  className={iconBtn}
+                  aria-label="Aumentar fonte"
+                  onClick={() => setFontSize((s) => Math.min(28, s + 2))}
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            ) : null}
             <button
               type="button"
               className={iconBtn}
