@@ -640,6 +640,17 @@ export type Database = {
         Args: { _series_id: string }
         Returns: undefined
       }
+      obra_ranking: {
+        Args: { _metric: string }
+        Returns: {
+          cover_url: string
+          id: string
+          rating: number
+          slug: string
+          title: string
+          total: number
+        }[]
+      }
       xp_ranking: {
         Args: { _period: string }
         Returns: {

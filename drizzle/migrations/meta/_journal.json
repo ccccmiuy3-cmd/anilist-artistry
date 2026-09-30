@@ -148,6 +148,13 @@
       "when": 1790773127177,
       "tag": "0020_series_in_slider",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790779088048,
+      "tag": "0021_obra_ranking_7d",
+      "breakpoints": true
     }
   ]
 }
