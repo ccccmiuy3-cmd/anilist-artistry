@@ -52,11 +52,13 @@ export async function fetchSeries(options: {
   limit?: number;
   search?: string;
   pinnedFirst?: boolean;
+  inSlider?: boolean;
 }) {
   let query = supabase.from("series").select(SERIES_SELECT).eq("published", true);
 
   if (options.kind && options.kind !== "Todos") query = query.eq("kind", options.kind);
   if (options.search) query = query.ilike("title", `%${options.search}%`);
+  if (options.inSlider) query = query.eq("in_slider", true);
   if (options.pinnedFirst) query = query.order("pinned", { ascending: false });
 
   query = query.order(options.order ?? "updated_at", { ascending: false }).limit(options.limit ?? 24);

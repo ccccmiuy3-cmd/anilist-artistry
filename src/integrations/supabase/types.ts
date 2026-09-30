@@ -489,6 +489,7 @@ export type Database = {
           created_by: string | null
           genres: string[]
           id: string
+          in_slider: boolean
           kind: string
           pinned: boolean
           published: boolean
@@ -511,6 +512,7 @@ export type Database = {
           created_by?: string | null
           genres?: string[]
           id?: string
+          in_slider?: boolean
           kind?: string
           pinned?: boolean
           published?: boolean
@@ -533,6 +535,7 @@ export type Database = {
           created_by?: string | null
           genres?: string[]
           id?: string
+          in_slider?: boolean
           kind?: string
           pinned?: boolean
           published?: boolean

@@ -55,6 +55,10 @@ function Home() {
     queryKey: ["series", "updated"],
     queryFn: () => fetchSeries({ order: "updated_at", limit: 12, pinnedFirst: true }),
   });
+  const slider = useQuery({
+    queryKey: ["series", "slider"],
+    queryFn: () => fetchSeries({ order: "updated_at", limit: 10, inSlider: true }),
+  });
   const ranking = useQuery({
     queryKey: ["series", "views"],
     queryFn: () => fetchSeries({ order: "views", limit: 10 }),
@@ -80,7 +84,7 @@ function Home() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <HeroCarousel items={updated.data ?? []} />
+      <HeroCarousel items={(slider.data?.length ? slider.data : updated.data) ?? []} />
       <main className="mx-auto max-w-7xl px-4 py-8">
         <h1 className="sr-only">Better Mangá — ler mangás, manhwas e comics online</h1>
         {empty ? (

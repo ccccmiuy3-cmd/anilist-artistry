@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Eye, EyeOff, GalleryHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/AdminShell";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
@@ -29,7 +29,7 @@ function ObrasAdmin() {
   const { isStaff, isAdmin } = useRoles(user?.id);
   const qc = useQueryClient();
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<"all" | "pub" | "draft">("all");
+  const [filter, setFilter] = useState<"all" | "pub" | "draft" | "slide">("all");
 
   const series = useQuery({
     queryKey: ["admin-series"],
@@ -37,7 +37,7 @@ function ObrasAdmin() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("series")
-        .select("id, slug, title, cover_url, kind, status, published, views, rating, updated_at, chapters(id)")
+        .select("id, slug, title, cover_url, kind, status, published, in_slider, views, rating, updated_at, chapters(id)")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -49,7 +49,7 @@ function ObrasAdmin() {
       (series.data ?? []).filter(
         (r) =>
           r.title.toLowerCase().includes(q.toLowerCase()) &&
-          (filter === "all" || (filter === "pub" ? r.published : !r.published)),
+          (filter === "all" || (filter === "slide" ? r.in_slider : filter === "pub" ? r.published : !r.published)),
       ),
     [series.data, q, filter],
   );
@@ -61,6 +61,20 @@ function ObrasAdmin() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-series"] }),
     onError: () => toast.error("Não foi possível alterar."),
+  });
+
+  const slide = useMutation({
+    mutationFn: async (r: { id: string; in_slider: boolean }) => {
+      const { error } = await supabase.from("series").update({ in_slider: !r.in_slider }).eq("id", r.id);
+      if (error) throw error;
+      return !r.in_slider;
+    },
+    onSuccess: (on) => {
+      toast.success(on ? "Obra adicionada ao slide." : "Obra removida do slide.");
+      qc.invalidateQueries({ queryKey: ["admin-series"] });
+      qc.invalidateQueries({ queryKey: ["series", "slider"] });
+    },
+    onError: () => toast.error("Não foi possível alterar o slide."),
   });
 
   const remove = useMutation({
@@ -97,6 +111,7 @@ function ObrasAdmin() {
             ["all", "Todas"],
             ["pub", "Publicadas"],
             ["draft", "Rascunhos"],
+            ["slide", "No slide"],
           ] as const).map(([k, l]) => (
             <button
               key={k}
@@ -123,11 +138,25 @@ function ObrasAdmin() {
                 >
                   {r.published ? "Publicada" : "Rascunho"}
                 </span>
+                {r.in_slider ? (
+                  <span className="shrink-0 rounded-full bg-accent px-2 py-px text-[10px] font-bold text-accent-foreground">No slide</span>
+                ) : null}
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
                 {r.kind} · {r.status} · {r.chapters?.length ?? 0} capítulos · {r.views} views · {timeAgo(r.updated_at)}
               </p>
             </div>
+            <Button
+              variant={r.in_slider ? "default" : "outline"}
+              size="sm"
+              className="font-semibold"
+              title={r.in_slider ? "Remover do slide" : "Colocar no slide"}
+              disabled={slide.isPending}
+              onClick={() => slide.mutate(r)}
+            >
+              <GalleryHorizontal className="h-3.5 w-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">{r.in_slider ? "Tirar do slide" : "Pôr no slide"}</span>
+            </Button>
             <Button variant="ghost" size="icon" title={r.published ? "Despublicar" : "Publicar"} onClick={() => toggle.mutate(r)}>
               {r.published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
             </Button>
