@@ -690,7 +690,7 @@ function SeriesPage() {
               </p>
             )}
             <ul className="mt-8 space-y-5">
-              {<CommentThreads
+              <CommentThreads
               comments={sortedComments}
               userId={user?.id}
               onReply={user ? (c) => setReplyTo({ id: c.id, username: c.author?.username ?? "leitor" }) : undefined}

@@ -348,7 +348,7 @@ function Reader() {
         )}
 
         <ul className="mt-6 space-y-5">
-          {<CommentThreads
+          <CommentThreads
               comments={(comments.data ?? [])}
               userId={user?.id}
               onReply={user ? (c) => setReplyTo({ id: c.id, username: c.author?.username ?? "leitor" }) : undefined}
