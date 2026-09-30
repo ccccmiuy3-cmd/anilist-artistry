@@ -13,14 +13,15 @@ const AI_VOICES = [
   { id: "Puck", label: "Puck (masculina animada)" },
 ];
 
-// Group sentences into ~700-char pieces for natural AI narration.
+// Group sentences into ~900-char pieces: longer pieces give the AI narrator
+// more context, so prosody and pauses sound more natural (server caps at 1200).
 function aiChunks(paragraphs: string[]) {
   const out: { p: number; text: string }[] = [];
   paragraphs.forEach((para, p) => {
     const parts = chunkText(para);
     let buf = "";
     for (const s of parts) {
-      if (buf && buf.length + s.length > 700) {
+      if (buf && buf.length + s.length > 900) {
         out.push({ p, text: buf });
         buf = "";
       }
@@ -239,7 +240,8 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
           const samples = await get(i)!;
           if (id !== session.current) return;
           setLoading(false);
-          get(i + 1); // prefetch next piece while this one plays (no gaps)
+          get(i + 1); // prefetch next pieces while this one plays (no gaps)
+          get(i + 2);
           if (chunk.p !== pos.current.p || i === 0 || chunks[i - 1]?.p !== chunk.p) {
             pos.current = { p: chunk.p, c: 0 };
             callbacks.current.onActiveChange(chunk.p);
