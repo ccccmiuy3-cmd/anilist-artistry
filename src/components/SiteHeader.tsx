@@ -45,7 +45,7 @@ export function SiteHeader() {
           <img
             src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
             alt="Better Mangá"
-            className="h-9 w-auto rounded-md object-contain"
+            className="h-7 w-auto object-contain drop-shadow-[0_0_10px_color-mix(in_oklab,var(--primary)_35%,transparent)] sm:h-8"
           />
         </Link>
 
