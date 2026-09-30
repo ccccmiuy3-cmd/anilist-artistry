@@ -23,6 +23,9 @@ export type SeriesRow = {
   slug: string;
   title: string;
   cover_url: string | null;
+  banner_url: string | null;
+  synopsis: string | null;
+  genres: string[] | null;
   kind: string;
   status: string;
   rating: number;
@@ -34,7 +37,7 @@ export type SeriesRow = {
 };
 
 const SERIES_SELECT =
-  "id, slug, title, cover_url, kind, status, rating, views, pinned, created_at, updated_at, chapters(id, number, title, created_at)";
+  "id, slug, title, cover_url, banner_url, synopsis, genres, kind, status, rating, views, pinned, created_at, updated_at, chapters(id, number, title, created_at)";
 
 function normalize(rows: unknown): SeriesRow[] {
   return ((rows ?? []) as SeriesRow[]).map((row) => ({
