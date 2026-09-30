@@ -145,6 +145,8 @@ function Home() {
           </div>
         </SectionRow>
 
+        {(releases.data?.length ?? 0) > 0 ? <Releases rows={releases.data!} /> : null}
+
         {user && (favorites.data?.length ?? 0) > 0 ? (
           <FavoritesUpdated rows={favorites.data!} />
         ) : null}
