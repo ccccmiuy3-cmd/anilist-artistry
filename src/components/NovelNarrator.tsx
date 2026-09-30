@@ -351,8 +351,11 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
   return (
     <div className="mb-8 flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3">
       <Volume2 className="h-5 w-5 text-primary" />
-      <span className="mr-auto text-sm font-bold">Narração automática</span>
-      <Button size="sm" onClick={toggle} aria-label={state === "playing" ? "Pausar" : "Ouvir"}>
+      <span className="mr-auto text-sm font-bold">
+        Narração automática
+        {loading ? <span className="ml-2 text-xs font-normal text-muted-foreground">preparando voz…</span> : null}
+      </span>
+      <Button size="sm" onClick={toggle} disabled={loading && state === "playing" && !ai.current.source} aria-label={state === "playing" ? "Pausar" : "Ouvir"}>
         {state === "playing" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         {state === "playing" ? "Pausar" : state === "paused" ? "Continuar" : "Ouvir"}
       </Button>
@@ -363,10 +366,25 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
       ) : null}
       <select
         className="h-9 rounded-md border border-border bg-background px-2 text-xs"
+        value={engine}
+        onChange={(e) => {
+          stop();
+          setEngine(e.target.value as "ai" | "device");
+        }}
+        aria-label="Tipo de voz"
+      >
+        <option value="ai">Voz realista (IA)</option>
+        <option value="device">Voz do aparelho</option>
+      </select>
+      <select
+        className="h-9 rounded-md border border-border bg-background px-2 text-xs"
         value={rate}
         onChange={(e) => {
-          setRate(Number(e.target.value));
-          restartIfPlaying();
+          const r = Number(e.target.value);
+          setRate(r);
+          if (engine === "ai") {
+            if (ai.current.source) ai.current.source.playbackRate.value = r;
+          } else restartIfPlaying();
         }}
         aria-label="Velocidade"
       >
@@ -374,7 +392,22 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
           <option key={r} value={r}>{r}x</option>
         ))}
       </select>
-      {voices.length > 1 ? (
+      {engine === "ai" ? (
+        <select
+          className="h-9 max-w-48 rounded-md border border-border bg-background px-2 text-xs"
+          value={aiVoice}
+          onChange={(e) => {
+            setAiVoice(e.target.value);
+            aiSettings.current.voice = e.target.value;
+            restartIfPlaying();
+          }}
+          aria-label="Voz"
+        >
+          {AI_VOICES.map((v) => (
+            <option key={v.id} value={v.id}>{v.label}</option>
+          ))}
+        </select>
+      ) : voices.length > 1 ? (
         <select
           className="h-9 max-w-44 rounded-md border border-border bg-background px-2 text-xs"
           value={voiceUri}
@@ -390,9 +423,11 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         </select>
       ) : null}
       <p className="w-full text-xs text-muted-foreground">
-        {voices.length === 0
-          ? "Nenhuma voz em português encontrada neste aparelho; será usada a voz padrão."
-          : "Toque em um parágrafo para ouvir a partir dele."}
+        {engine === "ai"
+          ? "Voz natural de narrador em português (requer login). Toque em um parágrafo para ouvir a partir dele."
+          : voices.length === 0
+            ? "Nenhuma voz em português encontrada neste aparelho; será usada a voz padrão."
+            : "Toque em um parágrafo para ouvir a partir dele."}
       </p>
     </div>
   );
