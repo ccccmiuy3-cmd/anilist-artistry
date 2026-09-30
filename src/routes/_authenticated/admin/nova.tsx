@@ -30,6 +30,8 @@ export const Route = createFileRoute("/_authenticated/admin/nova")({
 function NovaObra() {
   const navigate = useNavigate();
   const { user } = useSession();
+  const anilist = useServerFn(searchAnilist);
+  const [link, setLink] = useState("");
   const [form, setForm] = useState({
     title: "",
     altTitles: "",
@@ -46,6 +48,30 @@ function NovaObra() {
   function set(key: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+  const fill = useMutation({
+    mutationFn: async () => {
+      const results = await anilist({ data: { search: link.trim() } });
+      if (!results.length) throw new Error("Nada encontrado com esse link.");
+      return results[0]!;
+    },
+    onSuccess: (item) => {
+      setForm((prev) => ({
+        ...prev,
+        title: item.title,
+        altTitles: item.altTitles,
+        synopsis: item.synopsis,
+        coverUrl: item.coverUrl,
+        bannerUrl: item.bannerUrl,
+        status: item.status || prev.status,
+        author: item.author,
+        artist: item.artist,
+        genres: item.genres.join(", "),
+      }));
+      toast.success("Dados preenchidos do AniList! Revise e crie a obra.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao buscar no AniList"),
+  });
 
   const create = useMutation({
     mutationFn: async () => {
