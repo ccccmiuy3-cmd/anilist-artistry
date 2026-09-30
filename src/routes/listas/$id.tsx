@@ -117,7 +117,7 @@ function ListaPage() {
               {data.list_items.map((i) =>
                 i.series ? (
                   <div key={i.series.id} className="relative">
-                    <SeriesCard slug={i.series.slug} title={i.series.title} cover={i.series.cover_url} rating={i.series.rating} />
+                    <SeriesCard slug={i.series.slug} title={i.series.title} cover={i.series.cover_url} rating={i.series.rating} seriesId={i.series.id} />
                     {isOwner ? (
                       <button
                         onClick={() => removeItem.mutate(i.series!.id)}
