@@ -18,6 +18,7 @@ import { Route as RankingLeitoresRouteImport } from './routes/ranking-leitores'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedBibliotecaRouteImport } from './routes/_authenticated/biblioteca'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
+import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ListasIndexRouteImport } from './routes/listas/index'
 import { Route as ListasIdRouteImport } from './routes/listas/$id'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
@@ -76,6 +77,11 @@ const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
   id: '/historico',
   path: '/historico',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ListasIndexRoute = ListasIndexRouteImport.update({
   id: '/listas/',
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/historico': typeof AuthenticatedHistoricoRoute
+  '/api/tts': typeof ApiTtsRoute
   '/listas/$id': typeof ListasIdRoute
   '/u/$username': typeof UUsernameRoute
   '/listas/': typeof ListasIndexRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/historico': typeof AuthenticatedHistoricoRoute
+  '/api/tts': typeof ApiTtsRoute
   '/listas/$id': typeof ListasIdRoute
   '/u/$username': typeof UUsernameRoute
   '/listas': typeof ListasIndexRoute
@@ -211,6 +219,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
+  '/api/tts': typeof ApiTtsRoute
   '/listas/$id': typeof ListasIdRoute
   '/u/$username': typeof UUsernameRoute
   '/listas/': typeof ListasIndexRoute
@@ -237,6 +246,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/biblioteca'
     | '/historico'
+    | '/api/tts'
     | '/listas/$id'
     | '/u/$username'
     | '/listas/'
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/biblioteca'
     | '/historico'
+    | '/api/tts'
     | '/listas/$id'
     | '/u/$username'
     | '/listas'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/biblioteca'
     | '/_authenticated/historico'
+    | '/api/tts'
     | '/listas/$id'
     | '/u/$username'
     | '/listas/'
@@ -310,6 +322,7 @@ export interface RootRouteChildren {
   RankingRoute: typeof RankingRoute
   RankingLeitoresRoute: typeof RankingLeitoresRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiTtsRoute: typeof ApiTtsRoute
   ListasIdRoute: typeof ListasIdRoute
   UUsernameRoute: typeof UUsernameRoute
   ListasIndexRoute: typeof ListasIndexRoute
@@ -381,6 +394,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/historico'
       preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/listas/': {
       id: '/listas/'
@@ -522,6 +542,7 @@ const rootRouteChildren: RootRouteChildren = {
   RankingRoute: RankingRoute,
   RankingLeitoresRoute: RankingLeitoresRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiTtsRoute: ApiTtsRoute,
   ListasIdRoute: ListasIdRoute,
   UUsernameRoute: UUsernameRoute,
   ListasIndexRoute: ListasIndexRoute,
