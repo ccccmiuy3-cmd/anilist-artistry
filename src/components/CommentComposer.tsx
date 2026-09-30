@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CircleDollarSign, Eye, EyeOff, ImagePlus, Send, Smile, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -94,12 +94,10 @@ export function CommentComposer({ pending, onSubmit, replyTo, onCancelReply }: C
   };
 
   // Preenche o campo quando o usuário clica em "Responder" em um comentário.
-  const lastReply = useRef<string | null>(null);
-  if (replyTo && replyTo !== lastReply.current) {
-    lastReply.current = replyTo;
-    startReply(replyTo);
-  }
-  if (!replyTo && lastReply.current) lastReply.current = null;
+  useEffect(() => {
+    if (replyTo) startReply(replyTo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replyTo]);
 
   return (
     <div className="rounded-xl border-2 border-dashed border-border bg-surface/60 p-4 transition-colors focus-within:border-primary/40">
