@@ -101,6 +101,19 @@ export function CommentComposer({ pending, onSubmit, replyTo, onCancelReply }: C
 
   return (
     <div className="rounded-xl border-2 border-dashed border-border bg-surface/60 p-4 transition-colors focus-within:border-primary/40">
+      {replyTo ? (
+        <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+          Respondendo a @{replyTo}
+          <button
+            type="button"
+            onClick={onCancelReply}
+            aria-label="Cancelar resposta"
+            className="rounded-full p-0.5 hover:bg-primary/20"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ) : null}
       <textarea
         ref={textareaRef}
         value={body}
