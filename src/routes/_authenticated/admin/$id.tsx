@@ -90,8 +90,22 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
     >
       <Upload className="h-7 w-7 text-primary" />
       <p className="text-sm font-semibold">
-        {busy ? "Extraindo imagens…" : files.length ? `${files.length} imagem(ns) selecionada(s)` : "Arraste imagens, .zip ou .pdf ou clique para escolher"}
+        {busy
+          ? progress && progress.total > 0
+            ? `Extraindo imagens… ${progress.done}/${progress.total}`
+            : "Extraindo imagens…"
+          : files.length
+            ? `${files.length} imagem(ns) selecionada(s)`
+            : "Arraste imagens, .zip ou .pdf ou clique para escolher"}
       </p>
+      {busy && (
+        <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+          <div
+            className={`h-full rounded-full bg-primary transition-all duration-200 ${pct === null ? "animate-pulse" : ""}`}
+            style={{ width: `${pct ?? 100}%` }}
+          />
+        </div>
+      )}
       <p className="text-xs text-muted-foreground">ZIP/PDF: as imagens são extraídas e só elas são salvas. Ordem pelo nome (01.jpg, 02.jpg…)</p>
       <input
         type="file"
