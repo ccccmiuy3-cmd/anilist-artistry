@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Bell, BookMarked, LogOut, Search, Shield, User2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileNav } from "@/components/MobileNav";
-import { FramedAvatar } from "@/components/FramedAvatar";
 import { useProfile, useRoles, useSession } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
