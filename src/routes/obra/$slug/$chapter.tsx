@@ -63,11 +63,7 @@ function Reader() {
 
   useEffect(() => {
     if (!obra) return;
-    void supabase.rpc;
-    void supabase
-      .from("series")
-      .update({ views: obra.views + 1 })
-      .eq("id", obra.id);
+    void supabase.rpc("increment_series_views", { _series_id: obra.id });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [obra?.id, chapter]);
 
