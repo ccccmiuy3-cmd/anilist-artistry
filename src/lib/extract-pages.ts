@@ -2,22 +2,27 @@
 const IMG = /\.(jpe?g|png|webp|gif|avif)$/i;
 const MIME: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", avif: "image/avif" };
 
-async function fromZip(file: File): Promise<File[]> {
+export type ExtractProgress = (done: number, total: number) => void;
+
+async function fromZip(file: File, onProgress?: ExtractProgress): Promise<File[]> {
   const JSZip = (await import("jszip")).default;
   const zip = await JSZip.loadAsync(file);
   const entries = Object.values(zip.files).filter((f) => !f.dir && IMG.test(f.name) && !f.name.includes("__MACOSX"));
   entries.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   const base = file.name.replace(/\.zip$/i, "");
-  return Promise.all(
-    entries.map(async (e, i) => {
-      const ext = e.name.split(".").pop()!.toLowerCase();
-      const blob = await e.async("blob");
-      return new File([blob], `${base}-${String(i + 1).padStart(4, "0")}.${ext}`, { type: MIME[ext] ?? "image/jpeg" });
-    }),
-  );
+  const out: File[] = [];
+  let done = 0;
+  onProgress?.(0, entries.length);
+  for (const [i, e] of entries.entries()) {
+    const ext = e.name.split(".").pop()!.toLowerCase();
+    const blob = await e.async("blob");
+    out.push(new File([blob], `${base}-${String(i + 1).padStart(4, "0")}.${ext}`, { type: MIME[ext] ?? "image/jpeg" }));
+    onProgress?.(++done, entries.length);
+  }
+  return out;
 }
 
-async function fromPdf(file: File): Promise<File[]> {
+async function fromPdf(file: File, onProgress?: ExtractProgress): Promise<File[]> {
   const pdfjs = await import("pdfjs-dist");
   const worker = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
