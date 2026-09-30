@@ -74,7 +74,7 @@ export async function fetchSeriesBySlug(slug: string) {
   const { data, error } = await supabase
     .from("series")
     .select(
-      "id, slug, title, alt_titles, synopsis, cover_url, banner_url, kind, status, author, artist, genres, rating, views, published, created_at, updated_at, chapters(id, number, title, created_at, pages)",
+      "id, slug, title, alt_titles, synopsis, cover_url, banner_url, kind, status, author, artist, genres, rating, views, published, created_at, updated_at, chapters(id, number, title, created_at, pages, content)",
     )
     .eq("slug", slug)
     .maybeSingle();
