@@ -22,6 +22,8 @@ export const Route = createFileRoute("/_authenticated/admin/contas")({
       { name: "description", content: "Edite perfis, cargos, XP e bloqueios dos leitores." },
       { property: "og:title", content: "Gerenciar contas — Better Mangá" },
       { property: "og:description", content: "Gestão de contas e cargos." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Contas,
