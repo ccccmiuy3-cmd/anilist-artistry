@@ -266,87 +266,24 @@ function Perfil() {
           </Button>
         </div>
 
-        {isMe ? (
-          <OwnerProfileHeader
-            profile={p}
-            followers={stats.data?.followers ?? 0}
-            following={stats.data?.following ?? 0}
-            totalRank={stats.data?.totalRank ?? 0}
-            weeklyRank={stats.data?.weeklyRank ?? 0}
-            badges={stats.data?.badges ?? []}
-            isAdmin={stats.data?.isAdmin ?? false}
-            xpInLevel={xpInLevel}
-            xpGoal={xpGoal}
-            joinedAt={joinedAt}
-            onEdit={() => setEditing(true)}
-          />
-        ) : <section className="relative z-10 mx-auto -mt-20 max-w-7xl px-4 sm:px-6">
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-end sm:gap-10 lg:gap-14">
-            <div className="relative shrink-0 rounded-full bg-background p-1.5">
-              <FramedAvatar src={p.avatar_url} frame={p.avatar_frame} size={152} />
-              <span className="absolute -bottom-2 left-1/2 z-30 inline-flex -translate-x-1/2 items-center gap-1 rounded-full border border-primary/40 bg-background px-2.5 py-1 text-[11px] font-black text-primary shadow-[var(--shadow-card)]">
-                <span className="h-1 w-1 rounded-full bg-primary" /> {p.level}
-              </span>
-            </div>
-
-            <div className="min-w-0 w-full flex-1 pb-1 text-center sm:text-left">
-              <div className="flex flex-col items-center justify-between gap-4 sm:flex-row sm:items-end">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-end sm:gap-4">
-                    <h1 className="max-w-full break-words font-display text-2xl font-extrabold sm:text-3xl" style={{ color: p.accent_color ?? "var(--foreground)" }}>
-                      {p.display_name || p.username}
-                    </h1>
-                    <UserBadges tier={p.subscription_tier} badges={stats.data?.badges} isAdmin={stats.data?.isAdmin} size={40} />
-                  </div>
-                  <p className="mt-1 text-base text-muted-foreground sm:text-lg">@{p.username}</p>
-                  {p.bio ? <p className="mx-auto mt-2 max-w-2xl text-sm text-foreground/80 sm:mx-0">{p.bio}</p> : null}
-                  <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-muted-foreground sm:justify-start sm:gap-x-8">
-                    <span><b className="text-foreground">{stats.data?.followers ?? 0}</b> seguidores</span>
-                    <span className="hidden text-border sm:inline">•</span>
-                    <span><b className="text-foreground">{stats.data?.following ?? 0}</b> seguindo</span>
-                  </div>
-                  <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
-                    <Link to="/ranking-leitores" className="rounded-md border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-foreground/75 transition hover:border-primary/40 hover:text-primary">Global #{stats.data?.totalRank || "—"}</Link>
-                    <Link to="/ranking-leitores" className="rounded-md border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-foreground/75 transition hover:border-primary/40 hover:text-primary">Semanal #{stats.data?.weeklyRank || "—"}</Link>
-                  </div>
-                  <div className="mx-auto mt-3 w-full max-w-[220px] sm:mx-0">
-                    <div className="mb-1 flex justify-between text-[10px] font-bold uppercase text-muted-foreground">
-                      <span>Nível {p.level}</span><span>{p.xp.toLocaleString("pt-BR")} XP</span>
-                    </div>
-                    <div className="h-1.5 overflow-hidden rounded-full border border-border bg-surface-2">
-                      <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, (xpInLevel / xpGoal) * 100)}%` }} />
-                    </div>
-                    <div className="mt-1 flex justify-between text-[10px] font-medium text-muted-foreground"><span>XP</span><span>{Math.round((xpInLevel / xpGoal) * 100)}%</span></div>
-                  </div>
-                </div>
-
-                <div className="w-full shrink-0 sm:w-auto sm:pb-1">
-                  {!isMe && user ? (
-                    <Button className="min-w-36 rounded-full" variant={stats.data?.iFollow ? "outline" : "secondary"} onClick={() => follow.mutate()}>
-                      <UserPlus className="h-4 w-4" /> {stats.data?.iFollow ? "Seguindo" : "Seguir"}
-                    </Button>
-                  ) : null}
-                  {isMe ? <Button className="min-w-36 rounded-full" variant="secondary" onClick={() => setEditing(true)}><Pencil className="h-4 w-4" /> Editar perfil</Button> : null}
-                </div>
-              </div>
-
-              <div className="mt-5 hidden items-center gap-10 border-t border-border pt-4 sm:flex lg:gap-14">
-                <div><b className="block text-xl">{stats.data?.publicLists.length ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Na lista</span></div>
-                <div><b className="block text-xl">{readCount}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Lidos</span></div>
-                <div><b className="block text-xl">{stats.data?.favorites.length ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Favoritos</span></div>
-                <div><b className="block text-xl">{stats.data?.comments ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Comentários</span></div>
-                <span className="ml-auto inline-flex items-center gap-2 text-xs text-muted-foreground"><CalendarDays className="h-3.5 w-3.5" /> Entrou em {joinedAt}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-2 sm:hidden">
-            <div className="rounded-lg border border-border bg-surface/50 p-3 text-center"><b className="block text-xl">{stats.data?.publicLists.length ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Lista</span></div>
-            <div className="rounded-lg border border-border bg-surface/50 p-3 text-center"><b className="block text-xl">{readCount}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Lidos</span></div>
-            <div className="rounded-lg border border-border bg-surface/50 p-3 text-center"><b className="block text-xl">{stats.data?.favorites.length ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Favs</span></div>
-            <div className="rounded-lg border border-border bg-surface/50 p-3 text-center"><b className="block text-xl">{stats.data?.comments ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Msg</span></div>
-          </div>
-        </section>}
+        <OwnerProfileHeader
+          profile={p}
+          followers={stats.data?.followers ?? 0}
+          following={stats.data?.following ?? 0}
+          totalRank={stats.data?.totalRank ?? 0}
+          weeklyRank={stats.data?.weeklyRank ?? 0}
+          badges={stats.data?.badges ?? []}
+          isAdmin={stats.data?.isAdmin ?? false}
+          xpInLevel={xpInLevel}
+          xpGoal={xpGoal}
+          joinedAt={joinedAt}
+          onEdit={() => setEditing(true)}
+          action={isMe ? (
+            <Button variant="secondary" className="col-span-2 rounded-lg text-xs font-bold" onClick={() => setEditing(true)}><Pencil className="h-3.5 w-3.5" /> Editar perfil</Button>
+          ) : user ? (
+            <Button className="col-span-2 rounded-lg text-xs font-bold" variant={stats.data?.iFollow ? "outline" : "default"} onClick={() => follow.mutate()}><UserPlus className="h-3.5 w-3.5" /> {stats.data?.iFollow ? "Seguindo" : "Seguir"}</Button>
+          ) : null}
+        />
 
         {isMe ? (
           <OwnerOverview
@@ -361,23 +298,21 @@ function Perfil() {
             isAdmin={stats.data?.isAdmin ?? false}
             onEdit={() => setEditing(true)}
           />
-        ) : <div className="mx-auto grid max-w-7xl gap-8 px-4 lg:grid-cols-[280px_1fr] sm:px-6">
-          <aside className="pt-6">
-            {isMe ? (
-              <nav className="overflow-hidden rounded-lg border border-border bg-surface">
-                {menu.map((m) => (
-                  <Link key={m.to} to={m.to} className="flex items-center gap-3 border-b border-border px-4 py-3.5 text-sm hover:bg-surface-2">
-                    <m.icon className="h-4 w-4 text-primary" /> {m.label}
-                    <ChevronRight className="ml-auto h-4 w-4 text-primary" />
-                  </Link>
-                ))}
-                <button onClick={() => setEditing(true)} className="flex w-full items-center gap-3 px-4 py-3.5 text-sm hover:bg-surface-2">
-                  <Pencil className="h-4 w-4 text-primary" /> Editar perfil
-                  <ChevronRight className="ml-auto h-4 w-4 text-primary" />
-                </button>
-              </nav>
-            ) : <div className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground"><Users className="mb-3 h-5 w-5 text-primary" />Acompanhe os favoritos, listas e comentários deste leitor.</div>}
-          </aside>
+        ) : <>
+          <OwnerOverview
+            isMe={false}
+            collectionCount={(stats.data?.favorites.length ?? 0) + (stats.data?.readingStatuses.length ?? 0)}
+            readingCount={(stats.data?.readingStatuses ?? []).filter((row) => row.status === "lendo").length}
+            readCount={readCount}
+            favoritesCount={stats.data?.favorites.length ?? 0}
+            commentsCount={stats.data?.comments ?? 0}
+            followersCount={stats.data?.followers ?? 0}
+            badges={stats.data?.badges ?? []}
+            tier={p.subscription_tier}
+            isAdmin={stats.data?.isAdmin ?? false}
+            onEdit={() => setEditing(true)}
+          />
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
 
           <section className="min-w-0 pt-6">
             <div className="sticky top-0 z-20 -mx-4 overflow-x-auto border-y border-border bg-background/80 px-4 py-2 backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:rounded-lg sm:border">
@@ -554,7 +489,7 @@ function Perfil() {
               </ul>
             </div> : null}
           </section>
-        </div>}
+        </div></>}
       </main>
       {isMe ? <EditProfile open={editing} onOpenChange={setEditing} profile={p} /> : null}
       <SiteFooter />
@@ -584,8 +519,10 @@ function OwnerProfileHeader({
   xpGoal,
   joinedAt,
   onEdit,
+  action,
 }: {
-  profile: OwnerProfile;
+  action?: React.ReactNode;
+  profile: OwnerProfile & { bio?: string | null; accent_color?: string | null };
   followers: number;
   following: number;
   totalRank: number;
@@ -608,8 +545,9 @@ function OwnerProfileHeader({
           </div>
         </div>
         <div className="min-w-0 text-center lg:text-left">
-          <h1 className="truncate font-display text-2xl font-extrabold sm:text-3xl">{profile.display_name || profile.username}</h1>
+          <h1 className="truncate font-display text-2xl font-extrabold sm:text-3xl" style={profile.accent_color ? { color: profile.accent_color } : undefined}>{profile.display_name || profile.username}</h1>
           <p className="mt-1 text-sm text-muted-foreground">@{profile.username}</p>
+          {profile.bio ? <p className="mx-auto mt-2 max-w-2xl text-sm text-foreground/80 lg:mx-0">{profile.bio}</p> : null}
           <div className="mt-3 flex flex-wrap justify-center gap-2 lg:justify-start">
             <Link to="/ranking-leitores" className="rounded-md border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-foreground/75 hover:border-primary/40 hover:text-primary">Global #{totalRank || "—"}</Link>
             <Link to="/ranking-leitores" className="rounded-md border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-foreground/75 hover:border-primary/40 hover:text-primary">Semanal #{weeklyRank || "—"}</Link>
@@ -619,7 +557,7 @@ function OwnerProfileHeader({
         <div className="grid grid-cols-2 gap-2 lg:w-52">
           <div className="rounded-lg border border-border bg-surface/60 p-3 text-center"><b className="block text-lg">{followers}</b><span className="text-[9px] font-bold uppercase text-muted-foreground">Seguidores</span></div>
           <div className="rounded-lg border border-border bg-surface/60 p-3 text-center"><b className="block text-lg">{following}</b><span className="text-[9px] font-bold uppercase text-muted-foreground">Seguindo</span></div>
-          <Button variant="secondary" className="col-span-2 rounded-lg text-xs font-bold" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Editar perfil</Button>
+          {action}
         </div>
         <div className="lg:col-start-2 lg:col-span-2">
           <div className="mb-2 flex justify-between text-[10px] font-bold uppercase text-muted-foreground"><span>{profile.xp.toLocaleString("pt-BR")} XP total</span><span>{percentage}% do nível</span></div>
@@ -631,7 +569,8 @@ function OwnerProfileHeader({
   );
 }
 
-function OwnerOverview({ collectionCount, readingCount, readCount, favoritesCount, commentsCount, followersCount, badges, tier, isAdmin, onEdit }: {
+function OwnerOverview({ isMe = true, collectionCount, readingCount, readCount, favoritesCount, commentsCount, followersCount, badges, tier, isAdmin, onEdit }: {
+  isMe?: boolean;
   collectionCount: number;
   readingCount: number;
   readCount: number;
@@ -654,14 +593,14 @@ function OwnerOverview({ collectionCount, readingCount, readCount, favoritesCoun
   return (
     <section className="relative z-10 mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6">
       <div className="min-w-0">
-        <nav className="flex items-center gap-1 overflow-x-auto border-b border-border py-2 no-scrollbar">
+        {isMe ? <nav className="flex items-center gap-1 overflow-x-auto border-b border-border py-2 no-scrollbar">
           <Button variant="ghost" className="relative rounded-none text-primary after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:rounded-full after:bg-primary"><LayoutGrid className="h-4 w-4" /> Visão geral</Button>
           <Button asChild variant="ghost" className="rounded-none text-muted-foreground"><Link to="/biblioteca"><Library className="h-4 w-4" /> Coleção</Link></Button>
           <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={onEdit}><Settings className="h-4 w-4" /> Configurações</Button>
-        </nav>
+        </nav> : null}
         <div className="mt-6 grid gap-4 lg:grid-cols-12">
           <div className="lg:col-span-7">
-            <h2 className="mb-4 text-xs font-extrabold uppercase text-muted-foreground">Sua atividade</h2>
+            <h2 className="mb-4 text-xs font-extrabold uppercase text-muted-foreground">{isMe ? "Sua atividade" : "Atividade"}</h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {cards.map((card) => (
               <div key={card.label} className="group flex min-h-32 flex-col justify-between rounded-lg border border-border bg-surface/45 p-4 transition-colors hover:border-primary/40">
@@ -673,8 +612,8 @@ function OwnerOverview({ collectionCount, readingCount, readCount, favoritesCoun
           </div>
           <div className="min-w-0 rounded-lg border border-border bg-surface/30 p-5 lg:col-span-5">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-              <div className="min-w-0"><h2 className="font-display text-base font-bold">Meus selos</h2><p className="mt-1 text-xs text-muted-foreground">Conquistas exibidas no seu perfil</p></div>
-              <Button variant="outline" size="sm" onClick={onEdit}><Settings className="h-3.5 w-3.5" /> Personalizar</Button>
+              <div className="min-w-0"><h2 className="font-display text-base font-bold">{isMe ? "Meus selos" : "Selos"}</h2><p className="mt-1 text-xs text-muted-foreground">Conquistas deste leitor</p></div>
+              {isMe ? <Button variant="outline" size="sm" onClick={onEdit}><Settings className="h-3.5 w-3.5" /> Personalizar</Button> : null}
             </div>
             <div className="mt-5 min-h-24 max-w-full overflow-hidden rounded-lg border border-border bg-background/35 p-3">
               <UserBadges tier={tier} badges={badges} isAdmin={isAdmin} size={40} />
