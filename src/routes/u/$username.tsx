@@ -19,6 +19,7 @@ import {
   History,
   ImageIcon,
   Library,
+  LayoutGrid,
   ListOrdered,
   Lock,
   MessageSquare,
@@ -27,6 +28,7 @@ import {
   Play,
   ShieldCheck,
   Send,
+  Settings,
   Sparkles,
   Star,
   Tag,
@@ -261,7 +263,21 @@ function Perfil() {
           </Button>
         </div>
 
-        <section className="relative z-10 mx-auto -mt-20 max-w-7xl px-4 sm:px-6">
+        {isMe ? (
+          <OwnerProfileHeader
+            profile={p}
+            followers={stats.data?.followers ?? 0}
+            following={stats.data?.following ?? 0}
+            totalRank={stats.data?.totalRank ?? 0}
+            weeklyRank={stats.data?.weeklyRank ?? 0}
+            badges={stats.data?.badges ?? []}
+            isAdmin={stats.data?.isAdmin ?? false}
+            xpInLevel={xpInLevel}
+            xpGoal={xpGoal}
+            joinedAt={joinedAt}
+            onEdit={() => setEditing(true)}
+          />
+        ) : <section className="relative z-10 mx-auto -mt-20 max-w-7xl px-4 sm:px-6">
           <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-end sm:gap-10 lg:gap-14">
             <div className="relative shrink-0 rounded-full bg-background p-1.5">
               <FramedAvatar src={p.avatar_url} frame={p.avatar_frame} size={152} />
@@ -327,9 +343,22 @@ function Perfil() {
             <div className="rounded-lg border border-border bg-surface/50 p-3 text-center"><b className="block text-xl">{stats.data?.favorites.length ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Favs</span></div>
             <div className="rounded-lg border border-border bg-surface/50 p-3 text-center"><b className="block text-xl">{stats.data?.comments ?? 0}</b><span className="text-[10px] font-medium uppercase text-muted-foreground">Msg</span></div>
           </div>
-        </section>
+        </section>}
 
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 lg:grid-cols-[280px_1fr] sm:px-6">
+        {isMe ? (
+          <OwnerOverview
+            collectionCount={(stats.data?.favorites.length ?? 0) + (stats.data?.readingStatuses.length ?? 0)}
+            readingCount={(stats.data?.readingStatuses ?? []).filter((row) => row.status === "lendo").length}
+            readCount={readCount}
+            favoritesCount={stats.data?.favorites.length ?? 0}
+            commentsCount={stats.data?.comments ?? 0}
+            followersCount={stats.data?.followers ?? 0}
+            badges={stats.data?.badges ?? []}
+            tier={p.subscription_tier}
+            isAdmin={stats.data?.isAdmin ?? false}
+            onEdit={() => setEditing(true)}
+          />
+        ) : <div className="mx-auto grid max-w-7xl gap-8 px-4 lg:grid-cols-[280px_1fr] sm:px-6">
           <aside className="pt-6">
             {isMe ? (
               <nav className="overflow-hidden rounded-lg border border-border bg-surface">
@@ -522,11 +551,145 @@ function Perfil() {
               </ul>
             </div> : null}
           </section>
-        </div>
+        </div>}
       </main>
       {isMe ? <EditProfile open={editing} onOpenChange={setEditing} profile={p} /> : null}
       <SiteFooter />
     </div>
+  );
+}
+
+type OwnerProfile = {
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  avatar_frame: string | null;
+  level: number;
+  xp: number;
+  subscription_tier: string | null;
+};
+
+function OwnerProfileHeader({
+  profile,
+  followers,
+  following,
+  totalRank,
+  weeklyRank,
+  badges,
+  isAdmin,
+  xpInLevel,
+  xpGoal,
+  joinedAt,
+  onEdit,
+}: {
+  profile: OwnerProfile;
+  followers: number;
+  following: number;
+  totalRank: number;
+  weeklyRank: number;
+  badges: Badge[];
+  isAdmin: boolean;
+  xpInLevel: number;
+  xpGoal: number;
+  joinedAt: string;
+  onEdit: () => void;
+}) {
+  const percentage = Math.min(100, Math.round((xpInLevel / xpGoal) * 100));
+  return (
+    <section className="relative z-10 mx-auto -mt-20 max-w-7xl px-4 sm:-mt-28 sm:px-6">
+      <div className="grid items-start gap-8 lg:grid-cols-12">
+        <aside className="rounded-xl border border-border bg-background/70 p-6 shadow-[var(--shadow-card)] backdrop-blur-2xl lg:col-span-3">
+          <div className="flex justify-center">
+            <div className="relative rounded-full bg-background p-1.5">
+              <FramedAvatar src={profile.avatar_url} frame={profile.avatar_frame} size={128} />
+              <span className="absolute -bottom-2 left-1/2 z-30 inline-flex -translate-x-1/2 items-center gap-1 rounded-full border border-primary/40 bg-background px-2.5 py-1 text-[11px] font-black text-primary">
+                <span className="h-1 w-1 rounded-full bg-primary" /> {profile.level}
+              </span>
+            </div>
+          </div>
+          <div className="mt-5 text-center">
+            <h1 className="truncate font-display text-xl font-bold">{profile.display_name || profile.username}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">@{profile.username}</p>
+          </div>
+          <div className="mt-4 flex flex-wrap justify-center gap-2 border-y border-border py-3.5">
+            <Link to="/ranking-leitores" className="rounded-md border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-foreground/75 hover:text-primary">Global #{totalRank || "—"}</Link>
+            <Link to="/ranking-leitores" className="rounded-md border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-foreground/75 hover:text-primary">Semanal #{weeklyRank || "—"}</Link>
+          </div>
+          <div className="flex min-h-12 flex-wrap items-center justify-center gap-2 py-2">
+            <UserBadges tier={profile.subscription_tier} badges={badges} isAdmin={isAdmin} size={40} />
+          </div>
+          <div className="border-t border-border pt-4">
+            <div className="flex justify-between text-[10px] font-bold uppercase text-muted-foreground"><span>Nível {profile.level}</span><span>{profile.xp.toLocaleString("pt-BR")} XP total</span></div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full border border-border bg-surface-2"><div className="h-full rounded-full bg-primary" style={{ width: `${percentage}%` }} /></div>
+            <div className="mt-1 flex justify-between text-[10px] text-muted-foreground"><span>XP</span><span>{percentage}%</span></div>
+            <p className="mt-1.5 text-center text-[11px] text-muted-foreground">{xpInLevel.toLocaleString("pt-BR")} / {xpGoal.toLocaleString("pt-BR")} XP para o próximo nível</p>
+          </div>
+          <div className="mt-4 flex items-center justify-around border-t border-border pt-4 text-center">
+            <div><b className="block text-base">{followers}</b><span className="text-[10px] font-semibold uppercase text-muted-foreground">seguidores</span></div>
+            <span className="h-7 w-px bg-border" />
+            <div><b className="block text-base">{following}</b><span className="text-[10px] font-semibold uppercase text-muted-foreground">seguindo</span></div>
+          </div>
+          <p className="mt-4 flex items-center justify-center gap-1.5 border-t border-border pt-4 text-xs text-muted-foreground"><CalendarDays className="h-3.5 w-3.5" /> Membro desde {joinedAt}</p>
+          <Button variant="secondary" className="mt-5 w-full rounded-lg text-xs font-bold uppercase" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Editar perfil</Button>
+        </aside>
+        <div className="hidden min-h-24 lg:col-span-9 lg:block" />
+      </div>
+    </section>
+  );
+}
+
+function OwnerOverview({ collectionCount, readingCount, readCount, favoritesCount, commentsCount, followersCount, badges, tier, isAdmin, onEdit }: {
+  collectionCount: number;
+  readingCount: number;
+  readCount: number;
+  favoritesCount: number;
+  commentsCount: number;
+  followersCount: number;
+  badges: Badge[];
+  tier: string | null;
+  isAdmin: boolean;
+  onEdit: () => void;
+}) {
+  const cards = [
+    { label: "Na coleção", value: collectionCount, icon: BookOpen },
+    { label: "Lendo", value: readingCount, icon: Play },
+    { label: "Completadas", value: readCount, icon: Check },
+    { label: "Favoritos", value: favoritesCount, icon: Heart },
+    { label: "Comentários", value: commentsCount, icon: MessageSquare },
+    { label: "Seguidores", value: followersCount, icon: Users },
+  ];
+  return (
+    <section className="relative z-20 mx-auto -mt-6 grid max-w-7xl gap-8 px-4 pb-8 sm:px-6 lg:-mt-[40rem] lg:grid-cols-12 lg:pb-32">
+      <div className="hidden lg:col-span-3 lg:block" />
+      <div className="min-w-0 lg:col-span-9">
+        <nav className="flex items-center gap-1 overflow-x-auto border-b border-border py-2 no-scrollbar">
+          <Button variant="ghost" className="relative rounded-none text-primary after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:rounded-full after:bg-primary"><LayoutGrid className="h-4 w-4" /> Visão geral</Button>
+          <Button asChild variant="ghost" className="rounded-none text-muted-foreground"><Link to="/biblioteca"><Library className="h-4 w-4" /> Coleção</Link></Button>
+          <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={onEdit}><Settings className="h-4 w-4" /> Configurações</Button>
+        </nav>
+        <div className="mt-7">
+          <h2 className="mb-4 text-sm font-bold uppercase text-muted-foreground">Estatísticas</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {cards.map((card) => (
+              <div key={card.label} className="flex flex-col gap-3 rounded-lg border border-border bg-surface/45 p-4">
+                <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary"><card.icon className="h-4 w-4" /></span>
+                <div><b className="block text-2xl font-black tabular-nums">{card.value}</b><span className="text-[11px] font-semibold uppercase text-muted-foreground">{card.label}</span></div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 rounded-lg border border-border bg-surface/30 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div><h2 className="font-display text-base font-bold">Meus selos</h2><p className="mt-1 text-xs text-muted-foreground">Selos conquistados e ativos no seu perfil</p></div>
+              <Button variant="outline" size="sm" onClick={onEdit}><Settings className="h-3.5 w-3.5" /> Personalizar</Button>
+            </div>
+            <div className="mt-5 flex min-h-14 flex-wrap items-center gap-3">
+              <UserBadges tier={tier} badges={badges} isAdmin={isAdmin} size={52} />
+              {badges.length === 0 && !isAdmin && (!tier || tier === "none") ? <span className="text-sm text-muted-foreground">Nenhum selo conquistado.</span> : null}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
