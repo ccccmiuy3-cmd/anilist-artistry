@@ -10,7 +10,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/selos")({
   staticData: { sitemap: false },
-  head: () => ({ meta: [{ title: "Selos de evento — Painel" }] }),
+  head: () => ({ meta: [
+    { title: "Selos de evento — Better Mangá" },
+    { name: "description", content: "Gerencie eventos de selos e entregas para leitores." },
+    { property: "og:title", content: "Selos de evento — Better Mangá" },
+    { property: "og:description", content: "Gestão de eventos e selos dos leitores." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: BadgesAdmin,
 });
 
