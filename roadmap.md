@@ -9,3 +9,4 @@
 - [x] Copiar a barra de categorias enviada para o topo do slide
 - [x] Atualizar as categorias de cadastro, edição e importação no painel
 - [x] Criar modo de leitura dedicado para novels com controles de texto responsivos
+- [x] Melhorar publicação de novels com editor, prévia, rascunhos e gestão de capítulos

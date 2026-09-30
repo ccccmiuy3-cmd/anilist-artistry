@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookText, ChevronDown, Plus, Send } from "lucide-react";
+import { BookText, ChevronDown, Eye, FilePlus2, Pencil, Plus, Save, Search, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/AdminShell";
+import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +33,7 @@ type NovelRow = {
   title: string;
   cover_url: string | null;
   status: string;
-  chapters: { id: string; number: number; title: string | null }[];
+  chapters: { id: string; number: number; title: string | null; content: string | null; published: boolean; created_at: string }[];
 };
 
 function AdminNovels() {
@@ -45,7 +46,7 @@ function AdminNovels() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("series")
-        .select("id, slug, title, cover_url, status, chapters(id, number, title)")
+        .select("id, slug, title, cover_url, status, chapters(id, number, title, content, published, created_at)")
         .eq("kind", "Novel")
         .order("updated_at", { ascending: false });
       if (error) throw error;
@@ -176,52 +177,176 @@ function AdminNovels() {
 function ChapterForm({ novel }: { novel: NovelRow }) {
   const queryClient = useQueryClient();
   const nextNumber = Math.max(0, ...novel.chapters.map((c) => Number(c.number))) + 1;
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [number, setNumber] = useState(String(nextNumber));
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [published, setPublished] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
+  const draftKey = `better-manga:novel-draft:${novel.id}`;
+
+  const resetEditor = () => {
+    setEditingId(null);
+    setNumber(String(Math.max(nextNumber, 1)));
+    setTitle("");
+    setContent("");
+    setPublished(false);
+    setShowPreview(false);
+  };
+
+  useEffect(() => {
+    if (editingId) return;
+    const saved = window.localStorage.getItem(draftKey);
+    if (!saved) return;
+    try {
+      const draft = JSON.parse(saved) as { number?: string; title?: string; content?: string; published?: boolean };
+      setNumber(draft.number || String(nextNumber));
+      setTitle(draft.title || "");
+      setContent(draft.content || "");
+      setPublished(Boolean(draft.published));
+    } catch {
+      window.localStorage.removeItem(draftKey);
+    }
+  }, [draftKey, editingId, nextNumber]);
+
+  useEffect(() => {
+    if (editingId) return;
+    const timer = window.setTimeout(() => {
+      if (title.trim() || content.trim()) {
+        window.localStorage.setItem(draftKey, JSON.stringify({ number, title, content, published }));
+      } else {
+        window.localStorage.removeItem(draftKey);
+      }
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [content, draftKey, editingId, number, published, title]);
+
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const readingMinutes = wordCount ? Math.max(1, Math.ceil(wordCount / 220)) : 0;
+  const paragraphs = content.split(/\n{2,}|\r?\n/).map((part) => part.trim()).filter(Boolean);
+
+  const visibleChapters = useMemo(() => {
+    const term = search.trim().toLocaleLowerCase("pt-BR");
+    return [...novel.chapters]
+      .sort((a, b) => Number(b.number) - Number(a.number))
+      .filter((chapter) => !term || `capitulo ${chapter.number} ${chapter.title ?? ""}`.toLocaleLowerCase("pt-BR").includes(term));
+  }, [novel.chapters, search]);
+
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-novels"] });
+    queryClient.invalidateQueries({ queryKey: ["series", novel.slug] });
+  };
 
   const publish = useMutation({
     mutationFn: async () => {
       const num = Number(number);
-      if (!Number.isFinite(num) || num <= 0) throw new Error("Número de capítulo inválido.");
+      if (!Number.isFinite(num) || num < 0) throw new Error("Número de capítulo inválido.");
       if (content.trim().length < 10) throw new Error("Escreva o texto do capítulo.");
-      const { error } = await supabase.from("chapters").insert({
+      if (novel.chapters.some((chapter) => Number(chapter.number) === num && chapter.id !== editingId)) {
+        throw new Error(`O capítulo ${formatChapter(num)} já existe.`);
+      }
+      const values = {
         series_id: novel.id,
         number: num,
         title: title.trim() || null,
         content: content.trim(),
         pages: [],
-        published: true,
-      });
+        published,
+      };
+      const { error } = editingId
+        ? await supabase.from("chapters").update(values).eq("id", editingId).eq("series_id", novel.id)
+        : await supabase.from("chapters").insert(values);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Capítulo publicado!");
-      setTitle("");
-      setContent("");
-      setNumber(String(Number(number) + 1));
-      queryClient.invalidateQueries({ queryKey: ["admin-novels"] });
+      toast.success(published ? "Capítulo publicado!" : "Rascunho salvo!");
+      window.localStorage.removeItem(draftKey);
+      resetEditor();
+      refresh();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao publicar"),
   });
 
-  const recent = [...novel.chapters].sort((a, b) => Number(b.number) - Number(a.number)).slice(0, 5);
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("chapters").delete().eq("id", id).eq("series_id", novel.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Capítulo excluído.");
+      resetEditor();
+      refresh();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao excluir capítulo"),
+  });
+
+  const editChapter = (chapter: NovelRow["chapters"][number]) => {
+    setEditingId(chapter.id);
+    setNumber(String(chapter.number));
+    setTitle(chapter.title ?? "");
+    setContent(chapter.content ?? "");
+    setPublished(chapter.published);
+    setShowPreview(false);
+  };
 
   return (
-    <div className="border-t border-border p-4">
-      {recent.length > 0 ? (
-        <p className="mb-3 text-xs text-muted-foreground">
-          Últimos: {recent.map((c) => `Cap. ${formatChapter(c.number)}`).join(" · ")}
-        </p>
-      ) : null}
+    <div className="grid gap-5 border-t border-border p-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+      <aside className="min-w-0 rounded-lg border border-border bg-background/60 p-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+          <div className="relative min-w-0">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar capítulo" className="pl-9" />
+          </div>
+          <Button type="button" size="icon" onClick={resetEditor} aria-label="Novo capítulo" title="Novo capítulo">
+            <FilePlus2 className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="mt-3 max-h-[560px] space-y-2 overflow-y-auto pr-1">
+          {visibleChapters.map((chapter) => (
+            <div key={chapter.id} className={`rounded-md border p-3 ${editingId === chapter.id ? "border-primary bg-primary/10" : "border-border bg-surface/70"}`}>
+              <div className="flex min-w-0 items-start justify-between gap-2">
+                <button type="button" onClick={() => editChapter(chapter)} className="min-w-0 flex-1 text-left">
+                  <span className="block truncate text-sm font-bold">Cap. {formatChapter(chapter.number)}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{chapter.title || "Sem título"}</span>
+                </button>
+                <span className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${chapter.published ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}`}>
+                  {chapter.published ? "Publicado" : "Rascunho"}
+                </span>
+              </div>
+              <div className="mt-2 flex justify-end gap-1">
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => editChapter(chapter)} aria-label="Editar capítulo" title="Editar capítulo">
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+                <ConfirmDelete title={`Excluir capítulo ${formatChapter(chapter.number)}?`} description="O texto e os comentários ligados a este capítulo serão apagados permanentemente." onConfirm={() => remove.mutate(chapter.id)}>
+                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive" aria-label="Excluir capítulo" title="Excluir capítulo">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </ConfirmDelete>
+              </div>
+            </div>
+          ))}
+          {visibleChapters.length === 0 ? <p className="py-8 text-center text-xs text-muted-foreground">Nenhum capítulo encontrado.</p> : null}
+        </div>
+      </aside>
+
       <form
-        className="grid gap-3"
+        className="min-w-0 rounded-lg border border-border bg-background/60 p-4"
         onSubmit={(e) => {
           e.preventDefault();
           publish.mutate();
         }}
       >
-        <div className="grid grid-cols-2 gap-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="font-display text-base font-bold">{editingId ? "Editar capítulo" : "Novo capítulo"}</h3>
+            <p className="text-xs text-muted-foreground">O texto é salvo automaticamente neste aparelho enquanto você escreve.</p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => setShowPreview((shown) => !shown)}>
+            <Eye className="h-4 w-4" /> {showPreview ? "Editar texto" : "Visualizar"}
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[140px_minmax(0,1fr)]">
           <div className="space-y-1.5">
             <Label>Número</Label>
             <Input value={number} onChange={(e) => setNumber(e.target.value)} inputMode="decimal" className="bg-background" />
@@ -231,20 +356,37 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
             <Input value={title} onChange={(e) => setTitle(e.target.value)} className="bg-background" />
           </div>
         </div>
-        <div className="space-y-1.5">
+        <div className="mt-3 space-y-1.5">
           <Label>Texto do capítulo</Label>
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Cole ou escreva o texto aqui. Separe os parágrafos com uma linha em branco."
-            className="min-h-56 bg-background"
-          />
-          <p className="text-xs text-muted-foreground">{content.trim().length} caracteres</p>
+          {showPreview ? (
+            <article className="min-h-96 rounded-md border border-border bg-surface px-5 py-7 text-[17px] leading-8 text-foreground/90 sm:px-8">
+              {paragraphs.length ? paragraphs.map((paragraph, index) => <p key={index} className="mb-5 text-justify last:mb-0">{paragraph}</p>) : <p className="text-center text-sm text-muted-foreground">A prévia aparecerá aqui.</p>}
+            </article>
+          ) : (
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Cole ou escreva o texto aqui. Separe os parágrafos com uma linha em branco."
+              className="min-h-96 resize-y bg-background font-sans leading-7"
+              maxLength={500000}
+            />
+          )}
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span>{content.length.toLocaleString("pt-BR")} caracteres</span>
+            <span>{wordCount.toLocaleString("pt-BR")} palavras</span>
+            <span>{readingMinutes} min de leitura</span>
+          </div>
         </div>
-        <Button type="submit" disabled={publish.isPending} className="font-semibold">
-          <Send className="mr-2 h-4 w-4" />
-          {publish.isPending ? "Publicando…" : "Publicar capítulo"}
-        </Button>
+        <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <label className="flex cursor-pointer items-center gap-3 text-sm">
+            <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} className="h-4 w-4 accent-primary" />
+            <span><b>{published ? "Publicar agora" : "Salvar como rascunho"}</b><small className="block text-muted-foreground">{published ? "O capítulo ficará visível aos leitores." : "Somente a equipe poderá acessá-lo."}</small></span>
+          </label>
+          <Button type="submit" disabled={publish.isPending || content.trim().length < 10} className="font-semibold">
+            {editingId ? <Save className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
+            {publish.isPending ? "Salvando…" : editingId ? "Salvar alterações" : published ? "Publicar capítulo" : "Salvar rascunho"}
+          </Button>
+        </div>
       </form>
     </div>
   );
