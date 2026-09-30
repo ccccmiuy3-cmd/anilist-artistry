@@ -345,50 +345,57 @@ function SeriesPage() {
       <SiteHeader />
 
       <div className="relative">
-        <div className="h-48 w-full overflow-hidden sm:h-72">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] overflow-hidden">
           <img
             src={coverUrl(obra.banner_url ?? obra.cover_url)}
             alt=""
-            className="h-full w-full object-cover opacity-40"
+            className="h-full w-full scale-110 object-cover opacity-30 blur-2xl"
           />
-          <span className="cover-fade pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
         </div>
 
-        <main className="relative z-10 mx-auto -mt-28 max-w-6xl px-4 pb-10">
-          <div className="flex flex-col gap-6 sm:flex-row">
+        <main className="relative z-10 mx-auto max-w-7xl px-4 pb-10 pt-6 md:px-8 md:pt-14">
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="mb-6 flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:mb-8"
+          >
+            <ChevronDown className="h-4 w-4 rotate-90" /> Voltar
+          </button>
+          <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:gap-12 lg:gap-16">
             {/* Cover */}
-            <div className="relative w-44 shrink-0 self-start sm:w-56">
+            <div className="flex flex-col items-center md:w-[260px] md:shrink-0">
+              <div className="mb-2 flex flex-wrap justify-center gap-2 md:hidden">
+                <span className="rounded-full border border-border bg-surface-2 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{obra.kind}</span>
+                <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-300">{obra.status}</span>
+              </div>
               <img
                 src={coverUrl(obra.cover_url)}
                 alt={obra.title}
-                className="aspect-[3/4] w-full rounded-xl object-cover ring-1 ring-border shadow-[var(--shadow-card)]"
+                className="aspect-[2/3] w-[240px] rounded-2xl border border-border object-cover shadow-2xl md:w-full md:rounded-xl"
               />
-              <span className="absolute left-2 top-2 rounded-md bg-background/85 px-2 py-1 text-[11px] font-bold uppercase tracking-wide backdrop-blur">
-                {obra.kind}
-              </span>
-              <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-background/85 px-2 py-1 text-[11px] font-semibold backdrop-blur">
-                <BookOpen className="h-3 w-3" /> {obra.chapters.length} capítulos
-              </span>
             </div>
 
             {/* Info */}
-            <div className="flex-1">
-              <h1 className="font-display text-3xl font-extrabold leading-tight">{obra.title}</h1>
+            <div className="w-full flex-1 text-center md:text-left">
+              <div className="mb-3 hidden flex-wrap items-center gap-3 md:flex">
+                <span className="rounded border border-border px-2 py-0.5 text-[10px] font-bold uppercase text-muted-foreground">{obra.kind}</span>
+                <span className="rounded border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-400">{obra.status}</span>
+              </div>
+              <h1 className="font-display text-2xl font-black leading-tight md:text-3xl">{obra.title}</h1>
               {obra.alt_titles ? (
-                <p className="mt-1 text-sm text-muted-foreground">{obra.alt_titles}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{obra.alt_titles}</p>
               ) : null}
 
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-                <span className="rounded-md bg-surface-2 px-2 py-1 font-semibold">
-                  {obra.status}
-                </span>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground md:justify-start">
+                <span className="inline-flex items-center gap-1.5"><BookOpen className="h-4 w-4" /> {obra.chapters.length} capítulos</span>
+                <span className="inline-flex items-center gap-1.5 font-bold text-gold"><Star className="h-4 w-4 fill-gold" /> {average.toFixed(1).replace(".", ",")}</span>
+                <span className="inline-flex items-center gap-1.5"><MessageCircle className="h-4 w-4" /> {comments.data?.length ?? 0}</span>
+              </div>
+
+              <div className="mt-4 flex flex-wrap justify-center gap-1.5 md:justify-start md:gap-2">
                 {obra.genres.map((genre) => (
-                  <span
-                    key={genre}
-                    className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground"
-                  >
-                    {genre}
-                  </span>
+                  <span key={genre} className="rounded-lg border border-border bg-surface-2/60 px-2.5 py-1 text-xs text-muted-foreground">{genre}</span>
                 ))}
               </div>
 
@@ -401,22 +408,13 @@ function SeriesPage() {
               ) : null}
 
               {obra.synopsis ? (
-                <div className="mt-3">
-                  <p
-                    className={`whitespace-pre-line text-sm leading-relaxed text-muted-foreground ${
-                      expanded ? "" : "line-clamp-3"
-                    }`}
-                  >
+                <div className="mt-4 text-left">
+                  <p className={`whitespace-pre-line text-sm leading-relaxed text-foreground/80 ${expanded ? "" : "line-clamp-4"}`}>
                     {obra.synopsis}
                   </p>
                   {synopsisLong ? (
-                    <button
-                      onClick={() => setExpanded(!expanded)}
-                      className="mt-1 flex items-center gap-1 text-sm font-semibold text-primary"
-                    >
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
-                      />
+                    <button onClick={() => setExpanded(!expanded)} className="mt-2 flex items-center gap-1 text-sm font-semibold text-primary">
+                      <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
                       {expanded ? "Ver menos" : "Ver mais"}
                     </button>
                   ) : null}
@@ -424,27 +422,29 @@ function SeriesPage() {
               ) : null}
 
               {/* Actions */}
-              <div className="mt-5 flex flex-wrap items-center gap-3">
+              <div className="mt-6 grid gap-2 sm:grid-cols-2 md:max-w-xl">
                 {continueChapter ? (
-                  <Button asChild size="lg" className="font-bold">
+                  <Link
+                    to="/obra/$slug/$chapter"
+                    params={{ slug: obra.slug, chapter: formatChapter(continueChapter.number) }}
+                    className="flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-black uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110"
+                  >
+                    <Play className="h-4 w-4 fill-current" />
+                    {readIds.size > 0 ? `Continuar cap. ${formatChapter(continueChapter.number)}` : "Ler agora"}
+                  </Link>
+                ) : null}
+                {obra.chapters.length > 0 ? (() => {
+                  const last = obra.chapters.reduce((a, b) => (Number(b.number) > Number(a.number) ? b : a));
+                  return (
                     <Link
                       to="/obra/$slug/$chapter"
-                      params={{
-                        slug: obra.slug,
-                        chapter: formatChapter(continueChapter.number),
-                      }}
+                      params={{ slug: obra.slug, chapter: formatChapter(last.number) }}
+                      className="flex items-center justify-center gap-2 rounded-full bg-surface-2 px-5 py-3 text-sm font-black uppercase tracking-wider text-muted-foreground transition hover:text-foreground"
                     >
-                      <Play className="mr-2 h-4 w-4 fill-current" />
-                      {readIds.size > 0
-                        ? `Continue lendo (Capítulo ${formatChapter(continueChapter.number)})`
-                        : "Começar a ler"}
+                      Ler último
                     </Link>
-                  </Button>
-                ) : null}
-                <span className="flex items-center gap-1.5 font-display text-xl font-extrabold text-gold">
-                  <Star className="h-5 w-5 fill-gold" />
-                  {average.toFixed(1).replace(".", ",")}
-                </span>
+                  );
+                })() : null}
               </div>
 
               <div className="mt-3 flex flex-wrap gap-3">
