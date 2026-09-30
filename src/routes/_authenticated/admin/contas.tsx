@@ -106,7 +106,7 @@ function Contas() {
   );
 }
 
-function AccountDialog({ account, selfId, onClose }: { account: Account | null; selfId?: string; onClose: () => void }) {
+function AccountDialog({ account, selfId, onClose }: { account: Account | null; selfId?: string | undefined; onClose: () => void }) {
   const qc = useQueryClient();
   const [f, setF] = useState({ username: "", display_name: "", avatar_url: "", bio: "", xp: "0", banned: false, roles: [] as string[] });
   useEffect(() => {

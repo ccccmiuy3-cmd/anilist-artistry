@@ -24,7 +24,7 @@ export function AdminShell({
   adminOnly,
 }: {
   title: string;
-  subtitle?: string;
+  subtitle?: string | undefined;
   actions?: ReactNode;
   children: ReactNode;
   adminOnly?: boolean;
