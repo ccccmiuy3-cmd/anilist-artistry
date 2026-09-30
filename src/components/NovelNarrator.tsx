@@ -101,14 +101,14 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         callbacks.current.onFinished?.();
         return;
       }
-      const chunks = chunkText(list[pi]);
+      const chunks = chunkText(list[pi] ?? "");
       if (ci >= chunks.length) return speak(pi + 1, 0);
       pos.current = { p: pi, c: ci };
       if (ci === 0) {
         callbacks.current.onActiveChange(pi);
         document.getElementById(`novel-p-${pi}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
       }
-      const u = new SpeechSynthesisUtterance(chunks[ci]);
+      const u = new SpeechSynthesisUtterance(chunks[ci] ?? "");
       u.lang = settings.current.voice?.lang ?? "pt-BR";
       u.rate = settings.current.rate;
       if (settings.current.voice) u.voice = settings.current.voice;
@@ -120,7 +120,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         speak(pi, ci + 1);
       };
       // Watchdog: some browsers never fire onend; move on after a generous timeout.
-      const watchdog = window.setTimeout(next, 4000 + (chunks[ci].length * 160) / settings.current.rate);
+      const watchdog = window.setTimeout(next, 4000 + ((chunks[ci]?.length ?? 0) * 160) / settings.current.rate);
       u.onend = next;
       u.onerror = (e) => {
         if (e.error === "interrupted" || e.error === "canceled") {
