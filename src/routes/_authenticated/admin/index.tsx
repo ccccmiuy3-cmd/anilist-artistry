@@ -16,9 +16,9 @@ import { KINDS } from "@/lib/queries";
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
     meta: [
-      { title: "Painel de administração — MangaVerso" },
+      { title: "Painel de administração — Better Mangá" },
       { name: "description", content: "Visão geral do site, importação do AniList e gestão do catálogo." },
-      { property: "og:title", content: "Painel — MangaVerso" },
+      { property: "og:title", content: "Painel — Better Mangá" },
       { property: "og:description", content: "Visão geral e importação AniList." },
     ],
   }),

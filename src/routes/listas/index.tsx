@@ -22,9 +22,9 @@ import { coverUrl } from "@/lib/media";
 export const Route = createFileRoute("/listas/")({
   head: () => ({
     meta: [
-      { title: "Listas — MangaVerso" },
+      { title: "Listas — Better Mangá" },
       { name: "description", content: "Organize obras em listas e descubra listas criadas pela comunidade." },
-      { property: "og:title", content: "Listas — MangaVerso" },
+      { property: "og:title", content: "Listas — Better Mangá" },
       { property: "og:description", content: "Organize obras e descubra listas da comunidade." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

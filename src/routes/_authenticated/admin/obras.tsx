@@ -14,9 +14,9 @@ import { useRoles, useSession } from "@/hooks/useAuth";
 export const Route = createFileRoute("/_authenticated/admin/obras")({
   head: () => ({
     meta: [
-      { title: "Gerenciar obras — MangaVerso" },
+      { title: "Gerenciar obras — Better Mangá" },
       { name: "description", content: "Edite, publique, despublique ou apague obras do catálogo." },
-      { property: "og:title", content: "Gerenciar obras — MangaVerso" },
+      { property: "og:title", content: "Gerenciar obras — Better Mangá" },
       { property: "og:description", content: "Gestão do catálogo de obras." },
     ],
   }),

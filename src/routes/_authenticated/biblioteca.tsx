@@ -12,9 +12,9 @@ import { Pager } from "@/components/Pager";
 export const Route = createFileRoute("/_authenticated/biblioteca")({
   head: () => ({
     meta: [
-      { title: "Minha Coleção — MangaVerso" },
+      { title: "Minha Coleção — Better Mangá" },
       { name: "description", content: "Favoritos, obras em leitura e status de leitura da sua conta." },
-      { property: "og:title", content: "Minha Coleção — MangaVerso" },
+      { property: "og:title", content: "Minha Coleção — Better Mangá" },
       { property: "og:description", content: "Favoritos e histórico de leitura." },
     ],
   }),

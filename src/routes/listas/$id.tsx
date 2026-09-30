@@ -12,9 +12,9 @@ import { useSession } from "@/hooks/useAuth";
 export const Route = createFileRoute("/listas/$id")({
   head: () => ({
     meta: [
-      { title: "Lista — MangaVerso" },
-      { name: "description", content: "Obras reunidas em uma lista da comunidade MangaVerso." },
-      { property: "og:title", content: "Lista — MangaVerso" },
+      { title: "Lista — Better Mangá" },
+      { name: "description", content: "Obras reunidas em uma lista da comunidade Better Mangá." },
+      { property: "og:title", content: "Lista — Better Mangá" },
       { property: "og:description", content: "Obras reunidas em uma lista da comunidade." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

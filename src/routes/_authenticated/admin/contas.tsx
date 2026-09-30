@@ -17,9 +17,9 @@ import { useRoles, useSession } from "@/hooks/useAuth";
 export const Route = createFileRoute("/_authenticated/admin/contas")({
   head: () => ({
     meta: [
-      { title: "Gerenciar contas — MangaVerso" },
+      { title: "Gerenciar contas — Better Mangá" },
       { name: "description", content: "Edite perfis, cargos, XP e bloqueios dos leitores." },
-      { property: "og:title", content: "Gerenciar contas — MangaVerso" },
+      { property: "og:title", content: "Gerenciar contas — Better Mangá" },
       { property: "og:description", content: "Gestão de contas e cargos." },
     ],
   }),

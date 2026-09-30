@@ -13,13 +13,13 @@ import { useSession } from "@/hooks/useAuth";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MangaVerso — mangás, manhwas e comics atualizados" },
+      { title: "Better Mangá — mangás, manhwas e comics atualizados" },
       {
         name: "description",
         content:
           "Leia mangás, manhwas, manhuas e comics em português. Capítulos novos todos os dias, favoritos e histórico de leitura.",
       },
-      { property: "og:title", content: "MangaVerso — leitura online" },
+      { property: "og:title", content: "Better Mangá — leitura online" },
       {
         property: "og:description",
         content: "Catálogo de mangás, manhwas e comics com capítulos atualizados.",

@@ -40,12 +40,12 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-7xl items-center gap-4 px-4">
-        <Link to="/" className="flex items-center gap-2">
+      <div className="mx-auto flex h-24 max-w-7xl items-center gap-4 px-4">
+        <Link to="/" className="flex shrink-0 items-center" aria-label="Better Mangá — início">
           <img
             src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
             alt="Better Mangá"
-            className="h-14 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-16"
+            className="h-16 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-20"
           />
         </Link>
 
@@ -138,7 +138,7 @@ export function SiteFooter() {
           <img
             src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
             alt="Better Mangá"
-            className="h-14 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-16"
+            className="h-16 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-20"
           />
           <p>© {new Date().getFullYear()} — leitura de mangás, manhwas e comics</p>
         </div>
