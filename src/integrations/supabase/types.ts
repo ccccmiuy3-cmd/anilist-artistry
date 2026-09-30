@@ -172,6 +172,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_spoiler: boolean
+          parent_id: string | null
           series_id: string
           user_id: string
         }
@@ -182,6 +183,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_spoiler?: boolean
+          parent_id?: string | null
           series_id: string
           user_id: string
         }
@@ -192,6 +194,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_spoiler?: boolean
+          parent_id?: string | null
           series_id?: string
           user_id?: string
         }
@@ -201,6 +204,13 @@ export type Database = {
             columns: ["chapter_id"]
             isOneToOne: false
             referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
             referencedColumns: ["id"]
           },
           {
