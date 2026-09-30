@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { BookOpen, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, Play, Star } from "lucide-react";
 import type { SeriesRow } from "@/lib/queries";
 import { coverUrl, formatChapter } from "@/lib/media";
 import { Button } from "@/components/ui/button";
