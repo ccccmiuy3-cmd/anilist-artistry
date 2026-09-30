@@ -297,7 +297,13 @@ function ChaptersPanel({ seriesId, chapters, onChange }: { seriesId: string; cha
 
   const publish = useMutation({
     mutationFn: async () => {
+      const n = Number(number.replace(",", "."));
+      if (!number.trim() || !Number.isFinite(n) || n < 0 || n > 100000) throw new Error("Número do capítulo inválido.");
+      if (chapters.some((c) => Number(c.number) === n)) throw new Error(`O capítulo ${formatChapter(n)} já existe.`);
+      if (title.length > 150) throw new Error("Título muito longo (máx. 150).");
       const pasted = urls.split("\n").map((l) => l.trim()).filter(Boolean);
+      const bad = pasted.find((u) => !/^https?:\/\/\S+$/i.test(u));
+      if (bad) throw new Error(`Link inválido: ${bad.slice(0, 60)}`);
       const uploaded = files.length ? await uploadFiles(seriesId, formatChapter(number), files) : [];
       const pages = [...uploaded, ...pasted];
       if (!pages.length) throw new Error("Adicione páginas (upload ou links).");
