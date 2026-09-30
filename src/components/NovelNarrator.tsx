@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, Square, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { fetchSpeech, getAudioContext, SpeechError } from "@/lib/realistic-speech";
+import { fetchElevenSpeech, fetchSpeech, getAudioContext, SpeechError } from "@/lib/realistic-speech";
 
 const AI_VOICES = [
   { id: "Kore", label: "Kore (feminina)" },
@@ -11,6 +11,17 @@ const AI_VOICES = [
   { id: "Charon", label: "Charon (masculina grave)" },
   { id: "Orus", label: "Orus (masculina firme)" },
   { id: "Puck", label: "Puck (masculina animada)" },
+];
+
+const ELEVEN_VOICES = [
+  { id: "EXAVITQu4vr4xnSDxMaL", label: "Sarah (feminina)" },
+  { id: "FGY2WhTYpPnrIDTdsKH5", label: "Laura (feminina jovem)" },
+  { id: "Xb7hH8MSUJpSbSDYk0k2", label: "Alice (feminina suave)" },
+  { id: "pFZP5JQG7iQjIQuC4Bku", label: "Lily (feminina)" },
+  { id: "onwK4e9ZLuTAKqWW03F9", label: "Daniel (masculina)" },
+  { id: "nPczCjzI2devNBz1zQrb", label: "Brian (masculina grave)" },
+  { id: "JBFqnCBsd6RMkjVDRZzb", label: "George (masculina)" },
+  { id: "TX3LPaxmHKxFdv7VOQHJ", label: "Liam (masculina jovem)" },
 ];
 
 // Group sentences into ~700-char pieces for natural AI narration.
@@ -66,8 +77,9 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
   const [voiceUri, setVoiceUri] = useState("");
   const [rate, setRate] = useState(1);
   const [state, setState] = useState<"idle" | "playing" | "paused">("idle");
-  const [engine, setEngine] = useState<"ai" | "device">("ai");
+  const [engine, setEngine] = useState<"ai" | "elevenlabs" | "device">("ai");
   const [aiVoice, setAiVoice] = useState("Kore");
+  const [elevenVoice, setElevenVoice] = useState("EXAVITQu4vr4xnSDxMaL");
   const [loading, setLoading] = useState(false);
   const ai = useRef<{
     abort: AbortController | null;
