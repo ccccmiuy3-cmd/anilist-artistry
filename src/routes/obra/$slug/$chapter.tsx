@@ -105,8 +105,8 @@ function Reader() {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const progress = Math.round(((index + 1) / Math.max(obra.chapters.length, 1)) * 100);
 
-    const save = (pos: number) =>
-      supabase.from("reading_history").upsert(
+    const save = (pos: number) => {
+      void supabase.from("reading_history").upsert(
         {
           user_id: user.id,
           series_id: obra.id,
@@ -117,6 +117,15 @@ function Reader() {
         },
         { onConflict: "user_id,series_id" },
       );
+      if (pos > 0.9) {
+        void supabase
+          .from("chapter_reads")
+          .upsert(
+            { user_id: user.id, chapter_id: current.id },
+            { onConflict: "user_id,chapter_id" },
+          );
+      }
+    };
 
     const currentPos = () => {
       const max = document.documentElement.scrollHeight - window.innerHeight;

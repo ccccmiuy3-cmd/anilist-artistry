@@ -2,14 +2,18 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowDownWideNarrow,
   BookOpen,
   Check,
+  CheckCheck,
   ChevronDown,
   Eye,
+  EyeOff,
   Heart,
-  ListPlus,
   MessageCircle,
+  MessageSquare,
   Play,
+  RotateCcw,
   Send,
   Star,
 } from "lucide-react";
@@ -119,6 +123,39 @@ function SeriesPage() {
     queryFn: () => fetchComments(series.data!.id),
   });
 
+  const chapterReads = useQuery({
+    queryKey: ["chapter-reads", slug, user?.id],
+    enabled: Boolean(user && series.data),
+    queryFn: async () => {
+      const chapterIds = series.data!.chapters.map((c) => c.id);
+      if (chapterIds.length === 0) return new Set<string>();
+      const { data } = await supabase
+        .from("chapter_reads")
+        .select("chapter_id")
+        .eq("user_id", user!.id)
+        .in("chapter_id", chapterIds);
+      return new Set((data ?? []).map((row) => row.chapter_id));
+    },
+  });
+
+  const chapterCommentCounts = useQuery({
+    queryKey: ["chapter-comment-counts", series.data?.id],
+    enabled: Boolean(series.data),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("comments")
+        .select("chapter_id")
+        .eq("series_id", series.data!.id)
+        .not("chapter_id", "is", null);
+      const counts = new Map<string, number>();
+      for (const row of data ?? []) {
+        if (row.chapter_id)
+          counts.set(row.chapter_id, (counts.get(row.chapter_id) ?? 0) + 1);
+      }
+      return counts;
+    },
+  });
+
   const toggleFavorite = useMutation({
     mutationFn: async () => {
       if (!user || !series.data) throw new Error("Entre para favoritar.");
@@ -183,28 +220,54 @@ function SeriesPage() {
       if (!user || !series.data) throw new Error("Entre para marcar como lido.");
       if (chapter.isRead) {
         const { error } = await supabase
-          .from("reading_history")
+          .from("chapter_reads")
           .delete()
           .eq("user_id", user.id)
-          .eq("series_id", series.data.id);
+          .eq("chapter_id", chapter.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("reading_history").upsert(
-          {
-            user_id: user.id,
-            series_id: series.data.id,
-            chapter_id: chapter.id,
-            progress: 100,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,series_id" },
-        );
+        const { error } = await supabase
+          .from("chapter_reads")
+          .upsert(
+            { user_id: user.id, chapter_id: chapter.id },
+            { onConflict: "user_id,chapter_id" },
+          );
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["history", slug, user?.id] });
-      toast.success("Atualizado!");
+      queryClient.invalidateQueries({ queryKey: ["chapter-reads", slug, user?.id] });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
+  });
+
+  const markAll = useMutation({
+    mutationFn: async (mode: "read" | "unread") => {
+      if (!user || !series.data) throw new Error("Entre para marcar como lido.");
+      const chapterIds = series.data.chapters.map((c) => c.id);
+      if (chapterIds.length === 0) return;
+      if (mode === "unread") {
+        const { error } = await supabase
+          .from("chapter_reads")
+          .delete()
+          .eq("user_id", user.id)
+          .in("chapter_id", chapterIds);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("chapter_reads")
+          .upsert(
+            chapterIds.map((chapter_id) => ({ user_id: user.id, chapter_id })),
+            { onConflict: "user_id,chapter_id" },
+          );
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_data, mode) => {
+      queryClient.invalidateQueries({ queryKey: ["chapter-reads", slug, user?.id] });
+      toast.success(
+        mode === "read" ? "Todos marcados como lidos!" : "Leitura desmarcada!",
+      );
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
   });
@@ -234,18 +297,14 @@ function SeriesPage() {
   }
 
   const chapters = order === "asc" ? obra.chapters : [...obra.chapters].reverse();
-  const readNumbers = new Set(
-    (history.data ?? [])
-      .filter((entry) => entry.progress >= 1)
-      .map((entry) => entry.chapters?.number),
-  );
+  const readIds = chapterReads.data ?? new Set<string>();
   const lastRead = (history.data ?? [])
     .map((entry) => entry.chapters?.number)
     .filter((n): n is number => typeof n === "number")
     .sort((a, b) => b - a)[0];
   const continueChapter =
     obra.chapters.find((c) => c.number === lastRead) ??
-    obra.chapters.find((c) => !readNumbers.has(c.number)) ??
+    obra.chapters.find((c) => !readIds.has(c.id)) ??
     obra.chapters[0];
 
   const synopsisLong = (obra.synopsis ?? "").length > 320;
@@ -347,7 +406,7 @@ function SeriesPage() {
                       }}
                     >
                       <Play className="mr-2 h-4 w-4 fill-current" />
-                      {readNumbers.size > 0
+                      {readIds.size > 0
                         ? `Continue lendo (Capítulo ${formatChapter(continueChapter.number)})`
                         : "Começar a ler"}
                     </Link>
@@ -450,75 +509,142 @@ function SeriesPage() {
           </div>
 
           {/* Chapters */}
-          <section className="mt-8 rounded-xl border border-border bg-surface">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <h2 className="font-display text-lg font-bold">Capítulos</h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setOrder(order === "asc" ? "desc" : "asc")}
-                className="font-semibold"
-              >
-                {order === "desc" ? "Recentes" : "Antigos"}
-              </Button>
+          <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-surface">
+            <div className="border-b border-border px-4 py-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <h2 className="font-display text-lg font-bold">Capítulos</h2>
+                <div className="flex flex-wrap items-center justify-end gap-1.5">
+                  {user ? (
+                    <>
+                      <button
+                        type="button"
+                        title="Marcar todos como lidos"
+                        aria-label="Marcar todos como lidos"
+                        disabled={markAll.isPending || chapters.length === 0}
+                        onClick={() => markAll.mutate("read")}
+                        className="rounded-lg border border-emerald-500/25 p-2 text-emerald-400/90 transition-colors hover:bg-emerald-500/15 hover:text-emerald-300 disabled:pointer-events-none disabled:opacity-40"
+                      >
+                        <CheckCheck className="h-[18px] w-[18px]" />
+                      </button>
+                      <button
+                        type="button"
+                        title="Desmarcar leitura de todos os capítulos"
+                        aria-label="Desmarcar leitura de todos os capítulos"
+                        disabled={markAll.isPending || readIds.size === 0}
+                        onClick={() => markAll.mutate("unread")}
+                        className="rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                      >
+                        <RotateCcw className="h-[18px] w-[18px]" />
+                      </button>
+                    </>
+                  ) : null}
+                  <button
+                    type="button"
+                    title={
+                      order === "desc"
+                        ? "Ordem: do mais recente ao mais antigo"
+                        : "Ordem: do mais antigo ao mais recente"
+                    }
+                    aria-label={
+                      order === "desc"
+                        ? "Mostrar capítulos do mais antigo ao mais recente"
+                        : "Mostrar capítulos do mais recente ao mais antigo"
+                    }
+                    onClick={() => setOrder(order === "asc" ? "desc" : "asc")}
+                    className="flex items-center gap-1.5 rounded-lg border border-transparent px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:border-border hover:text-foreground sm:text-sm"
+                  >
+                    <ArrowDownWideNarrow
+                      className={`h-4 w-4 shrink-0 text-primary opacity-90 ${order === "asc" ? "rotate-180" : ""}`}
+                    />
+                    <span>{order === "desc" ? "Recentes" : "Antigos"}</span>
+                  </button>
+                </div>
+              </div>
             </div>
-            <ul className="divide-y divide-border">
+            <ul className="max-h-[60vh] divide-y divide-border/60 overflow-y-auto pr-1 md:max-h-[min(72vh,780px)]">
               {chapters.map((chapter) => {
-                const isRead = readNumbers.has(chapter.number);
+                const isRead = readIds.has(chapter.id);
+                const commentCount =
+                  chapterCommentCounts.data?.get(chapter.id) ?? 0;
                 return (
-                  <li key={chapter.id} className="flex items-center">
+                  <li
+                    key={chapter.id}
+                    className={`flex items-center gap-4 px-4 py-4 transition-colors hover:bg-surface-2/60 ${
+                      isRead ? "opacity-75 hover:opacity-100" : ""
+                    }`}
+                  >
                     <Link
                       to="/obra/$slug/$chapter"
                       params={{ slug: obra.slug, chapter: formatChapter(chapter.number) }}
-                      className="flex min-w-0 flex-1 items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2/60"
+                      className="flex min-w-0 flex-1 items-center gap-4 text-left"
                     >
                       <span
-                        className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg text-sm font-bold ${
-                          isRead ? "bg-primary/15 text-primary" : "bg-surface-2"
+                        className={`grid h-12 w-12 shrink-0 place-items-center rounded-lg text-sm font-bold ${
+                          isRead
+                            ? "bg-emerald-500/10 text-emerald-500"
+                            : "bg-surface-2 text-muted-foreground"
                         }`}
                       >
-                        {isRead ? <Check className="h-5 w-5" /> : formatChapter(chapter.number)}
+                        {isRead ? (
+                          <Check className="h-5 w-5" />
+                        ) : (
+                          formatChapter(chapter.number)
+                        )}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span
-                          className={`block truncate text-sm font-bold ${
-                            isRead ? "text-primary" : ""
+                          className={`flex min-w-0 items-center gap-1.5 font-medium ${
+                            isRead ? "text-emerald-500/90" : ""
                           }`}
                         >
-                          Capítulo {formatChapter(chapter.number)}
-                          {chapter.title ? (
-                            <span className="ml-2 font-normal text-muted-foreground">
-                              {chapter.title}
-                            </span>
-                          ) : null}
+                          <span className="truncate">
+                            Capítulo {formatChapter(chapter.number)}
+                            {chapter.title ? (
+                              <span className="ml-2 font-normal text-muted-foreground">
+                                {chapter.title}
+                              </span>
+                            ) : null}
+                          </span>
                         </span>
-                        <span className="mt-0.5 block text-xs text-muted-foreground">
-                          {timeAgo(chapter.created_at)}
+                        <span className="mt-0.5 flex flex-wrap items-center gap-2">
+                          <span className="text-xs text-muted-foreground/70">
+                            {timeAgo(chapter.created_at)}
+                          </span>
                           {isRead ? (
-                            <span className="ml-2 font-bold uppercase tracking-wide text-primary">
+                            <span className="text-[10px] uppercase tracking-wider text-emerald-500/80">
                               Lido
                             </span>
                           ) : null}
                         </span>
                       </span>
-                      <span className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <Eye className="h-4 w-4" />
-                      </span>
                     </Link>
+                    <span className="flex shrink-0 items-center gap-2.5 text-muted-foreground/60">
+                      <span
+                        className="inline-flex items-center gap-1 text-xs tabular-nums"
+                        title="Comentários"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        {commentCount}
+                      </span>
+                    </span>
                     {user ? (
                       <button
                         type="button"
                         disabled={toggleRead.isPending}
                         onClick={() => toggleRead.mutate({ id: chapter.id, isRead })}
-                        title={isRead ? "Desmarcar como lido" : "Marcar como lido"}
-                        aria-label={isRead ? "Desmarcar como lido" : "Marcar como lido"}
-                        className={`mr-4 grid h-8 w-8 shrink-0 place-items-center rounded-md border transition-colors ${
+                        title={isRead ? "Marcar como não lido" : "Marcar como lido"}
+                        aria-label={isRead ? "Marcar como não lido" : "Marcar como lido"}
+                        className={`shrink-0 rounded-full p-2 transition-colors ${
                           isRead
-                            ? "border-primary/50 bg-primary/15 text-primary"
-                            : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                            ? "text-emerald-500 hover:bg-emerald-500/10"
+                            : "text-muted-foreground/50 hover:bg-surface-2 hover:text-foreground"
                         }`}
                       >
-                        <Check className="h-4 w-4" />
+                        {isRead ? (
+                          <EyeOff className="h-[18px] w-[18px]" />
+                        ) : (
+                          <Eye className="h-[18px] w-[18px]" />
+                        )}
                       </button>
                     ) : null}
                   </li>
