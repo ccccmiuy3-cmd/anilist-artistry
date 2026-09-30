@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { BookMarked, LogOut, Search, Shield, User2 } from "lucide-react";
+import { Bell, BookMarked, LogOut, Search, Shield, User2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileNav } from "@/components/MobileNav";
 import { useProfile, useRoles, useSession } from "@/hooks/useAuth";
@@ -15,7 +15,7 @@ import {
 
 const NAV = [
   { to: "/", label: "Início" },
-    { to: "/biblioteca", label: "Coleção" },
+  { to: "/biblioteca", label: "Coleção" },
   { to: "/listas", label: "Listas" },
   { to: "/ranking", label: "Ranking" },
   { to: "/historico", label: "Histórico" },
@@ -37,38 +37,64 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 gap-y-0 px-3 py-2 sm:h-24 sm:flex-nowrap sm:gap-4 sm:px-4 sm:py-0">
+      <header className="sticky top-0 z-40 border-b border-foreground/5 bg-background/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 gap-y-0 px-3 py-2 sm:h-16 sm:flex-nowrap sm:gap-4 sm:px-4 sm:py-0 md:px-8">
           <Link to="/" className="flex shrink-0 items-center" aria-label="Better Mangá — início">
             <img
               src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
               alt="Better Mangá"
-              className="h-11 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-20"
+              className="h-11 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-12"
             />
           </Link>
 
           <div className="flex-1 sm:hidden" />
 
-          <nav className="hidden items-center text-sm font-semibold lg:order-none lg:flex lg:w-auto lg:min-w-0 lg:flex-1 lg:gap-1">
+          <nav className="hidden items-center gap-1 text-sm font-medium lg:order-none lg:flex lg:w-auto lg:min-w-0 lg:flex-1">
             {NAV.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 activeOptions={{ exact: item.to === "/" }}
-                activeProps={{ className: "text-primary" }}
-                inactiveProps={{ className: "text-muted-foreground hover:text-foreground" }}
-                className="whitespace-nowrap rounded-md px-2 py-2 transition-colors sm:px-3"
+                className="group relative flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 transition-all"
+                activeProps={{ className: "text-foreground" }}
+                inactiveProps={{ className: "text-muted-foreground hover:bg-foreground/5 hover:text-foreground" }}
               >
-                {item.label}
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full transition-colors ${
+                        isActive ? "bg-primary shadow-[var(--shadow-glow)]" : "bg-transparent group-hover:bg-foreground/25"
+                      }`}
+                    />
+                    {item.label}
+                  </>
+                )}
               </Link>
             ))}
           </nav>
+
+          <div className="hidden flex-1 lg:block" />
+
+          <Button
+            asChild
+            variant="ghost"
+            className="group hidden h-9 w-52 shrink-0 items-center gap-2.5 rounded-full border border-foreground/10 bg-foreground/[0.03] px-4 text-muted-foreground transition-all hover:border-foreground/15 hover:bg-foreground/[0.06] hover:text-foreground lg:flex"
+          >
+            <Link to="/catalogo" search={{ q: "", kind: "Todos" }}>
+              <Search className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex-1 text-left text-[13px]">Buscar...</span>
+              <span className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100">
+                <kbd className="rounded border border-foreground/10 bg-background/60 px-1.5 py-0.5 font-mono text-[9px] leading-none text-muted-foreground">Ctrl</kbd>
+                <kbd className="rounded border border-foreground/10 bg-background/60 px-1.5 py-0.5 font-mono text-[9px] leading-none text-muted-foreground">K</kbd>
+              </span>
+            </Link>
+          </Button>
 
           <Button
             asChild
             size="icon"
             variant="outline"
-            className="h-9 w-9 shrink-0 rounded-full border-border bg-surface"
+            className="h-9 w-9 shrink-0 rounded-full border-border bg-surface lg:hidden"
             aria-label="Pesquisar"
           >
             <Link to="/catalogo" search={{ q: "", kind: "Todos" }}>
@@ -76,55 +102,71 @@ export function SiteHeader() {
             </Link>
           </Button>
 
-        {user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-full border border-border bg-surface py-1 pl-1 pr-3 text-sm font-semibold">
-                <span className="grid h-7 w-7 place-items-center overflow-hidden rounded-full bg-surface-2">
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <User2 className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </span>
-                <span className="hidden max-w-24 truncate sm:block">
-                  {profile?.username ?? "leitor"}
-                </span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem asChild>
-                <Link to="/u/$username" params={{ username: profile?.username ?? "" }} className="flex items-center gap-2">
-                  <User2 className="h-4 w-4" /> Meu perfil
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/biblioteca" className="flex items-center gap-2">
-                  <BookMarked className="h-4 w-4" /> Minha biblioteca
-                </Link>
-              </DropdownMenuItem>
-              {isStaff ? (
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            title="Notificações"
+            className="relative hidden h-9 w-9 shrink-0 rounded-md text-muted-foreground hover:bg-foreground/5 hover:text-foreground sm:flex"
+          >
+            <Bell className="h-[18px] w-[18px]" />
+            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-background bg-primary" />
+          </Button>
+
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex min-w-0 items-center gap-2" aria-label="Conta">
+                  <span className="relative shrink-0 pb-2">
+                    <span className="relative z-10 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-foreground/10 bg-surface-2">
+                      {profile?.avatar_url ? (
+                        <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <User2 className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </span>
+                    <span className="absolute -bottom-1 left-1/2 z-30 min-w-max -translate-x-1/2">
+                      <span className="inline-flex h-[18px] items-center justify-center gap-1 rounded-full border border-foreground/10 bg-foreground/[0.07] px-1.5 text-[10px] font-semibold tracking-wide text-muted-foreground backdrop-blur-sm">
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-primary" />
+                        <span className="tabular-nums leading-none">{profile?.level ?? 1}</span>
+                      </span>
+                    </span>
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem asChild>
-                  <Link to="/admin" className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" /> Painel
+                  <Link to="/u/$username" params={{ username: profile?.username ?? "" }} className="flex items-center gap-2">
+                    <User2 className="h-4 w-4" /> Meu perfil
                   </Link>
                 </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut} className="flex items-center gap-2">
-                <LogOut className="h-4 w-4" /> Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Button asChild size="sm" className="rounded-full font-semibold">
-            <Link to="/auth">Entrar</Link>
-          </Button>
-        )}
-          </div>
-        </header>
-        <MobileNav />
-      </>
+                <DropdownMenuItem asChild>
+                  <Link to="/biblioteca" className="flex items-center gap-2">
+                    <BookMarked className="h-4 w-4" /> Minha biblioteca
+                  </Link>
+                </DropdownMenuItem>
+                {isStaff ? (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin" className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" /> Painel
+                    </Link>
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="flex items-center gap-2">
+                  <LogOut className="h-4 w-4" /> Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button asChild size="sm" className="rounded-full font-semibold">
+              <Link to="/auth">Entrar</Link>
+            </Button>
+          )}
+        </div>
+      </header>
+      <MobileNav />
+    </>
   );
 }
 
