@@ -15,6 +15,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as AuthenticatedBibliotecaRouteImport } from './routes/_authenticated/biblioteca'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminNovaRouteImport } from './routes/_authenticated/admin/nova'
 import { Route as ObraSlugIndexRouteImport } from './routes/obra/$slug/index'
 import { Route as ObraSlugChapterRouteImport } from './routes/obra/$slug/$chapter'
 
@@ -47,6 +49,16 @@ const AuthenticatedBibliotecaRoute = AuthenticatedBibliotecaRouteImport.update({
   path: '/biblioteca',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminNovaRoute = AuthenticatedAdminNovaRouteImport.update({
+  id: '/admin/nova',
+  path: '/admin/nova',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ObraSlugIndexRoute = ObraSlugIndexRouteImport.update({
   id: '/obra/$slug/',
   path: '/obra/$slug/',
@@ -64,7 +76,9 @@ export interface FileRoutesByFullPath {
   '/catalogo': typeof CatalogoRoute
   '/ranking': typeof RankingRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
+  '/admin/nova': typeof AuthenticatedAdminNovaRoute
   '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/obra/$slug/': typeof ObraSlugIndexRoute
 }
 export interface FileRoutesByTo {
@@ -73,7 +87,9 @@ export interface FileRoutesByTo {
   '/catalogo': typeof CatalogoRoute
   '/ranking': typeof RankingRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
+  '/admin/nova': typeof AuthenticatedAdminNovaRoute
   '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/obra/$slug': typeof ObraSlugIndexRoute
 }
 export interface FileRoutesById {
@@ -84,7 +100,9 @@ export interface FileRoutesById {
   '/catalogo': typeof CatalogoRoute
   '/ranking': typeof RankingRoute
   '/_authenticated/biblioteca': typeof AuthenticatedBibliotecaRoute
+  '/_authenticated/admin/nova': typeof AuthenticatedAdminNovaRoute
   '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/obra/$slug/': typeof ObraSlugIndexRoute
 }
 export interface FileRouteTypes {
@@ -95,7 +113,9 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/ranking'
     | '/biblioteca'
+    | '/admin/nova'
     | '/obra/$slug/$chapter'
+    | '/admin/'
     | '/obra/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -104,7 +124,9 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/ranking'
     | '/biblioteca'
+    | '/admin/nova'
     | '/obra/$slug/$chapter'
+    | '/admin'
     | '/obra/$slug'
   id:
     | '__root__'
@@ -114,7 +136,9 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/ranking'
     | '/_authenticated/biblioteca'
+    | '/_authenticated/admin/nova'
     | '/obra/$slug/$chapter'
+    | '/_authenticated/admin/'
     | '/obra/$slug/'
   fileRoutesById: FileRoutesById
 }
@@ -172,6 +196,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBibliotecaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/nova': {
+      id: '/_authenticated/admin/nova'
+      path: '/admin/nova'
+      fullPath: '/admin/nova'
+      preLoaderRoute: typeof AuthenticatedAdminNovaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/obra/$slug/': {
       id: '/obra/$slug/'
       path: '/obra/$slug'
@@ -191,10 +229,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBibliotecaRoute: typeof AuthenticatedBibliotecaRoute
+  AuthenticatedAdminNovaRoute: typeof AuthenticatedAdminNovaRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBibliotecaRoute: AuthenticatedBibliotecaRoute,
+  AuthenticatedAdminNovaRoute: AuthenticatedAdminNovaRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
