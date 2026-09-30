@@ -37,12 +37,13 @@ function LevelBadge({ level }: { level: number }) {
   const high = level >= 50;
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded border px-1.5 py-px text-[10px] font-bold ${
-        high ? "border-gold/50 bg-gold/10 text-gold" : "border-accent/50 bg-accent/15 text-accent-foreground"
+      title={high ? `Nível ${level} · Crítico` : `Nível ${level} · Viciado`}
+      className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-semibold tabular-nums leading-none ${
+        high ? "border-yellow-500/35 bg-yellow-500/10 text-yellow-100" : "border-purple-500/30 bg-purple-500/10 text-purple-200"
       }`}
     >
-      {high ? <Star className="h-2.5 w-2.5" /> : <Flame className="h-2.5 w-2.5" />}
-      Nv. {level}
+      {high ? <Star className="h-[11px] w-[11px] shrink-0 text-yellow-300" strokeWidth={2.5} /> : <Flame className="h-[11px] w-[11px] shrink-0 text-purple-300" strokeWidth={2.5} />}
+      <span>Nv.&nbsp;{level}</span>
     </span>
   );
 }
@@ -80,30 +81,69 @@ function Ranking() {
   const rest = rows.slice(3);
 
   const podium = (r: Reader | undefined, place: 1 | 2 | 3) => {
-    if (!r) return <div className="w-44" />;
     const cfg = {
-      1: { h: "h-56", av: "h-28 w-28 ring-4 ring-gold", bg: "from-primary/70 via-primary/25 to-transparent", xp: "text-gold" },
-      2: { h: "h-44", av: "h-24 w-24 ring-4 ring-muted", bg: "from-secondary via-secondary/40 to-transparent", xp: "text-foreground/80" },
-      3: { h: "h-36", av: "h-20 w-20 ring-4 ring-primary/40", bg: "from-primary/35 via-primary/10 to-transparent", xp: "text-foreground/80" },
+      1: {
+        h: "h-[11.5rem] md:h-56",
+        av: "h-[5.75rem] w-[5.75rem] md:h-[6.75rem] md:w-[6.75rem]",
+        ring: "ring-[3px] ring-amber-400/90",
+        bg: "from-amber-600/55 via-amber-900/85 to-zinc-950",
+        border: "border-amber-400/35",
+        glow: "from-amber-200/20",
+        xp: "text-amber-200",
+      },
+      2: {
+        h: "h-[8.5rem] md:h-44",
+        av: "h-[4.5rem] w-[4.5rem] md:h-24 md:w-24",
+        ring: "ring-2 ring-white/20",
+        bg: "from-slate-600/50 via-slate-800/90 to-zinc-950",
+        border: "border-slate-500/30",
+        glow: "from-white/15",
+        xp: "text-zinc-400",
+      },
+      3: {
+        h: "h-[7rem] md:h-36",
+        av: "h-[4.25rem] w-[4.25rem] md:h-[5.25rem] md:w-[5.25rem]",
+        ring: "ring-2 ring-white/20",
+        bg: "from-amber-900/45 via-amber-950/90 to-zinc-950",
+        border: "border-amber-900/50",
+        glow: "from-amber-500/10",
+        xp: "text-zinc-400",
+      },
     }[place];
+    if (!r) return <div className="min-w-0 flex-1" />;
     return (
-      <Link to="/u/$username" params={{ username: r.username }} className="relative flex w-40 flex-col items-center sm:w-44">
-        {place === 1 ? (
-          <span className="z-10 -mb-3 grid h-7 w-7 place-items-center rounded-full bg-gold text-background">
-            <Crown className="h-4 w-4" />
+      <div className="flex min-w-0 flex-1 flex-col items-center">
+        <div className="relative z-[2] flex flex-col items-center">
+          {place === 1 ? (
+            <div className="mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-600 text-amber-950 shadow-lg shadow-amber-900/40">
+              <Crown className="h-4 w-4" strokeWidth={2.2} />
+            </div>
+          ) : null}
+          <Link
+            to="/u/$username"
+            params={{ username: r.username }}
+            aria-label={`Perfil de ${r.username}`}
+            className={`relative outline-none transition hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-orange-500/70 ${cfg.av}`}
+          >
+            <Avatar r={r} className={`absolute inset-0 h-full w-full rounded-full shadow-xl ring-offset-2 ring-offset-zinc-950 ${cfg.ring}`} />
+          </Link>
+        </div>
+        <div
+          className={`relative z-[1] -mt-5 flex w-full max-w-[10.5rem] flex-col items-center rounded-t-2xl border-x border-t bg-gradient-to-b px-2 pb-4 pt-9 md:max-w-[11.5rem] ${cfg.h} ${cfg.bg} ${cfg.border} shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]`}
+        >
+          <div className={`pointer-events-none absolute inset-x-0 top-0 h-12 rounded-t-2xl bg-gradient-to-b ${cfg.glow} to-transparent`} aria-hidden="true" />
+          <span className="select-none text-5xl font-black leading-none text-black/[0.12] md:text-6xl" aria-hidden="true">
+            {place}
           </span>
-        ) : null}
-        <Avatar r={r} className={`z-10 -mb-10 text-2xl ${cfg.av}`} />
-        <div className={`relative flex w-full flex-col items-center justify-end rounded-t-xl border border-b-0 border-border bg-gradient-to-b ${cfg.bg} ${cfg.h} px-2 pb-3`}>
-          <span className="pointer-events-none absolute top-10 font-display text-6xl font-black text-foreground/10">{place}</span>
-          <p className="flex items-center gap-1.5 text-sm font-bold">
-            <span className="max-w-24 truncate">{r.username}</span> <LevelBadge level={r.level} />
+          <p className="-mt-1 flex w-full max-w-full flex-wrap items-center justify-center gap-1 px-1">
+            <span className="truncate text-sm font-semibold text-zinc-100 md:text-base">{r.username}</span>
+            <LevelBadge level={r.level} />
           </p>
-          <p className={`mt-4 text-sm font-bold ${cfg.xp}`}>
-            {fmt(r.xp)} <span className="text-muted-foreground">XP</span>
+          <p className={`mt-auto pt-2 text-center text-xs font-bold tabular-nums md:text-sm ${cfg.xp}`}>
+            {fmt(r.xp)} <span className="font-medium text-white/25">XP</span>
           </p>
         </div>
-      </Link>
+      </div>
     );
   };
 
@@ -147,15 +187,17 @@ function Ranking() {
 
         {rows.length ? (
           <>
-            <div className="mx-auto mt-12 max-w-2xl">
-              <div className="flex items-end justify-center gap-3 sm:gap-6">
-                {podium(second, 2)}
-                {podium(first, 1)}
-                {podium(third, 3)}
+            <section className="mt-12" aria-label="Pódio top 3">
+              <div className="mx-auto w-full max-w-lg md:max-w-2xl">
+                <div className="flex items-end justify-center gap-1.5 px-1 sm:gap-3 md:gap-5">
+                  {podium(second, 2)}
+                  {podium(first, 1)}
+                  {podium(third, 3)}
+                </div>
+                <div className="mx-1 mt-0 h-2 rounded-b-lg bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 shadow-inner md:mx-2" aria-hidden="true" />
+                <p className="mt-2 text-center text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-600">Pódio</p>
               </div>
-              <div className="h-2 rounded-full bg-surface-2" />
-              <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Pódio</p>
-            </div>
+            </section>
 
             <ol className="mt-12 space-y-2.5">
               {rest.map((r, i) => (
