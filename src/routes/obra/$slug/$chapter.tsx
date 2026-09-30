@@ -72,6 +72,19 @@ function Reader() {
     return Array.isArray(raw) ? (raw.filter((item) => typeof item === "string") as string[]) : [];
   }, [current]);
 
+  const isNovel = obra?.kind === "Novel";
+  const paragraphs = useMemo(
+    () =>
+      isNovel
+        ? ((current as { content?: string | null } | undefined)?.content ?? "")
+            .split(/\n{2,}|\r?\n/)
+            .map((p) => p.trim())
+            .filter(Boolean)
+        : [],
+    [current, isNovel],
+  );
+  const [fontSize, setFontSize] = useState(18);
+
   const queryClient = useQueryClient();
   const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
 
@@ -294,7 +307,27 @@ function Reader() {
       </header>
 
       <main className="mx-auto max-w-3xl">
-        {pages.length === 0 ? (
+        {isNovel ? (
+          <article className="px-5 py-10 sm:px-8">
+            {current.title ? (
+              <h2 className="mb-8 text-center font-display text-xl font-extrabold">{current.title}</h2>
+            ) : null}
+            {paragraphs.length === 0 ? (
+              <p className="py-10 text-center text-sm text-muted-foreground">
+                Este capítulo ainda não tem texto.
+              </p>
+            ) : (
+              <div
+                className="space-y-6 leading-relaxed text-foreground/90"
+                style={{ fontSize: `${fontSize}px`, lineHeight: 1.9 }}
+              >
+                {paragraphs.map((paragraph, paragraphIndex) => (
+                  <p key={paragraphIndex}>{paragraph}</p>
+                ))}
+              </div>
+            )}
+          </article>
+        ) : pages.length === 0 ? (
           <p className="p-16 text-center text-sm text-muted-foreground">
             Este capítulo ainda não tem páginas.
           </p>
