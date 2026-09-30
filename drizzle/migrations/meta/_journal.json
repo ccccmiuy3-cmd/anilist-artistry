@@ -176,6 +176,13 @@
       "when": 1790783616959,
       "tag": "0024_perf_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790794642579,
+      "tag": "0025_support_messages",
+      "breakpoints": true
     }
   ]
 }
