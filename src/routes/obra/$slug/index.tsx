@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import {
@@ -8,6 +8,9 @@ import {
   CheckCheck,
   ChevronDown,
   Eye,
+  Forward,
+  Search,
+  Sparkles,
   EyeOff,
   Heart,
   MessageCircle,
@@ -74,6 +77,8 @@ function SeriesPage() {
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [expanded, setExpanded] = useState(false);
   const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [chapterSearch, setChapterSearch] = useState("");
+  const [commentSort, setCommentSort] = useState<"new" | "old">("new");
 
   const series = useSuspenseQuery({
     queryKey: ["series", slug],
@@ -145,6 +150,22 @@ function SeriesPage() {
     queryKey: ["comments", series.data?.id],
     enabled: Boolean(series.data),
     queryFn: () => fetchComments(series.data!.id),
+  });
+
+  const recommended = useQuery({
+    queryKey: ["recommended", series.data?.id],
+    enabled: Boolean(series.data && series.data.genres.length),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("series")
+        .select("id, slug, title, cover_url")
+        .eq("published", true)
+        .overlaps("genres", series.data!.genres)
+        .neq("id", series.data!.id)
+        .order("views", { ascending: false })
+        .limit(6);
+      return data ?? [];
+    },
   });
 
   const chapterReads = useQuery({
@@ -327,6 +348,13 @@ function SeriesPage() {
     obra.chapters.find((c) => !readIds.has(c.id)) ??
     obra.chapters[0];
 
+  const firstChapter = obra.chapters.reduce<(typeof obra.chapters)[number] | undefined>((a, b) => (!a || Number(b.number) < Number(a.number) ? b : a), undefined);
+  const lastChapter = obra.chapters.reduce<(typeof obra.chapters)[number] | undefined>((a, b) => (!a || Number(b.number) > Number(a.number) ? b : a), undefined);
+  const q = chapterSearch.trim().toLowerCase();
+  const visibleChapters = q
+    ? chapters.filter((c) => formatChapter(c.number).includes(q) || (c.title ?? "").toLowerCase().includes(q))
+    : chapters;
+  const sortedComments = commentSort === "new" ? (comments.data ?? []) : [...(comments.data ?? [])].reverse();
   const synopsisLong = (obra.synopsis ?? "").length > 320;
   const stats = ratingStats.data ?? { count: 0, avg: 0 };
   const average = stats.count > 0 ? stats.avg : Number(obra.rating) || 0;
@@ -413,278 +441,240 @@ function SeriesPage() {
               ) : null}
 
               {/* Actions */}
-              <div className="mt-6 grid gap-2 sm:grid-cols-2 md:max-w-xl">
-                {continueChapter ? (
+              <div className="mt-6 flex flex-wrap justify-center gap-2 md:justify-start">
+                {obra.chapters.length > 0 ? (
                   <Link
                     to="/obra/$slug/$chapter"
-                    params={{ slug: obra.slug, chapter: formatChapter(continueChapter.number) }}
-                    className="flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-black uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110"
+                    params={{ slug: obra.slug, chapter: formatChapter((readIds.size > 0 && continueChapter ? continueChapter : firstChapter!).number) }}
+                    className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.97]"
                   >
-                    <Play className="h-4 w-4 fill-current" />
-                    {readIds.size > 0 ? `Continuar cap. ${formatChapter(continueChapter.number)}` : "Ler agora"}
+                    <Play className="h-3.5 w-3.5 fill-current" />
+                    {readIds.size > 0 && continueChapter ? `Continuar cap. ${formatChapter(continueChapter.number)}` : "Ler primeiro"}
                   </Link>
                 ) : null}
-                {obra.chapters.length > 0 ? (() => {
-                  const last = obra.chapters.reduce((a, b) => (Number(b.number) > Number(a.number) ? b : a));
-                  return (
-                    <Link
-                      to="/obra/$slug/$chapter"
-                      params={{ slug: obra.slug, chapter: formatChapter(last.number) }}
-                      className="flex items-center justify-center gap-2 rounded-full bg-surface-2 px-5 py-3 text-sm font-black uppercase tracking-wider text-muted-foreground transition hover:text-foreground"
-                    >
-                      Ler último
-                    </Link>
-                  );
-                })() : null}
+                {lastChapter ? (
+                  <Link
+                    to="/obra/$slug/$chapter"
+                    params={{ slug: obra.slug, chapter: formatChapter(lastChapter.number) }}
+                    className="flex items-center gap-2 rounded-full bg-foreground/[0.06] px-4 py-2.5 text-xs font-black uppercase tracking-wider text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground active:scale-[0.97]"
+                  >
+                    <Forward className="h-3.5 w-3.5" /> Ler último
+                  </Link>
+                ) : null}
               </div>
 
-              <div className="mt-3 flex flex-wrap gap-3">
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2 md:justify-start">
                 {user ? (
                   <>
-                    <Button
-                      variant={favorite.data ? "default" : "outline"}
+                    <button
+                      type="button"
                       onClick={() => toggleFavorite.mutate()}
-                      className="font-semibold"
+                      disabled={toggleFavorite.isPending}
+                      className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-wider transition disabled:opacity-50 ${
+                        favorite.data
+                          ? "bg-rose-500 text-white shadow-lg shadow-rose-500/25 hover:bg-rose-400"
+                          : "bg-foreground/[0.06] text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+                      }`}
                     >
-                      <Heart
-                        className={`mr-2 h-4 w-4 ${favorite.data ? "fill-current" : ""}`}
-                      />
+                      <Heart className={`h-3.5 w-3.5 ${favorite.data ? "fill-current" : ""}`} />
                       {favorite.data ? "Favoritado" : "Favoritar"}
-                    </Button>
+                    </button>
                     <AddToListButton userId={user.id} seriesId={obra.id} />
+                    <span className="mx-0.5 hidden h-4 w-px bg-border sm:block" />
                     <StatusButton userId={user.id} seriesId={obra.id} />
                   </>
                 ) : (
-                  <Button asChild variant="outline" className="font-semibold">
-                    <Link to="/auth">Entrar para favoritar</Link>
-                  </Button>
+                  <Link to="/auth" className="flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-4 py-2 text-[11px] font-black uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                    <Heart className="h-3.5 w-3.5" /> Entrar para favoritar
+                  </Link>
                 )}
-              </div>
-
-              {/* Rating */}
-              <div className="mt-6 rounded-xl border border-border bg-surface p-5">
-                <h2 className="text-sm font-semibold text-muted-foreground">Sua avaliação</h2>
-                <div className="mt-2 flex items-center gap-1">
-                  {Array.from({ length: 10 }, (_, i) => i + 1).map((score) => (
-                    <button
-                      key={score}
-                      disabled={!user || rate.isPending}
-                      onClick={() => rate.mutate(score)}
-                      className="transition-transform hover:scale-110 disabled:cursor-not-allowed"
-                      aria-label={`Avaliar com ${score}`}
-                    >
-                      <Star
-                        className={`h-6 w-6 ${
-                          score <= (myRating.data ?? 0)
-                            ? "fill-gold text-gold"
-                            : "text-muted-foreground/40"
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Star className="h-4 w-4 fill-gold text-gold" />
-                  <span className="font-bold text-foreground">
-                    {average.toFixed(1).replace(".", ",")}
-                  </span>
-                  média da obra · {stats.count} avaliações
-                </p>
-                {!user ? (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    <Link to="/auth" className="text-primary">
-                      Entre
-                    </Link>{" "}
-                    para avaliar.
-                  </p>
-                ) : null}
-                <div className="-mx-5 -mb-5 mt-5 border-t border-border p-5">
-                  <div className="flex items-start gap-3">
-                    <Heart className="mt-1 h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-sm font-bold">Apoiar esta obra</p>
-                      <p className="text-xs text-muted-foreground">O valor vai ajudar a pagar os capítulos.</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
-                    {["R$ 5", "R$ 10", "R$ 15", "Outro valor"].map((v) => (
-                      <button
-                        key={v}
-                        onClick={() => toast.info("Doações em breve!")}
-                        className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-bold hover:border-primary"
-                      >
-                        {v}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => toast.info("Doações em breve!")}
-                      className="ml-auto rounded-lg border border-primary/50 bg-primary/15 px-5 py-2 text-sm font-bold text-primary"
-                    >
-                      Doar agora
-                    </button>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
+        </main>
 
-          {/* Chapters */}
-          <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-surface">
-            <div className="border-b border-border px-4 py-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <h2 className="font-display text-lg font-bold">Capítulos</h2>
-                <div className="flex flex-wrap items-center justify-end gap-1.5">
-                  {user ? (
-                    <>
-                      <button
-                        type="button"
-                        title="Marcar todos como lidos"
-                        aria-label="Marcar todos como lidos"
-                        disabled={markAll.isPending || chapters.length === 0}
-                        onClick={() => markAll.mutate("read")}
-                        className="rounded-lg border border-emerald-500/25 p-2 text-emerald-400/90 transition-colors hover:bg-emerald-500/15 hover:text-emerald-300 disabled:pointer-events-none disabled:opacity-40"
-                      >
-                        <CheckCheck className="h-[18px] w-[18px]" />
-                      </button>
-                      <button
-                        type="button"
-                        title="Desmarcar leitura de todos os capítulos"
-                        aria-label="Desmarcar leitura de todos os capítulos"
-                        disabled={markAll.isPending || readIds.size === 0}
-                        onClick={() => markAll.mutate("unread")}
-                        className="rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
-                      >
-                        <RotateCcw className="h-[18px] w-[18px]" />
-                      </button>
-                    </>
-                  ) : null}
-                  <button
-                    type="button"
-                    title={
-                      order === "desc"
-                        ? "Ordem: do mais recente ao mais antigo"
-                        : "Ordem: do mais antigo ao mais recente"
-                    }
-                    aria-label={
-                      order === "desc"
-                        ? "Mostrar capítulos do mais antigo ao mais recente"
-                        : "Mostrar capítulos do mais recente ao mais antigo"
-                    }
-                    onClick={() => setOrder(order === "asc" ? "desc" : "asc")}
-                    className="flex items-center gap-1.5 rounded-lg border border-transparent px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:border-border hover:text-foreground sm:text-sm"
-                  >
-                    <ArrowDownWideNarrow
-                      className={`h-4 w-4 shrink-0 text-primary opacity-90 ${order === "asc" ? "rotate-180" : ""}`}
+        <div className="relative z-10 mx-auto max-w-7xl px-4 pb-10 pt-4 md:px-8 md:pt-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+            {/* Chapters */}
+            <section className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-border bg-surface/60 shadow-xl backdrop-blur">
+              <div className="flex flex-col gap-3 border-b border-border px-4 py-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 className="font-display font-bold">Capítulos</h2>
+                  <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+                    {user ? (
+                      <>
+                        <ToolbarButton disabled={markAll.isPending || chapters.length === 0} onClick={() => markAll.mutate("read")} icon={<CheckCheck className="h-3.5 w-3.5" />} label="Marcar todos" />
+                        <ToolbarButton disabled={markAll.isPending || readIds.size === 0} onClick={() => markAll.mutate("unread")} icon={<RotateCcw className="h-3.5 w-3.5" />} label="Desmarcar todos" />
+                      </>
+                    ) : null}
+                    <ToolbarButton
+                      onClick={() => setOrder(order === "asc" ? "desc" : "asc")}
+                      icon={<ArrowDownWideNarrow className={`h-3.5 w-3.5 text-primary ${order === "asc" ? "rotate-180" : ""}`} />}
+                      label={order === "desc" ? "Recentes" : "Antigos"}
                     />
-                    <span>{order === "desc" ? "Recentes" : "Antigos"}</span>
-                  </button>
+                  </div>
+                </div>
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
+                  <input
+                    value={chapterSearch}
+                    onChange={(e) => setChapterSearch(e.target.value)}
+                    placeholder="Buscar capítulo..."
+                    className="w-full rounded-full border border-border bg-foreground/[0.03] py-2.5 pl-10 pr-4 text-[13px] outline-none transition placeholder:text-muted-foreground/50 focus:border-primary/40 focus:bg-foreground/[0.06]"
+                  />
                 </div>
               </div>
-            </div>
-            <ul className="max-h-[60vh] divide-y divide-border/60 overflow-y-auto pr-1 md:max-h-[min(72vh,780px)]">
-              {chapters.map((chapter) => {
-                const isRead = readIds.has(chapter.id);
-                const commentCount =
-                  chapterCommentCounts.data?.get(chapter.id) ?? 0;
-                return (
-                  <li
-                    key={chapter.id}
-                    className={`flex items-center gap-4 px-4 py-4 transition-colors hover:bg-surface-2/60 ${
-                      isRead ? "opacity-75 hover:opacity-100" : ""
-                    }`}
-                  >
-                    <Link
-                      to="/obra/$slug/$chapter"
-                      params={{ slug: obra.slug, chapter: formatChapter(chapter.number) }}
-                      className="flex min-w-0 flex-1 items-center gap-4 text-left"
-                    >
-                      <span
-                        className={`grid h-12 w-12 shrink-0 place-items-center rounded-lg text-sm font-bold ${
-                          isRead
-                            ? "bg-emerald-500/10 text-emerald-500"
-                            : "bg-surface-2 text-muted-foreground"
-                        }`}
+              <ul className="max-h-[60vh] divide-y divide-border/40 overflow-y-auto">
+                {visibleChapters.map((chapter) => {
+                  const isRead = readIds.has(chapter.id);
+                  const commentCount = chapterCommentCounts.data?.get(chapter.id) ?? 0;
+                  return (
+                    <li key={chapter.id} className={`flex items-center gap-4 px-4 py-3.5 transition hover:bg-foreground/[0.02] ${isRead ? "opacity-60 hover:opacity-90" : ""}`}>
+                      <Link
+                        to="/obra/$slug/$chapter"
+                        params={{ slug: obra.slug, chapter: formatChapter(chapter.number) }}
+                        className="flex min-w-0 flex-1 items-center gap-4 text-left"
                       >
-                        {isRead ? (
-                          <Check className="h-5 w-5" />
-                        ) : (
-                          formatChapter(chapter.number)
-                        )}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span
-                          className={`flex min-w-0 items-center gap-1.5 font-medium ${
-                            isRead ? "text-emerald-500/90" : ""
-                          }`}
-                        >
-                          <span className="truncate">
+                        <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border text-sm font-bold ${isRead ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-border bg-foreground/[0.04] text-muted-foreground"}`}>
+                          {isRead ? <Check className="h-[18px] w-[18px]" strokeWidth={2.5} /> : formatChapter(chapter.number)}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className={`block truncate font-medium ${isRead ? "text-emerald-500/90" : ""}`}>
                             Capítulo {formatChapter(chapter.number)}
-                            {chapter.title ? (
-                              <span className="ml-2 font-normal text-muted-foreground">
-                                {chapter.title}
-                              </span>
+                            {chapter.title ? <span className="ml-2 font-normal text-muted-foreground">{chapter.title}</span> : null}
+                          </span>
+                          <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                            <span className="text-xs font-medium text-muted-foreground/70">{timeAgo(chapter.created_at)}</span>
+                            {isRead ? (
+                              <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">Lido</span>
                             ) : null}
                           </span>
                         </span>
-                        <span className="mt-0.5 flex flex-wrap items-center gap-2">
-                          <span className="text-xs text-muted-foreground/70">
-                            {timeAgo(chapter.created_at)}
-                          </span>
-                          {isRead ? (
-                            <span className="text-[10px] uppercase tracking-wider text-emerald-500/80">
-                              Lido
-                            </span>
-                          ) : null}
+                      </Link>
+                      {commentCount > 0 ? (
+                        <span className="inline-flex items-center gap-1 text-xs tabular-nums text-muted-foreground/60" title="Comentários">
+                          <MessageSquare className="h-3.5 w-3.5" /> {commentCount}
                         </span>
-                      </span>
-                    </Link>
-                    <span className="flex shrink-0 items-center gap-2.5 text-muted-foreground/60">
-                      <span
-                        className="inline-flex items-center gap-1 text-xs tabular-nums"
-                        title="Comentários"
-                      >
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        {commentCount}
-                      </span>
-                    </span>
-                    {user ? (
-                      <button
-                        type="button"
-                        disabled={toggleRead.isPending}
-                        onClick={() => toggleRead.mutate({ id: chapter.id, isRead })}
-                        title={isRead ? "Marcar como não lido" : "Marcar como lido"}
-                        aria-label={isRead ? "Marcar como não lido" : "Marcar como lido"}
-                        className={`shrink-0 rounded-full p-2 transition-colors ${
-                          isRead
-                            ? "text-emerald-500 hover:bg-emerald-500/10"
-                            : "text-muted-foreground/50 hover:bg-surface-2 hover:text-foreground"
-                        }`}
-                      >
-                        {isRead ? (
-                          <EyeOff className="h-[18px] w-[18px]" />
-                        ) : (
-                          <Eye className="h-[18px] w-[18px]" />
-                        )}
-                      </button>
-                    ) : null}
+                      ) : null}
+                      {user ? (
+                        <button
+                          type="button"
+                          disabled={toggleRead.isPending}
+                          onClick={() => toggleRead.mutate({ id: chapter.id, isRead })}
+                          title={isRead ? "Marcar como não lido" : "Marcar como lido"}
+                          aria-label={isRead ? "Marcar como não lido" : "Marcar como lido"}
+                          className={`shrink-0 rounded-xl border p-2 transition ${isRead ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20" : "border-border bg-foreground/[0.02] text-muted-foreground/50 hover:border-primary/30 hover:bg-primary/10 hover:text-primary"}`}
+                        >
+                          {isRead ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      ) : null}
+                    </li>
+                  );
+                })}
+                {visibleChapters.length === 0 ? (
+                  <li className="px-5 py-8 text-center text-sm text-muted-foreground">
+                    {chapterSearch ? "Nenhum capítulo encontrado." : "Nenhum capítulo publicado ainda."}
                   </li>
-                );
-              })}
-              {chapters.length === 0 ? (
-                <li className="px-5 py-8 text-center text-sm text-muted-foreground">
-                  Nenhum capítulo publicado ainda.
-                </li>
-              ) : null}
-            </ul>
-          </section>
+                ) : null}
+              </ul>
+            </section>
+
+            {/* Sidebar */}
+            <aside className="w-full space-y-5 lg:w-[320px] lg:shrink-0">
+              <div className="rounded-2xl border border-border bg-surface/60 p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold">Avaliar</h3>
+                    <p className="text-xs text-muted-foreground">Dê sua nota de 1 a 10.</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-black text-gold">
+                      {average.toFixed(1).replace(".", ",")} <span className="text-[11px] font-medium text-muted-foreground">/ 10</span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">{stats.count} avaliações</p>
+                  </div>
+                </div>
+                <div className="mt-4 grid grid-cols-5 gap-2">
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((score) => (
+                    <button
+                      key={score}
+                      disabled={rate.isPending}
+                      onClick={() => (user ? rate.mutate(score) : toast.info("Entre para avaliar."))}
+                      className={`h-10 rounded-xl border text-sm font-bold transition ${
+                        score === (myRating.data ?? 0)
+                          ? "border-gold/50 bg-gold/15 text-gold"
+                          : "border-border bg-foreground/[0.03] text-foreground/80 hover:border-primary/40 hover:text-primary"
+                      }`}
+                    >
+                      {score}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-surface/60 p-5">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-rose-500/10 text-rose-400"><Heart className="h-4 w-4" /></span>
+                  <div>
+                    <h3 className="text-sm font-bold">Apoiar a obra</h3>
+                    <p className="text-xs text-muted-foreground">O valor é repassado aos responsáveis pelos capítulos.</p>
+                  </div>
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {["R$ 5", "R$ 10", "R$ 15"].map((v) => (
+                    <button key={v} onClick={() => toast.info("Apoio em breve!")} className="h-10 rounded-xl border border-border bg-foreground/[0.03] text-sm font-bold hover:border-primary/40">{v}</button>
+                  ))}
+                </div>
+                <button onClick={() => toast.info("Apoio em breve!")} className="mt-2 h-10 w-full rounded-xl border border-border bg-foreground/[0.03] text-sm font-semibold hover:border-primary/40">Personalizado</button>
+                <button onClick={() => toast.info("Apoio em breve!")} className="mt-3 h-10 w-full rounded-xl bg-rose-500/80 text-sm font-bold text-white hover:bg-rose-500">Apoiar agora</button>
+              </div>
+            </aside>
+          </div>
+
+          {/* Recommendations */}
+          {(recommended.data ?? []).length > 0 ? (
+            <section className="mt-14">
+              <h2 className="flex items-center gap-3 font-display text-lg font-bold">
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary"><Sparkles className="h-4 w-4" /></span>
+                Recomendadas para você
+              </h2>
+              <div className="mt-5 grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
+                {(recommended.data ?? []).map((r) => (
+                  <Link key={r.id} to="/obra/$slug" params={{ slug: r.slug }} className="group">
+                    <div className="aspect-[2/3] overflow-hidden rounded-2xl border border-border">
+                      <img src={coverUrl(r.cover_url)} alt={r.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                    </div>
+                    <p className="mt-2 line-clamp-2 text-[13px] font-bold leading-snug group-hover:text-primary">{r.title}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           {/* Comments */}
-          <section className="mt-10">
-            <h2 className="section-title">
-              <MessageCircle className="h-5 w-5" /> Comentários
-            </h2>
+          <section className="mx-auto mt-14 max-w-4xl rounded-2xl border border-border bg-surface/60 p-5 md:p-8">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary"><MessageCircle className="h-4 w-4" /></span>
+                <div>
+                  <h2 className="text-sm font-bold">Comentários</h2>
+                  <p className="text-xs text-muted-foreground">{comments.data?.length ?? 0} comentários</p>
+                </div>
+              </div>
+              <div className="flex gap-1.5">
+                {([["new", "Mais Recentes"], ["old", "Mais Antigos"]] as const).map(([k, label]) => (
+                  <button
+                    key={k}
+                    onClick={() => setCommentSort(k)}
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${commentSort === k ? "bg-primary text-primary-foreground" : "bg-foreground/[0.06] text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             {user ? (
-              <div className="mt-4">
+              <div className="mt-6">
                 <CommentComposer
                   pending={postComment.isPending}
                   onSubmit={(draft) => postComment.mutate(draft)}
@@ -693,16 +683,12 @@ function SeriesPage() {
                 />
               </div>
             ) : (
-              <p className="mt-4 text-sm text-muted-foreground">
-                <Link to="/auth" className="text-primary">
-                  Entre
-                </Link>{" "}
-                para comentar.
+              <p className="mt-6 text-sm text-muted-foreground">
+                <Link to="/auth" className="text-primary">Entre</Link> para comentar.
               </p>
             )}
-
-            <ul className="mt-6 space-y-5">
-              {(comments.data ?? []).map((comment) => (
+            <ul className="mt-8 space-y-5">
+              {sortedComments.map((comment) => (
                 <CommentItem
                   key={comment.id}
                   comment={comment}
@@ -712,9 +698,23 @@ function SeriesPage() {
               ))}
             </ul>
           </section>
-        </main>
+        </div>
       </div>
       <SiteFooter />
     </div>
+  );
+}
+
+function ToolbarButton({ icon, label, onClick, disabled }: { icon: ReactNode; label: string; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="flex items-center justify-center gap-1.5 rounded-full border border-border bg-foreground/[0.03] px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground transition hover:bg-foreground/[0.08] hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
