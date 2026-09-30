@@ -1,6 +1,35 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, Square, Volume2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { fetchSpeech, getAudioContext, SpeechError } from "@/lib/realistic-speech";
+
+const AI_VOICES = [
+  { id: "Kore", label: "Kore (feminina)" },
+  { id: "Aoede", label: "Aoede (feminina suave)" },
+  { id: "Leda", label: "Leda (feminina jovem)" },
+  { id: "Charon", label: "Charon (masculina grave)" },
+  { id: "Orus", label: "Orus (masculina firme)" },
+  { id: "Puck", label: "Puck (masculina animada)" },
+];
+
+// Group sentences into ~700-char pieces for natural AI narration.
+function aiChunks(paragraphs: string[]) {
+  const out: { p: number; text: string }[] = [];
+  paragraphs.forEach((para, p) => {
+    const parts = chunkText(para);
+    let buf = "";
+    for (const s of parts) {
+      if (buf && buf.length + s.length > 700) {
+        out.push({ p, text: buf });
+        buf = "";
+      }
+      buf = buf ? `${buf} ${s}` : s;
+    }
+    if (buf) out.push({ p, text: buf });
+  });
+  return out;
+}
 
 type Props = {
   paragraphs: string[];
@@ -36,6 +65,15 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
   const [voiceUri, setVoiceUri] = useState("");
   const [rate, setRate] = useState(1);
   const [state, setState] = useState<"idle" | "playing" | "paused">("idle");
+  const [engine, setEngine] = useState<"ai" | "device">("ai");
+  const [aiVoice, setAiVoice] = useState("Kore");
+  const [loading, setLoading] = useState(false);
+  const ai = useRef<{
+    abort: AbortController | null;
+    source: AudioBufferSourceNode | null;
+    index: number;
+    cache: Map<number, Promise<Float32Array>>;
+  }>({ abort: null, source: null, index: 0, cache: new Map() });
 
   // Refs so callbacks always see fresh values (no stale closures).
   const pos = useRef({ p: 0, c: 0 });
@@ -54,6 +92,8 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
       const saved = JSON.parse(localStorage.getItem("novel-tts") ?? "{}");
       if (typeof saved.rate === "number") setRate(saved.rate);
       if (typeof saved.voice === "string") setVoiceUri(saved.voice);
+      if (saved.engine === "ai" || saved.engine === "device") setEngine(saved.engine);
+      if (typeof saved.aiVoice === "string") setAiVoice(saved.aiVoice);
     } catch {
       /* ignore */
     }
@@ -75,15 +115,29 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
 
   useEffect(() => {
     if (!supported) return;
-    localStorage.setItem("novel-tts", JSON.stringify({ rate, voice: voiceUri }));
-  }, [rate, voiceUri, supported]);
+    localStorage.setItem("novel-tts", JSON.stringify({ rate, voice: voiceUri, engine, aiVoice }));
+  }, [rate, voiceUri, engine, aiVoice, supported]);
+
+  const stopAi = useCallback(() => {
+    ai.current.abort?.abort();
+    ai.current.abort = null;
+    try {
+      ai.current.source?.stop();
+    } catch {
+      /* already stopped */
+    }
+    ai.current.source = null;
+    ai.current.cache.clear();
+    setLoading(false);
+  }, []);
 
   const stop = useCallback(() => {
+    stopAi();
     session.current++;
     if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
     setState("idle");
     callbacks.current.onActiveChange(null);
-  }, []);
+  }, [stopAi]);
 
   const play = useCallback((p: number, c = 0) => {
     const synth = window.speechSynthesis;
@@ -145,9 +199,94 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
     speak(p, c);
   }, []);
 
+  const aiSettings = useRef({ voice: aiVoice, rate });
+  aiSettings.current = { voice: aiVoice, rate };
+
+  const playAi = useCallback(
+    async (startParagraph: number) => {
+      stopAi();
+      window.speechSynthesis?.cancel();
+      const id = ++session.current;
+      const chunks = aiChunks(paragraphsRef.current);
+      let i = Math.max(0, chunks.findIndex((c) => c.p >= startParagraph));
+      const controller = new AbortController();
+      ai.current.abort = controller;
+      const context = getAudioContext();
+      try {
+        if (context.state === "suspended") await context.resume();
+      } catch {
+        /* resumed on next gesture */
+      }
+      setState("playing");
+      const voice = aiSettings.current.voice;
+      const get = (k: number) => {
+        if (k >= chunks.length) return null;
+        let pr = ai.current.cache.get(k);
+        if (!pr) {
+          pr = fetchSpeech(chunks[k]!.text, voice, controller.signal);
+          pr.catch(() => undefined);
+          ai.current.cache.set(k, pr);
+        }
+        return pr;
+      };
+      try {
+        while (i < chunks.length && id === session.current) {
+          const chunk = chunks[i]!;
+          ai.current.index = i;
+          setLoading(!ai.current.cache.has(i));
+          const samples = await get(i)!;
+          if (id !== session.current) return;
+          setLoading(false);
+          get(i + 1); // prefetch next piece while this one plays (no gaps)
+          if (chunk.p !== pos.current.p || i === 0 || chunks[i - 1]?.p !== chunk.p) {
+            pos.current = { p: chunk.p, c: 0 };
+            callbacks.current.onActiveChange(chunk.p);
+            document.getElementById(`novel-p-${chunk.p}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+          const buffer = context.createBuffer(1, samples.length, 24000);
+          buffer.copyToChannel(samples as Float32Array<ArrayBuffer>, 0);
+          const src = context.createBufferSource();
+          src.buffer = buffer;
+          src.playbackRate.value = aiSettings.current.rate;
+          src.connect(context.destination);
+          ai.current.source = src;
+          await new Promise<void>((resolve) => {
+            src.onended = () => resolve();
+            src.start(context.currentTime + 0.03);
+          });
+          ai.current.cache.delete(i);
+          i++;
+        }
+        if (id === session.current) {
+          session.current++;
+          setState("idle");
+          callbacks.current.onActiveChange(null);
+          callbacks.current.onFinished?.();
+        }
+      } catch (e) {
+        if (id !== session.current || controller.signal.aborted) return;
+        setLoading(false);
+        const err = e as SpeechError;
+        const reason =
+          err.status === 401
+            ? "Entre na sua conta para usar a voz realista."
+            : err.status === 402
+              ? "Créditos de voz realista esgotados."
+              : err.status === 429
+                ? "Muitas leituras ao mesmo tempo."
+                : "A voz realista falhou.";
+        toast.error(`${reason} Continuando com a voz do aparelho.`);
+        const p = chunks[i]?.p ?? startParagraph;
+        setEngine("device");
+        play(p, 0);
+      }
+    },
+    [play, stopAi],
+  );
+
   // Chrome pauses forever after long idle; keep engine awake while playing.
   useEffect(() => {
-    if (state !== "playing") return;
+    if (state !== "playing" || engine === "ai") return;
     const t = window.setInterval(() => {
       const s = window.speechSynthesis;
       if (s.speaking && !s.paused) {
@@ -156,7 +295,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
       }
     }, 10000);
     return () => clearInterval(t);
-  }, [state]);
+  }, [state, engine]);
 
   // Chapter changed: stop.
   useEffect(() => {
@@ -167,13 +306,29 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
   // User tapped a paragraph while playing: jump there.
   useEffect(() => {
     if (activeIndex == null || state === "idle") return;
-    if (activeIndex !== pos.current.p) play(activeIndex, 0);
-  }, [activeIndex, state, play]);
+    if (activeIndex !== pos.current.p) {
+      if (engine === "ai") void playAi(activeIndex);
+      else play(activeIndex, 0);
+    }
+  }, [activeIndex, state, play, playAi, engine]);
 
   if (!supported || paragraphs.length === 0) return null;
 
   // Pause = cancel + remember position (native pause/resume is broken on Android).
   const toggle = () => {
+    if (engine === "ai") {
+      const c = getAudioContext();
+      if (state === "playing") {
+        void c.suspend();
+        setState("paused");
+      } else if (state === "paused" && ai.current.source) {
+        void c.resume();
+        setState("playing");
+      } else {
+        void playAi(state === "paused" ? pos.current.p : (activeIndex ?? 0));
+      }
+      return;
+    }
     if (state === "playing") {
       session.current++;
       window.speechSynthesis.cancel();
@@ -186,7 +341,11 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
   };
 
   const restartIfPlaying = () => {
-    if (state === "playing") setTimeout(() => play(pos.current.p, pos.current.c), 0);
+    if (state === "idle") return;
+    if (engine === "ai") {
+      if (getAudioContext().state === "suspended") void getAudioContext().resume();
+      setTimeout(() => void playAi(pos.current.p), 0);
+    } else if (state === "playing") setTimeout(() => play(pos.current.p, pos.current.c), 0);
   };
 
   return (
