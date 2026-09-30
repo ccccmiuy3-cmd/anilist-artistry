@@ -16,6 +16,8 @@ import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as AuthenticatedBibliotecaRouteImport } from './routes/_authenticated/biblioteca'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
+import { Route as ListasIndexRouteImport } from './routes/listas/index'
+import { Route as ListasIdRouteImport } from './routes/listas/$id'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
 import { Route as AuthenticatedAdminNovaRouteImport } from './routes/_authenticated/admin/nova'
@@ -56,6 +58,16 @@ const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
   path: '/historico',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ListasIndexRoute = ListasIndexRouteImport.update({
+  id: '/listas/',
+  path: '/listas/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListasIdRoute = ListasIdRouteImport.update({
+  id: '/listas/$id',
+  path: '/listas/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -89,6 +101,8 @@ export interface FileRoutesByFullPath {
   '/ranking': typeof RankingRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/historico': typeof AuthenticatedHistoricoRoute
+  '/listas/$id': typeof ListasIdRoute
+  '/listas/': typeof ListasIndexRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/nova': typeof AuthenticatedAdminNovaRoute
   '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
@@ -102,6 +116,8 @@ export interface FileRoutesByTo {
   '/ranking': typeof RankingRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/historico': typeof AuthenticatedHistoricoRoute
+  '/listas/$id': typeof ListasIdRoute
+  '/listas': typeof ListasIndexRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/nova': typeof AuthenticatedAdminNovaRoute
   '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
@@ -117,6 +133,8 @@ export interface FileRoutesById {
   '/ranking': typeof RankingRoute
   '/_authenticated/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
+  '/listas/$id': typeof ListasIdRoute
+  '/listas/': typeof ListasIndexRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/nova': typeof AuthenticatedAdminNovaRoute
   '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
@@ -132,6 +150,8 @@ export interface FileRouteTypes {
     | '/ranking'
     | '/biblioteca'
     | '/historico'
+    | '/listas/$id'
+    | '/listas/'
     | '/admin/$id'
     | '/admin/nova'
     | '/obra/$slug/$chapter'
@@ -145,6 +165,8 @@ export interface FileRouteTypes {
     | '/ranking'
     | '/biblioteca'
     | '/historico'
+    | '/listas/$id'
+    | '/listas'
     | '/admin/$id'
     | '/admin/nova'
     | '/obra/$slug/$chapter'
@@ -159,6 +181,8 @@ export interface FileRouteTypes {
     | '/ranking'
     | '/_authenticated/biblioteca'
     | '/_authenticated/historico'
+    | '/listas/$id'
+    | '/listas/'
     | '/_authenticated/admin/$id'
     | '/_authenticated/admin/nova'
     | '/obra/$slug/$chapter'
@@ -172,6 +196,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CatalogoRoute: typeof CatalogoRoute
   RankingRoute: typeof RankingRoute
+  ListasIdRoute: typeof ListasIdRoute
+  ListasIndexRoute: typeof ListasIndexRoute
   ObraSlugChapterRoute: typeof ObraSlugChapterRoute
   ObraSlugIndexRoute: typeof ObraSlugIndexRoute
 }
@@ -226,6 +252,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/historico'
       preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/listas/': {
+      id: '/listas/'
+      path: '/listas'
+      fullPath: '/listas/'
+      preLoaderRoute: typeof ListasIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/listas/$id': {
+      id: '/listas/$id'
+      path: '/listas/$id'
+      fullPath: '/listas/$id'
+      preLoaderRoute: typeof ListasIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
@@ -290,6 +330,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CatalogoRoute: CatalogoRoute,
   RankingRoute: RankingRoute,
+  ListasIdRoute: ListasIdRoute,
+  ListasIndexRoute: ListasIndexRoute,
   ObraSlugChapterRoute: ObraSlugChapterRoute,
   ObraSlugIndexRoute: ObraSlugIndexRoute,
 }

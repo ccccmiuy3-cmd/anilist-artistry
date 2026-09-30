@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { BookOpen, Star, Trash2 } from "lucide-react";
+import { Ban, BookmarkPlus, BookOpen, CheckCircle2, Sparkles, Star, Trash2 } from "lucide-react";
 import { coverUrl } from "@/lib/media";
 
 export const FORMATS = ["Todos", "Comic", "Manga", "Manhwa", "Manhua", "Shoujo", "Yaoi", "Yuri", "Novel"];
@@ -155,3 +155,11 @@ export function CollectionCard({
     </div>
   );
 }
+
+export const STATUSES = [
+  { key: "interessado", label: "Interessado", icon: Sparkles },
+  { key: "lendo", label: "Lendo", icon: BookOpen },
+  { key: "lido", label: "Lido", icon: CheckCircle2 },
+  { key: "dropado", label: "Dropado", icon: Ban },
+  { key: "planejo", label: "Planejo Ler", icon: BookmarkPlus },
+] as const;

@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Ban, BookmarkPlus, BookOpen, CheckCircle2, Heart, Library, Play, Sparkles } from "lucide-react";
+import { Heart, Library, Play } from "lucide-react";
 import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
-import { Chips, CollectionCard, PageTitle, TabButton } from "@/components/LibraryBits";
+import { Chips, CollectionCard, PageTitle, STATUSES, TabButton } from "@/components/LibraryBits";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useAuth";
 
@@ -20,13 +20,6 @@ export const Route = createFileRoute("/_authenticated/biblioteca")({
   component: Colecao,
 });
 
-export const STATUSES = [
-  { key: "interessado", label: "Interessado", icon: Sparkles },
-  { key: "lendo", label: "Lendo", icon: BookOpen },
-  { key: "lido", label: "Lido", icon: CheckCircle2 },
-  { key: "dropado", label: "Dropado", icon: Ban },
-  { key: "planejo", label: "Planejo Ler", icon: BookmarkPlus },
-] as const;
 
 type Tab = "favoritos" | "continuando" | (typeof STATUSES)[number]["key"];
 

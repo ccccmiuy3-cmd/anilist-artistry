@@ -16,9 +16,11 @@ import {
 
 const NAV = [
   { to: "/", label: "Início" },
-  { to: "/catalogo", label: "Coleção" },
+  { to: "/catalogo", label: "Catálogo" },
+  { to: "/biblioteca", label: "Coleção" },
+  { to: "/listas", label: "Listas" },
   { to: "/ranking", label: "Ranking" },
-  { to: "/biblioteca", label: "Biblioteca" },
+  { to: "/historico", label: "Histórico" },
 ] as const;
 
 export function SiteHeader() {
