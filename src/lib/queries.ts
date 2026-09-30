@@ -118,11 +118,14 @@ export async function fetchComments(seriesId: string) {
   if (error) throw error;
   const rows = data ?? [];
   const ids = [...new Set(rows.map((row) => row.user_id))];
-  const authors = new Map<string, { username: string; avatar_url: string | null }>();
+  const authors = new Map<
+    string,
+    { username: string; avatar_url: string | null; level: number; avatar_frame: string | null }
+  >();
   if (ids.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, username, avatar_url")
+      .select("id, username, avatar_url, level, avatar_frame")
       .in("id", ids);
     for (const profile of profiles ?? []) {
       authors.set(profile.id, { username: profile.username, avatar_url: profile.avatar_url });
