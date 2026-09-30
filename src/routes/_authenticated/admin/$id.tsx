@@ -249,7 +249,7 @@ function InfoForm({ obra, onSaved }: { obra: Obra; onSaved: () => void }) {
           <div className="space-y-1.5">
             <Label>Tipo</Label>
             <select value={f.kind} onChange={(e) => set("kind", e.target.value)} className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm">
-              {KINDS.map((k) => <option key={k}>{k}</option>)}
+              {[...new Set([f.kind, ...KINDS])].map((k) => <option key={k}>{k}</option>)}
             </select>
           </div>
           <div className="space-y-1.5">
