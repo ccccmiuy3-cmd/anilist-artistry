@@ -238,7 +238,7 @@ function SeriesPage() {
         <main className="mx-auto -mt-28 max-w-6xl px-4 pb-10">
           <div className="flex flex-col gap-6 sm:flex-row">
             {/* Cover */}
-            <div className="relative w-44 shrink-0 sm:w-56">
+            <div className="relative w-44 shrink-0 self-start sm:w-56">
               <img
                 src={coverUrl(obra.cover_url)}
                 alt={obra.title}
