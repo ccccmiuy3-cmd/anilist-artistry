@@ -28,12 +28,14 @@ import {
   Play,
   ShieldCheck,
   Send,
+  Shapes,
   Settings,
   Sparkles,
   Star,
   Tag,
   Trophy,
   Trash2,
+  Upload,
   User2,
   UserPlus,
   Users,
@@ -44,6 +46,7 @@ import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useAuth";
@@ -716,8 +719,6 @@ const COMMENT_BGS = [
   { id: "fire", label: "Fogo", value: "linear-gradient(135deg, rgba(249,115,22,.14), rgba(250,204,21,.05))" },
 ];
 
-type EditScreen = "main" | "identidade" | "cores" | "moldura" | "fundo" | "privacidade";
-
 type EditableProfile = {
   id: string;
   username: string;
@@ -742,7 +743,6 @@ function EditProfile({
   profile: EditableProfile;
 }) {
   const qc = useQueryClient();
-  const [screen, setScreen] = useState<EditScreen>("main");
   const [form, setForm] = useState({
     username: profile.username,
     display_name: profile.display_name ?? "",
@@ -755,7 +755,7 @@ function EditProfile({
     is_private: profile.is_private,
   });
   const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
-  const [framePage, setFramePage] = useState(0);
+  const [showFrames, setShowFrames] = useState(false);
   const { data: frames } = useQuery({
     queryKey: ["avatar-frames"],
     queryFn: async () => {
@@ -796,8 +796,8 @@ function EditProfile({
   });
 
   async function upload(kind: "avatar" | "banner", file: File) {
-    if (file.size > 20 * 1024 * 1024) {
-      toast.error("Imagem maior que 20 MB");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 5 MB");
       return;
     }
     setUploading(kind);
@@ -816,277 +816,118 @@ function EditProfile({
     }
   }
 
-  const accent = form.accent_color || "var(--primary)";
-
-  const menuItems: { id: EditScreen; label: string; icon: typeof FileText; value?: string }[] = [
-    { id: "identidade", label: "Nome, nick e bio", icon: FileText },
-    { id: "cores", label: "Cores do menu", icon: Palette },
-    { id: "moldura", label: "Moldura do avatar", icon: Frame },
-    { id: "fundo", label: "Fundo nos comentários", icon: ImageIcon },
-    { id: "privacidade", label: "Privacidade", icon: Lock, value: form.is_private ? "Privado" : "Público" },
-  ];
-
   return (
     <Dialog
       open={open}
       onOpenChange={(v) => {
-        if (!v) setScreen("main");
+        if (!v) setShowFrames(false);
         onOpenChange(v);
       }}
     >
-      <DialogContent className="max-w-md gap-0 overflow-hidden p-0 [&>button:last-child]:hidden">
+      <DialogContent className="h-[100dvh] w-screen max-w-none gap-0 overflow-y-auto rounded-none border-0 bg-background p-0 sm:h-[min(92dvh,900px)] sm:w-[min(94vw,1080px)] sm:max-w-5xl sm:rounded-xl sm:border [&>button:last-child]:hidden">
         <DialogHeader className="sr-only">
           <DialogTitle>Editar perfil</DialogTitle>
         </DialogHeader>
-
-        <div className="flex items-center justify-between px-4 pt-4">
-          {screen === "main" ? (
-            <button
-              onClick={() => onOpenChange(false)}
-              className="flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1.5 text-sm font-semibold hover:bg-surface"
-            >
-              <X className="h-4 w-4" /> Cancelar
-            </button>
-          ) : (
-            <button
-              onClick={() => setScreen("main")}
-              className="flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1.5 text-sm font-semibold hover:bg-surface"
-            >
-              <ArrowLeft className="h-4 w-4" /> Voltar
-            </button>
-          )}
-          <button
-            onClick={() => onOpenChange(false)}
-            className="grid h-8 w-8 place-items-center rounded-full bg-surface-2 hover:bg-surface"
-            aria-label="Fechar"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {screen === "main" ? (
-          <>
-            <div className="relative mx-4 mt-4 h-32 overflow-hidden rounded-xl bg-surface-2">
-              {form.banner_url ? (
-                <img src={form.banner_url} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,var(--primary),transparent_70%)] opacity-30" />
-              )}
-              <button
-                onClick={() => bannerInput.current?.click()}
-                className="absolute inset-0 grid place-items-center bg-black/40 text-sm font-semibold opacity-0 transition hover:opacity-100"
-              >
-                <span className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> {uploading === "banner" ? "Enviando…" : "Alterar banner"}</span>
-              </button>
-              <input
-                ref={bannerInput}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) void upload("banner", f);
-                  e.target.value = "";
-                }}
-              />
-            </div>
-
-            <div className="-mt-10 ml-8 relative h-20 w-20">
-              <FramedAvatar src={form.avatar_url} frame={form.avatar_frame || null} size={80} />
-              <button
-                onClick={() => avatarInput.current?.click()}
-                className="absolute inset-0 grid place-items-center rounded-full bg-black/40 text-[11px] font-semibold opacity-0 transition hover:opacity-100"
-              >
-                <span className="flex flex-col items-center gap-0.5"><Camera className="h-4 w-4" /> {uploading === "avatar" ? "…" : "Foto"}</span>
-              </button>
-              <input
-                ref={avatarInput}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) void upload("avatar", f);
-                  e.target.value = "";
-                }}
-              />
-            </div>
-
-            <div className="mt-3 px-6">
-              <p className="flex items-center gap-2 font-display text-lg font-bold">
-                {form.display_name || form.username}
-                <span className="rounded border border-border px-1.5 text-xs font-bold text-muted-foreground">Nv. {profile.level}</span>
-              </p>
-              <p className="text-sm" style={{ color: accent }}>@{form.username}</p>
-            </div>
-
-            <p className="mt-5 px-6 text-xs font-bold tracking-widest text-muted-foreground">EDITAR PERFIL</p>
-            <nav className="mt-2 space-y-2 px-4 pb-4">
-              {menuItems.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => setScreen(m.id)}
-                  className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3.5 text-sm font-semibold hover:bg-surface-2"
-                >
-                  <m.icon className="h-4 w-4" style={{ color: accent }} /> {m.label}
-                  {m.value ? <span className="ml-auto text-xs font-normal text-muted-foreground">{m.value}</span> : null}
-                  <ChevronRight className={`h-4 w-4 ${m.value ? "" : "ml-auto"}`} style={{ color: accent }} />
-                </button>
-              ))}
-            </nav>
-          </>
-        ) : null}
-
-        {screen === "identidade" ? (
-          <div className="space-y-3 px-6 py-5">
-            <p className="text-xs font-bold tracking-widest text-muted-foreground">NOME, NICK E BIO</p>
-            <label className="block text-xs text-muted-foreground">
-              Nome de exibição
-              <Input className="mt-1" maxLength={50} value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} />
-            </label>
-            <label className="block text-xs text-muted-foreground">
-              Nick (@usuário)
-              <Input
-                className="mt-1"
-                maxLength={30}
-                value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value.replace(/[^a-zA-Z0-9_.-]/g, "") })}
-              />
-            </label>
-            <label className="block text-xs text-muted-foreground">
-              Bio
-              <Textarea className="mt-1 min-h-24" maxLength={500} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
-            </label>
-            <label className="block text-xs text-muted-foreground">
-              Link do avatar (ou toque na foto na tela anterior)
-              <Input className="mt-1" value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} />
-            </label>
-            <label className="block text-xs text-muted-foreground">
-              Link do banner
-              <Input className="mt-1" value={form.banner_url} onChange={(e) => setForm({ ...form, banner_url: e.target.value })} />
-            </label>
-            <Button className="w-full" disabled={save.isPending || !form.username.trim()} onClick={() => save.mutate({}, { onSuccess: () => setScreen("main") })}>
-              Salvar
-            </Button>
+        <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-xl md:px-8">
+          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} aria-label="Voltar">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="min-w-0">
+            <h1 className="text-base font-black uppercase">Editar perfil</h1>
+            <p className="hidden text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground sm:block">Avatar · Banner · Moldura · Dados pessoais</p>
           </div>
-        ) : null}
+        </header>
 
-        {screen === "cores" ? (
-          <div className="space-y-4 px-6 py-5">
-            <p className="text-xs font-bold tracking-widest text-muted-foreground">CORES DO MENU</p>
-            <div className="grid grid-cols-4 gap-3">
-              {ACCENT_COLORS.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => save.mutate({ accent_color: c })}
-                  className={`h-12 rounded-xl border-2 transition ${form.accent_color === c ? "border-foreground" : "border-transparent"}`}
-                  style={{ background: c }}
-                  aria-label={c}
-                />
-              ))}
-            </div>
-            <Button variant="outline" className="w-full" onClick={() => save.mutate({ accent_color: "" })}>
-              Voltar à cor padrão
-            </Button>
-          </div>
-        ) : null}
+        <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8 md:py-8">
+          <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_1.4fr] lg:gap-6">
+            <div className="space-y-4">
+              <section className="space-y-4 rounded-lg border border-border bg-card p-5">
+                <h2 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground"><User2 className="h-3 w-3" /> Foto de perfil</h2>
+                <div className="flex items-center gap-4">
+                  <Button variant="ghost" className="relative h-20 w-20 shrink-0 rounded-full p-0" onClick={() => avatarInput.current?.click()} aria-label="Escolher foto de perfil">
+                    <FramedAvatar src={form.avatar_url} frame={form.avatar_frame || null} size={80} />
+                    <span className="absolute inset-0 grid place-items-center rounded-full bg-background/70 opacity-0 transition-opacity hover:opacity-100"><Upload className="h-5 w-5" /></span>
+                  </Button>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <p className="text-xs leading-relaxed text-muted-foreground">JPG ou PNG, máximo 5MB.</p>
+                    <Button variant="secondary" size="sm" onClick={() => avatarInput.current?.click()} disabled={uploading !== null}>{uploading === "avatar" ? "Enviando…" : "Escolher"}</Button>
+                  </div>
+                </div>
+                <input ref={avatarInput} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) void upload("avatar", file); e.target.value = ""; }} />
+              </section>
 
-        {screen === "moldura" ? (
-          <div className="space-y-4 px-6 py-5">
-            <p className="text-xs font-bold tracking-widest text-muted-foreground">MOLDURA</p>
-            {(() => {
-              const all = [
-                { id: "none", name: "Sem moldura", image_url: "" },
-                ...(frames ?? []),
-              ];
-              const perPage = 9;
-              const pageCount = Math.max(1, Math.ceil(all.length / perPage));
-              const page = Math.min(framePage, pageCount - 1);
-              const items = all.slice(page * perPage, page * perPage + perPage);
-              return (
-                <>
-                  <div className="grid grid-cols-3 gap-3">
-                    {items.map((f) => (
-                      <button
-                        key={f.id}
-                        onClick={() => save.mutate({ avatar_frame: f.image_url })}
-                        className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 p-2 text-xs transition ${form.avatar_frame === f.image_url || (!form.avatar_frame && !f.image_url) ? "border-primary bg-surface-2" : "border-border bg-surface hover:border-muted-foreground/40"}`}
-                      >
-                        {f.image_url ? (
-                          <img src={f.image_url} alt="" loading="lazy" className="h-16 w-16 object-contain" />
-                        ) : (
-                          <span className="h-16 w-16 rounded-full border-2 border-dashed border-border" />
-                        )}
-                        <span className="line-clamp-1">{f.name}</span>
-                      </button>
+              <section className="space-y-4 rounded-lg border border-border bg-card p-5">
+                <h2 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground"><ImageIcon className="h-3 w-3" /> Banner</h2>
+                <Button variant="ghost" className="group relative h-32 w-full overflow-hidden rounded-lg bg-surface-2 p-0" onClick={() => bannerInput.current?.click()}>
+                  {form.banner_url ? <img src={form.banner_url} alt="Banner atual" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> : <ImageIcon className="h-7 w-7 text-muted-foreground" />}
+                  <span className="absolute inset-0 grid place-items-center bg-background/60 opacity-0 transition-opacity group-hover:opacity-100"><span className="flex items-center gap-2 text-xs font-bold"><Upload className="h-4 w-4" /> Alterar banner</span></span>
+                </Button>
+                <div className="flex justify-end"><Button variant="secondary" size="sm" onClick={() => bannerInput.current?.click()} disabled={uploading !== null}>{uploading === "banner" ? "Enviando…" : "Escolher"}</Button></div>
+                <input ref={bannerInput} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) void upload("banner", file); e.target.value = ""; }} />
+              </section>
+
+              <section className="space-y-4 rounded-lg border border-border bg-card p-5">
+                <h2 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground"><Shapes className="h-3 w-3" /> Moldura</h2>
+                <div className="flex items-center gap-3">
+                  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-surface-2">{form.avatar_frame ? <img src={form.avatar_frame} alt="Moldura atual" className="h-14 w-14 object-contain" /> : <span className="text-[9px] font-bold uppercase text-muted-foreground">Nenhuma</span>}</div>
+                  <p className="min-w-0 flex-1 text-xs text-muted-foreground">Abra a galeria, escolha e salve.</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowFrames((value) => !value)}>Galeria</Button>
+                {showFrames ? (
+                  <div className="grid grid-cols-3 gap-2 border-t border-border pt-4 sm:grid-cols-4">
+                    {[{ id: "none", name: "Sem moldura", image_url: "" }, ...(frames ?? [])].map((frame) => (
+                      <Button key={frame.id} variant="ghost" className={`h-auto min-h-24 flex-col gap-1 border p-2 ${form.avatar_frame === frame.image_url || (!form.avatar_frame && !frame.image_url) ? "border-primary bg-primary/10" : "border-border"}`} onClick={() => setForm({ ...form, avatar_frame: frame.image_url })}>
+                        {frame.image_url ? <img src={frame.image_url} alt="" className="h-14 w-14 object-contain" /> : <span className="h-12 w-12 rounded-full border-2 border-dashed border-border" />}
+                        <span className="line-clamp-1 max-w-full text-[10px]">{frame.name}</span>
+                      </Button>
                     ))}
                   </div>
-                  <div className="flex items-center justify-center gap-4">
-                    <button
-                      onClick={() => setFramePage(Math.max(0, page - 1))}
-                      disabled={page === 0}
-                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface disabled:opacity-40"
-                      aria-label="Página anterior"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <span className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-bold tabular-nums">
-                      {page + 1} / {pageCount}
-                    </span>
-                    <button
-                      onClick={() => setFramePage(Math.min(pageCount - 1, page + 1))}
-                      disabled={page >= pageCount - 1}
-                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface disabled:opacity-40"
-                      aria-label="Próxima página"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <Button variant="outline" className="w-full" onClick={() => setScreen("main")}>
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
-                  </Button>
-                </>
-              );
-            })()}
-          </div>
-        ) : null}
-
-        {screen === "fundo" ? (
-          <div className="space-y-4 px-6 py-5">
-            <p className="text-xs font-bold tracking-widest text-muted-foreground">FUNDO NOS COMENTÁRIOS</p>
-            <div className="space-y-2">
-              {COMMENT_BGS.map((b) => (
-                <button
-                  key={b.id}
-                  onClick={() => save.mutate({ comment_bg: b.value })}
-                  className={`flex w-full items-center gap-3 rounded-xl border p-3 text-sm ${form.comment_bg === b.value ? "border-primary" : "border-border"}`}
-                >
-                  <span className="h-10 w-16 rounded-lg bg-surface-2" style={b.value ? { background: b.value } : undefined} />
-                  {b.label}
-                </button>
-              ))}
+                ) : null}
+              </section>
             </div>
-          </div>
-        ) : null}
 
-        {screen === "privacidade" ? (
-          <div className="space-y-4 px-6 py-5">
-            <p className="text-xs font-bold tracking-widest text-muted-foreground">PRIVACIDADE</p>
-            {[
-              { v: false, label: "Público", desc: "Qualquer pessoa pode ver seu perfil, favoritos e comentários." },
-              { v: true, label: "Privado", desc: "Seu perfil fica discreto e só você gerencia quem interage." },
-            ].map((o) => (
-              <button
-                key={o.label}
-                onClick={() => save.mutate({ is_private: o.v })}
-                className={`w-full rounded-xl border p-4 text-left ${form.is_private === o.v ? "border-primary bg-surface-2" : "border-border bg-surface"}`}
-              >
-                <p className="flex items-center gap-2 text-sm font-bold"><Lock className="h-4 w-4" style={{ color: accent }} /> {o.label}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{o.desc}</p>
-              </button>
-            ))}
+            <section className="space-y-5 rounded-lg border border-border bg-card p-5">
+              <h2 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground"><Pencil className="h-3 w-3" /> Dados pessoais</h2>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Nome
+                <Input className="mt-2 h-11 text-sm font-medium normal-case tracking-normal" maxLength={50} placeholder="O seu nome" value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} />
+              </label>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Nickname
+                <Input className="mt-2 h-11 text-sm font-medium normal-case tracking-normal" maxLength={30} value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value.replace(/[^a-zA-Z0-9_.-]/g, "") })} />
+              </label>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Biografia
+                <Textarea className="mt-2 min-h-28 resize-none text-sm font-medium normal-case tracking-normal" maxLength={500} placeholder="Conte um pouco sobre você" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
+                <span className="mt-1 block text-right text-[10px] font-medium normal-case tracking-normal">{form.bio.length}/500</span>
+              </label>
+
+              <div className="flex items-center gap-3 rounded-lg border border-border bg-surface p-4">
+                <div className="min-w-0 flex-1"><p className="text-sm font-bold">Perfil público</p><p className="mt-1 text-xs text-muted-foreground">Qualquer pessoa pode ver o seu perfil.</p></div>
+                <Switch checked={!form.is_private} onCheckedChange={(checked) => setForm({ ...form, is_private: !checked })} aria-label="Perfil público" />
+              </div>
+
+              <div className="space-y-3 border-t border-border pt-5">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Cor do perfil</p>
+                <div className="flex flex-wrap gap-2">
+                  {ACCENT_COLORS.map((color) => (
+                    <Button key={color} variant="ghost" size="icon" className={`h-8 w-8 rounded-full border-2 p-1 ${form.accent_color === color ? "border-foreground" : "border-transparent"}`} onClick={() => setForm({ ...form, accent_color: color })} aria-label={`Escolher cor ${color}`}><span className="h-full w-full rounded-full" style={{ backgroundColor: color }} /></Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3 border-t border-border pt-5">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Fundo nos comentários</p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {COMMENT_BGS.map((background) => (
+                    <Button key={background.id} variant="outline" className={`h-14 justify-start ${form.comment_bg === background.value ? "border-primary" : ""}`} onClick={() => setForm({ ...form, comment_bg: background.value })}><span className="h-7 w-9 rounded bg-surface-2" style={background.value ? { background: background.value } : undefined} /><span className="truncate text-xs">{background.label}</span></Button>
+                  ))}
+                </div>
+              </div>
+
+              <Button className="h-11 w-full text-xs font-black uppercase tracking-widest" disabled={save.isPending || uploading !== null || !form.username.trim()} onClick={() => save.mutate({}, { onSuccess: () => onOpenChange(false) })}>
+                <Check className="h-4 w-4" /> {save.isPending ? "Salvando…" : "Salvar dados"}
+              </Button>
+            </section>
           </div>
-        ) : null}
+        </div>
       </DialogContent>
     </Dialog>
   );
