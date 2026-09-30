@@ -65,6 +65,16 @@ export const Route = createFileRoute("/u/$username")({
   component: Perfil,
 });
 
+type ProfileSeries = {
+  id: string;
+  slug: string;
+  title: string;
+  cover_url: string | null;
+  kind: string;
+  rating: number;
+  chapters: { number: number }[];
+};
+
 function Perfil() {
   const { username } = Route.useParams();
   const { user } = useSession();
