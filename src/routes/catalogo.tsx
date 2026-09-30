@@ -23,9 +23,9 @@ export const Route = createFileRoute("/catalogo")({
   validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
-      { title: "Pesquisar — MangaVerso" },
+      { title: "Pesquisar — Better Mangá" },
       { name: "description", content: "Descubra obras por nome, gênero e filtros, ou encontre leitores pelo @nick." },
-      { property: "og:title", content: "Pesquisar — MangaVerso" },
+      { property: "og:title", content: "Pesquisar — Better Mangá" },
       { property: "og:description", content: "Busque mangás, manhwas e comics com filtros." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

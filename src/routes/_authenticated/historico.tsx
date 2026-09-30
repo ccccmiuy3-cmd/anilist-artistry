@@ -13,9 +13,9 @@ import { coverUrl, formatChapter, timeAgo } from "@/lib/media";
 export const Route = createFileRoute("/_authenticated/historico")({
   head: () => ({
     meta: [
-      { title: "Histórico — MangaVerso" },
-      { name: "description", content: "As últimas obras e capítulos que você abriu no MangaVerso." },
-      { property: "og:title", content: "Histórico — MangaVerso" },
+      { title: "Histórico — Better Mangá" },
+      { name: "description", content: "As últimas obras e capítulos que você abriu no Better Mangá." },
+      { property: "og:title", content: "Histórico — Better Mangá" },
       { property: "og:description", content: "Últimas obras que você abriu." },
     ],
   }),

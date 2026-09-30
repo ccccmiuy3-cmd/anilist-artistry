@@ -32,12 +32,12 @@ import { uploadCommentImage } from "@/lib/comments";
 export const Route = createFileRoute("/obra/$slug/")({
   head: () => ({
     meta: [
-      { title: "Obra — MangaVerso" },
+      { title: "Obra — Better Mangá" },
       {
         name: "description",
-        content: "Sinopse, gêneros e lista completa de capítulos da obra no MangaVerso.",
+        content: "Sinopse, gêneros e lista completa de capítulos da obra no Better Mangá.",
       },
-      { property: "og:title", content: "Obra — MangaVerso" },
+      { property: "og:title", content: "Obra — Better Mangá" },
       { property: "og:description", content: "Sinopse, gêneros e capítulos disponíveis." },
     ],
   }),

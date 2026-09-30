@@ -15,12 +15,12 @@ import { uploadCommentImage } from "@/lib/comments";
 export const Route = createFileRoute("/obra/$slug/$chapter")({
   head: () => ({
     meta: [
-      { title: "Leitor de capítulo — MangaVerso" },
+      { title: "Leitor de capítulo — Better Mangá" },
       {
         name: "description",
         content: "Leia o capítulo página por página com navegação rápida entre capítulos.",
       },
-      { property: "og:title", content: "Leitor de capítulo — MangaVerso" },
+      { property: "og:title", content: "Leitor de capítulo — Better Mangá" },
       { property: "og:description", content: "Leitura fluida, página por página." },
     ],
   }),

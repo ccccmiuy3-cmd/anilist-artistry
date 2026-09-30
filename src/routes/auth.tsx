@@ -11,12 +11,12 @@ import { useSession } from "@/hooks/useAuth";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Entrar no MangaVerso" },
+      { title: "Entrar no Better Mangá" },
       {
         name: "description",
         content: "Crie sua conta para favoritar obras, salvar o histórico de leitura e comentar.",
       },
-      { property: "og:title", content: "Entrar no MangaVerso" },
+      { property: "og:title", content: "Entrar no Better Mangá" },
       { property: "og:description", content: "Favoritos, histórico e comentários na sua conta." },
     ],
   }),
@@ -80,13 +80,12 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen place-items-center px-4 py-10">
       <div className="w-full max-w-sm">
-        <Link to="/" className="mb-8 flex items-center justify-center gap-2">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-primary text-xl font-black text-primary-foreground">
-            M
-          </span>
-          <span className="font-display text-xl font-extrabold">
-            Manga<span className="text-primary">Verso</span>
-          </span>
+        <Link to="/" className="mb-8 flex items-center justify-center" aria-label="Better Mangá — início">
+          <img
+            src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
+            alt="Better Mangá"
+            className="h-24 w-auto object-contain drop-shadow-[0_0_18px_color-mix(in_oklab,var(--primary)_45%,transparent)]"
+          />
         </Link>
 
         <div className="rounded-2xl border border-border bg-surface p-6 shadow-[var(--shadow-card)]">

@@ -22,9 +22,9 @@ const STATUSES = ["Em andamento", "Completo", "Hiato", "Cancelado"];
 export const Route = createFileRoute("/_authenticated/admin/$id")({
   head: () => ({
     meta: [
-      { title: "Editar obra e capítulos — MangaVerso" },
+      { title: "Editar obra e capítulos — Better Mangá" },
       { name: "description", content: "Edite a obra, envie páginas e gerencie os capítulos." },
-      { property: "og:title", content: "Editar obra — MangaVerso" },
+      { property: "og:title", content: "Editar obra — Better Mangá" },
       { property: "og:description", content: "Gestão de obra e capítulos." },
     ],
   }),

@@ -8,10 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/ranking")({
   head: () => ({
     meta: [
-      { title: "Ranking de XP dos leitores — MangaVerso" },
-      { name: "description", content: "Veja quem mais ganhou XP lendo mangás, manhwas e comics no MangaVerso." },
-      { property: "og:title", content: "Ranking de XP — MangaVerso" },
-      { property: "og:description", content: "O pódio dos leitores mais ativos do MangaVerso." },
+      { title: "Ranking de XP dos leitores — Better Mangá" },
+      { name: "description", content: "Veja quem mais ganhou XP lendo mangás, manhwas e comics no Better Mangá." },
+      { property: "og:title", content: "Ranking de XP — Better Mangá" },
+      { property: "og:description", content: "O pódio dos leitores mais ativos do Better Mangá." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

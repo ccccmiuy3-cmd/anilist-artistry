@@ -41,10 +41,10 @@ import { SubscriptionSeal } from "@/components/SubscriptionSeal";
 export const Route = createFileRoute("/u/$username")({
   head: ({ params }) => ({
     meta: [
-      { title: `@${params.username} — MangaVerso` },
-      { name: "description", content: `Perfil de @${params.username} no MangaVerso: favoritos, listas e comentários.` },
-      { property: "og:title", content: `@${params.username} — MangaVerso` },
-      { property: "og:description", content: "Perfil de leitor no MangaVerso." },
+      { title: `@${params.username} — Better Mangá` },
+      { name: "description", content: `Perfil de @${params.username} no Better Mangá: favoritos, listas e comentários.` },
+      { property: "og:title", content: `@${params.username} — Better Mangá` },
+      { property: "og:description", content: "Perfil de leitor no Better Mangá." },
       { property: "og:type", content: "profile" },
       { name: "twitter:card", content: "summary" },
     ],
