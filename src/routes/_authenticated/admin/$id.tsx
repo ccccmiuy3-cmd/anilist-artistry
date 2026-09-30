@@ -53,12 +53,14 @@ async function uploadFiles(seriesId: string, chapterNumber: string, files: File[
 function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) => void }) {
   const [over, setOver] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const handle = async (list: File[]) => {
     if (!list.length) return;
     setBusy(true);
+    setProgress(null);
     try {
       const { extractPages } = await import("@/lib/extract-pages");
-      const imgs = await extractPages(list);
+      const imgs = await extractPages(list, (done, total) => setProgress({ done, total }));
       if (!imgs.length) throw new Error("Nenhuma imagem encontrada no arquivo.");
       setFiles(imgs);
       toast.success(`${imgs.length} imagem(ns) extraída(s)`);
@@ -66,8 +68,10 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
       toast.error(e instanceof Error ? e.message : "Falha ao extrair arquivo");
     } finally {
       setBusy(false);
+      setProgress(null);
     }
   };
+  const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : null;
   return (
     <label
       onDragOver={(e) => {
