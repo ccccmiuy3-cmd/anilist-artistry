@@ -346,6 +346,7 @@ export type Database = {
         Row: {
           chapter_id: string | null
           progress: number
+          scroll_pos: number
           series_id: string
           updated_at: string
           user_id: string
@@ -353,6 +354,7 @@ export type Database = {
         Insert: {
           chapter_id?: string | null
           progress?: number
+          scroll_pos?: number
           series_id: string
           updated_at?: string
           user_id: string
@@ -360,6 +362,7 @@ export type Database = {
         Update: {
           chapter_id?: string | null
           progress?: number
+          scroll_pos?: number
           series_id?: string
           updated_at?: string
           user_id?: string

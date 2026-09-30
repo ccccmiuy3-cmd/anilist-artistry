@@ -96,18 +96,74 @@ function Reader() {
     onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
   });
 
+  // Save chapter + exact scroll position; restore where the user stopped.
   useEffect(() => {
     if (!user || !obra || !current) return;
-    void supabase.from("reading_history").upsert(
-      {
-        user_id: user.id,
-        series_id: obra.id,
-        chapter_id: current.id,
-        progress: Math.round(((index + 1) / Math.max(obra.chapters.length, 1)) * 100),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id,series_id" },
-    );
+    let cancelled = false;
+    let lastPos = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const progress = Math.round(((index + 1) / Math.max(obra.chapters.length, 1)) * 100);
+
+    const save = (pos: number) =>
+      supabase.from("reading_history").upsert(
+        {
+          user_id: user.id,
+          series_id: obra.id,
+          chapter_id: current.id,
+          progress,
+          scroll_pos: pos,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,series_id" },
+      );
+
+    const currentPos = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      return max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+    };
+
+    (async () => {
+      const { data } = await supabase
+        .from("reading_history")
+        .select("chapter_id, scroll_pos")
+        .eq("user_id", user.id)
+        .eq("series_id", obra.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const saved = data?.chapter_id === current.id ? Number(data.scroll_pos) || 0 : 0;
+      lastPos = saved;
+      void save(saved);
+      if (saved > 0.01 && saved < 0.99) {
+        // wait for images to lay out, then jump
+        let tries = 0;
+        const jump = () => {
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          window.scrollTo({ top: saved * max });
+          if (++tries < 8 && !cancelled) setTimeout(jump, 400);
+        };
+        jump();
+        toast.info("Continuando de onde você parou");
+      }
+    })();
+
+    const onScroll = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const pos = currentPos();
+        if (Math.abs(pos - lastPos) > 0.01) {
+          lastPos = pos;
+          void save(pos);
+        }
+      }, 800);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      window.removeEventListener("scroll", onScroll);
+      const pos = currentPos();
+      if (Math.abs(pos - lastPos) > 0.01) void save(pos);
+    };
   }, [user, obra, current, index]);
 
   useEffect(() => {

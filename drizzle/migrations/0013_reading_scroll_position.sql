@@ -1,0 +1,1 @@
+ALTER TABLE public.reading_history ADD COLUMN IF NOT EXISTS scroll_pos real NOT NULL DEFAULT 0;
