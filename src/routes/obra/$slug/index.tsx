@@ -406,7 +406,7 @@ function SeriesPage() {
                       }}
                     >
                       <Play className="mr-2 h-4 w-4 fill-current" />
-                      {readNumbers.size > 0
+                      {readIds.size > 0
                         ? `Continue lendo (Capítulo ${formatChapter(continueChapter.number)})`
                         : "Começar a ler"}
                     </Link>
