@@ -49,6 +49,53 @@ function Reader() {
     return Array.isArray(raw) ? (raw.filter((item) => typeof item === "string") as string[]) : [];
   }, [current]);
 
+  const queryClient = useQueryClient();
+  const [body, setBody] = useState("");
+
+  const comments = useQuery({
+    queryKey: ["chapter-comments", current?.id],
+    enabled: Boolean(current),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("comments")
+        .select("id, body, created_at, user_id")
+        .eq("chapter_id", current!.id)
+        .order("created_at", { ascending: false })
+        .limit(80);
+      if (error) throw error;
+      const rows = data ?? [];
+      const ids = [...new Set(rows.map((row) => row.user_id))];
+      const authors = new Map<string, { username: string; avatar_url: string | null }>();
+      if (ids.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, username, avatar_url")
+          .in("id", ids);
+        for (const profile of profiles ?? []) authors.set(profile.id, profile);
+      }
+      return rows.map((row) => ({ ...row, author: authors.get(row.user_id) ?? null }));
+    },
+  });
+
+  const postComment = useMutation({
+    mutationFn: async () => {
+      if (!user || !obra || !current) throw new Error("Entre para comentar.");
+      const { error } = await supabase.from("comments").insert({
+        series_id: obra.id,
+        chapter_id: current.id,
+        user_id: user.id,
+        body: body.trim(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setBody("");
+      queryClient.invalidateQueries({ queryKey: ["chapter-comments", current?.id] });
+      toast.success("Comentário publicado!");
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
+  });
+
   useEffect(() => {
     if (!user || !obra || !current) return;
     void supabase.from("reading_history").upsert(
