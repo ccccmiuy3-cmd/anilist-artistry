@@ -118,7 +118,7 @@ function AdminPage() {
         >
           <div className="relative min-w-56 flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Nome da obra no AniList" className="h-11 bg-background pl-9" />
+            <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Nome da obra ou link do AniList (anilist.co/manga/...)" className="h-11 bg-background pl-9" />
           </div>
           <select value={kind} onChange={(e) => setKind(e.target.value)} className="h-11 rounded-md border border-border bg-background px-3 text-sm font-semibold">
             {KINDS.map((k) => (

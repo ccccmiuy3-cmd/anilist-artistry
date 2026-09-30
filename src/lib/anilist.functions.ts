@@ -16,9 +16,9 @@ export type AnilistResult = {
 };
 
 const QUERY = `
-query ($search: String) {
-  Page(perPage: 12) {
-    media(search: $search, type: MANGA, sort: SEARCH_MATCH) {
+query ($search: String, $ids: [Int], $sort: [MediaSort]) {
+  Page(perPage: 24) {
+    media(search: $search, id_in: $ids, type: MANGA, sort: $sort) {
       id
       title { romaji english native }
       description(asHtml: false)
@@ -43,11 +43,34 @@ const STATUS_PT: Record<string, string> = {
 export const searchAnilist = createServerFn({ method: "POST" })
   .inputValidator((input: { search: string }) => z.object({ search: z.string().min(1) }).parse(input))
   .handler(async ({ data }): Promise<AnilistResult[]> => {
-    const response = await fetch("https://graphql.anilist.co", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ query: QUERY, variables: { search: data.search } }),
-    });
+    const gql = (query: string, variables: Record<string, unknown>) =>
+      fetch("https://graphql.anilist.co", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ query, variables }),
+      });
+    const raw = data.search.trim();
+    let variables: Record<string, unknown> = { search: raw, sort: ["SEARCH_MATCH"] };
+    const url = /anilist\.co\/(manga|anime|search)\/?(\d+)?/i.exec(raw);
+    if (url) {
+      const [, kind, id] = url;
+      if (kind === "manga" && id) variables = { ids: [Number(id)] };
+      else if (kind === "anime" && id) {
+        // Anime link: import the manga it is based on
+        const r = await gql(
+          `query ($id: Int) { Media(id: $id, type: ANIME) { relations { edges { relationType node { id type } } } } }`,
+          { id: Number(id) },
+        );
+        const j = (await r.json()) as { data?: { Media?: { relations?: { edges?: Array<{ node?: { id: number; type: string } }> } } } };
+        const ids = (j.data?.Media?.relations?.edges ?? []).filter((e) => e.node?.type === "MANGA").map((e) => e.node!.id);
+        if (!ids.length) throw new Error("Esse anime não tem mangá de origem no AniList.");
+        variables = { ids };
+      } else {
+        const q = new URL(raw.startsWith("http") ? raw : `https://${raw}`).searchParams.get("search");
+        variables = q ? { search: q, sort: ["SEARCH_MATCH"] } : { sort: ["TRENDING_DESC"] };
+      }
+    }
+    const response = await gql(QUERY, variables);
 
     if (!response.ok) {
       throw new Error(`Não foi possível buscar no AniList (${response.status}).`);
