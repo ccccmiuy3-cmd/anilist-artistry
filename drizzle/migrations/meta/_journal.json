@@ -15,6 +15,13 @@
       "when": 1790731054119,
       "tag": "0001_manga_storage_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790731416250,
+      "tag": "0002_increment_series_views",
+      "breakpoints": true
     }
   ]
 }

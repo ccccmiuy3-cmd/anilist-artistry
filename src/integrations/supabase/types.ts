@@ -311,6 +311,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_series_views: {
+        Args: { _series_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "uploader" | "user"

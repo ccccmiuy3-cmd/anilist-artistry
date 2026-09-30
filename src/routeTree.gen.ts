@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as ObraSlugIndexRouteImport } from './routes/obra/$slug/index'
+import { Route as ObraSlugChapterRouteImport } from './routes/obra/$slug/$chapter'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +36,32 @@ const RankingRoute = RankingRouteImport.update({
   path: '/ranking',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ObraSlugIndexRoute = ObraSlugIndexRouteImport.update({
+  id: '/obra/$slug/',
+  path: '/obra/$slug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ObraSlugChapterRoute = ObraSlugChapterRouteImport.update({
+  id: '/obra/$slug/$chapter',
+  path: '/obra/$slug/$chapter',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/catalogo': typeof CatalogoRoute
   '/ranking': typeof RankingRoute
+  '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
+  '/obra/$slug/': typeof ObraSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/catalogo': typeof CatalogoRoute
   '/ranking': typeof RankingRoute
+  '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
+  '/obra/$slug': typeof ObraSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +69,34 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/catalogo': typeof CatalogoRoute
   '/ranking': typeof RankingRoute
+  '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
+  '/obra/$slug/': typeof ObraSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/catalogo' | '/ranking'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/catalogo'
+    | '/ranking'
+    | '/obra/$slug/$chapter'
+    | '/obra/$slug/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/catalogo' | '/ranking'
-  id: '__root__' | '/' | '/auth' | '/catalogo' | '/ranking'
+  to:
+    | '/'
+    | '/auth'
+    | '/catalogo'
+    | '/ranking'
+    | '/obra/$slug/$chapter'
+    | '/obra/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/catalogo'
+    | '/ranking'
+    | '/obra/$slug/$chapter'
+    | '/obra/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +104,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CatalogoRoute: typeof CatalogoRoute
   RankingRoute: typeof RankingRoute
+  ObraSlugChapterRoute: typeof ObraSlugChapterRoute
+  ObraSlugIndexRoute: typeof ObraSlugIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +138,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RankingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/obra/$slug/': {
+      id: '/obra/$slug/'
+      path: '/obra/$slug'
+      fullPath: '/obra/$slug/'
+      preLoaderRoute: typeof ObraSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/obra/$slug/$chapter': {
+      id: '/obra/$slug/$chapter'
+      path: '/obra/$slug/$chapter'
+      fullPath: '/obra/$slug/$chapter'
+      preLoaderRoute: typeof ObraSlugChapterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +160,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CatalogoRoute: CatalogoRoute,
   RankingRoute: RankingRoute,
+  ObraSlugChapterRoute: ObraSlugChapterRoute,
+  ObraSlugIndexRoute: ObraSlugIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
