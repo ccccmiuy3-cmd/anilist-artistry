@@ -7,7 +7,7 @@ import { SeriesCard } from "@/components/SeriesCard";
 import { HScroll, SectionRow } from "@/components/SectionRow";
 import { Button } from "@/components/ui/button";
 import { fetchFavorites, fetchHistory, fetchSeries, KINDS } from "@/lib/queries";
-import { coverUrl, formatChapter, timeAgo } from "@/lib/media";
+import { coverUrl, formatChapter } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/")({
@@ -112,7 +112,10 @@ function Home() {
                 title={item.title}
                 cover={item.cover_url}
                 rating={item.rating}
+                chapters={item.chapters.length}
                 showTitle={false}
+                favorite={favoriteIds.has(item.id)}
+                seriesId={item.id}
               />
             ))}
             {byKind.data?.length === 0 ? (
@@ -132,7 +135,9 @@ function Home() {
                     slug={item.slug}
                     title={item.title}
                     cover={item.cover_url}
-                    badge="♥"
+                    rating={item.rating}
+                    favorite
+                    seriesId={item.id}
                   />
                 </div>
               ))}
@@ -271,6 +276,8 @@ function Home() {
                         title={item.title}
                         cover={item.cover_url}
                         rating={item.rating}
+                        favorite={favoriteIds.has(item.id)}
+                        seriesId={item.id}
                       />
                     </div>
                   </div>
