@@ -183,6 +183,13 @@
       "when": 1790794642579,
       "tag": "0025_support_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790794946967,
+      "tag": "0026_tighten_comment_likes_badges_rls",
+      "breakpoints": true
     }
   ]
 }
