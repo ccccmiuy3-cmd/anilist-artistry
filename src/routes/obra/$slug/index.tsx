@@ -27,7 +27,6 @@ import { useSession } from "@/hooks/useAuth";
 import { AddToListButton, StatusButton } from "@/components/SeriesActions";
 import { CommentItem } from "@/components/CommentItem";
 import { CommentComposer, type CommentDraft } from "@/components/CommentComposer";
-import { CommentContent } from "@/components/CommentContent";
 import { uploadCommentImage } from "@/lib/comments";
 
 export const Route = createFileRoute("/obra/$slug/")({
