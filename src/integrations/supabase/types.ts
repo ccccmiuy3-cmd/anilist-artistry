@@ -206,27 +206,71 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_comments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          banner_url: string | null
+          bio: string | null
           created_at: string
+          display_name: string | null
           id: string
           level: number
           username: string
+          xp: number
         }
         Insert: {
           avatar_url?: string | null
+          banner_url?: string | null
+          bio?: string | null
           created_at?: string
+          display_name?: string | null
           id: string
           level?: number
           username: string
+          xp?: number
         }
         Update: {
           avatar_url?: string | null
+          banner_url?: string | null
+          bio?: string | null
           created_at?: string
+          display_name?: string | null
           id?: string
           level?: number
           username?: string
+          xp?: number
         }
         Relationships: []
       }
@@ -395,6 +439,32 @@ export type Database = {
           views?: number
         }
         Relationships: []
+      }
+      user_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

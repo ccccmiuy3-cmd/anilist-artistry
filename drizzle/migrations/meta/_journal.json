@@ -36,6 +36,13 @@
       "when": 1790732472543,
       "tag": "0004_reading_status_and_lists",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790732822044,
+      "tag": "0005_profile_extras",
+      "breakpoints": true
     }
   ]
 }
