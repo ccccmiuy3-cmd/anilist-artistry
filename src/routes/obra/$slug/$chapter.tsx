@@ -73,7 +73,7 @@ function Reader() {
   }, [current]);
 
   const queryClient = useQueryClient();
-  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
 
   const comments = useQuery({
     queryKey: ["chapter-comments", current?.id],
@@ -81,15 +81,19 @@ function Reader() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("comments")
-        .select("id, body, created_at, user_id, is_spoiler, image_url")
+        .select("id, body, created_at, user_id, is_spoiler, image_url, parent_id")
         .eq("chapter_id", current!.id)
         .order("created_at", { ascending: false })
         .limit(80);
       if (error) throw error;
       const rows = data ?? [];
       const ids = [...new Set(rows.map((row) => row.user_id))];
-      const authors = await fetchCommentAuthors(ids);
-      return rows.map((row) => ({ ...row, author: authors.get(row.user_id) ?? null }));
+      const [authors, parents] = await Promise.all([fetchCommentAuthors(ids), fetchCommentParents(rows)]);
+      return rows.map((row) => ({
+        ...row,
+        author: authors.get(row.user_id) ?? null,
+        parent: row.parent_id ? (parents.get(row.parent_id) ?? null) : null,
+      }));
     },
   });
 
@@ -104,10 +108,12 @@ function Reader() {
         body: draft.body,
         is_spoiler: draft.isSpoiler,
         image_url: imageUrl,
+        parent_id: replyTo?.id ?? null,
       });
       if (error) throw error;
     },
     onSuccess: () => {
+      setReplyTo(null);
       queryClient.invalidateQueries({ queryKey: ["chapter-comments", current?.id] });
       toast.success("Comentário publicado!");
     },
