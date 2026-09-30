@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as RankingLeitoresRouteImport } from './routes/ranking-leitores'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedBibliotecaRouteImport } from './routes/_authenticated/biblioteca'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
@@ -52,6 +53,11 @@ const CatalogoRoute = CatalogoRouteImport.update({
 const RankingRoute = RankingRouteImport.update({
   id: '/ranking',
   path: '/ranking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankingLeitoresRoute = RankingLeitoresRouteImport.update({
+  id: '/ranking-leitores',
+  path: '/ranking-leitores',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/catalogo': typeof CatalogoRoute
   '/ranking': typeof RankingRoute
+  '/ranking-leitores': typeof RankingLeitoresRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/historico': typeof AuthenticatedHistoricoRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/catalogo': typeof CatalogoRoute
   '/ranking': typeof RankingRoute
+  '/ranking-leitores': typeof RankingLeitoresRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/historico': typeof AuthenticatedHistoricoRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/catalogo': typeof CatalogoRoute
   '/ranking': typeof RankingRoute
+  '/ranking-leitores': typeof RankingLeitoresRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo'
     | '/ranking'
+    | '/ranking-leitores'
     | '/sitemap.xml'
     | '/biblioteca'
     | '/historico'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo'
     | '/ranking'
+    | '/ranking-leitores'
     | '/sitemap.xml'
     | '/biblioteca'
     | '/historico'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo'
     | '/ranking'
+    | '/ranking-leitores'
     | '/sitemap.xml'
     | '/_authenticated/biblioteca'
     | '/_authenticated/historico'
@@ -270,6 +282,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CatalogoRoute: typeof CatalogoRoute
   RankingRoute: typeof RankingRoute
+  RankingLeitoresRoute: typeof RankingLeitoresRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ListasIdRoute: typeof ListasIdRoute
   UUsernameRoute: typeof UUsernameRoute
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/ranking'
       fullPath: '/ranking'
       preLoaderRoute: typeof RankingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ranking-leitores': {
+      id: '/ranking-leitores'
+      path: '/ranking-leitores'
+      fullPath: '/ranking-leitores'
+      preLoaderRoute: typeof RankingLeitoresRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -456,6 +476,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CatalogoRoute: CatalogoRoute,
   RankingRoute: RankingRoute,
+  RankingLeitoresRoute: RankingLeitoresRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ListasIdRoute: ListasIdRoute,
   UUsernameRoute: UUsernameRoute,
