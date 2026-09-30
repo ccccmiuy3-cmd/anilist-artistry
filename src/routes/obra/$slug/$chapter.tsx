@@ -1,11 +1,13 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { BookOpen, ChevronLeft, ChevronRight, ChevronsDown, Home, Infinity, Maximize2, Palette } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BookOpen, ChevronLeft, ChevronRight, ChevronsDown, Home, Infinity, Maximize2, MessageCircle, Palette, Send } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSeriesBySlug } from "@/lib/queries";
-import { formatChapter } from "@/lib/media";
+import { formatChapter, timeAgo } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/obra/$slug/$chapter")({
@@ -46,6 +48,53 @@ function Reader() {
     const raw = (current?.pages ?? []) as unknown;
     return Array.isArray(raw) ? (raw.filter((item) => typeof item === "string") as string[]) : [];
   }, [current]);
+
+  const queryClient = useQueryClient();
+  const [body, setBody] = useState("");
+
+  const comments = useQuery({
+    queryKey: ["chapter-comments", current?.id],
+    enabled: Boolean(current),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("comments")
+        .select("id, body, created_at, user_id")
+        .eq("chapter_id", current!.id)
+        .order("created_at", { ascending: false })
+        .limit(80);
+      if (error) throw error;
+      const rows = data ?? [];
+      const ids = [...new Set(rows.map((row) => row.user_id))];
+      const authors = new Map<string, { username: string; avatar_url: string | null }>();
+      if (ids.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, username, avatar_url")
+          .in("id", ids);
+        for (const profile of profiles ?? []) authors.set(profile.id, profile);
+      }
+      return rows.map((row) => ({ ...row, author: authors.get(row.user_id) ?? null }));
+    },
+  });
+
+  const postComment = useMutation({
+    mutationFn: async () => {
+      if (!user || !obra || !current) throw new Error("Entre para comentar.");
+      const { error } = await supabase.from("comments").insert({
+        series_id: obra.id,
+        chapter_id: current.id,
+        user_id: user.id,
+        body: body.trim(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setBody("");
+      queryClient.invalidateQueries({ queryKey: ["chapter-comments", current?.id] });
+      toast.success("Comentário publicado!");
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
+  });
 
   useEffect(() => {
     if (!user || !obra || !current) return;
@@ -186,6 +235,66 @@ function Reader() {
           Próximo <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </div>
+
+      <section className="mx-auto max-w-3xl px-4 pb-16">
+        <h2 className="section-title">
+          <MessageCircle className="h-5 w-5" /> Comentários do capítulo
+        </h2>
+        {user ? (
+          <div className="mt-4 rounded-xl border border-dashed border-border bg-surface p-4">
+            <Textarea
+              value={body}
+              onChange={(event) => setBody(event.target.value)}
+              placeholder="Escreva seu comentário…"
+              maxLength={350}
+              className="min-h-24 border-none bg-transparent p-0 focus-visible:ring-0"
+            />
+            <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+              <span className="text-xs text-muted-foreground">{body.length}/350</span>
+              <Button
+                className="font-semibold"
+                disabled={body.trim().length === 0 || postComment.isPending}
+                onClick={() => postComment.mutate()}
+              >
+                <Send className="mr-2 h-4 w-4" /> Comentar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-muted-foreground">
+            <Link to="/auth" className="text-primary">
+              Entre
+            </Link>{" "}
+            para comentar.
+          </p>
+        )}
+
+        <ul className="mt-6 space-y-5">
+          {(comments.data ?? []).map((comment) => (
+            <li key={comment.id} className="flex gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-2 text-sm font-bold">
+                {comment.author?.avatar_url ? (
+                  <img src={comment.author.avatar_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  (comment.author?.username ?? "?").slice(0, 1).toUpperCase()
+                )}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-bold">{comment.author?.username ?? "leitor"}</span>
+                  <span className="text-xs text-muted-foreground">{timeAgo(comment.created_at)}</span>
+                </div>
+                <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{comment.body}</p>
+              </div>
+            </li>
+          ))}
+          {(comments.data ?? []).length === 0 && !comments.isLoading ? (
+            <li className="py-6 text-center text-sm text-muted-foreground">
+              Seja o primeiro a comentar este capítulo.
+            </li>
+          ) : null}
+        </ul>
+      </section>
     </div>
   );
 }
