@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, Heart, LayoutGrid, PlusSquare, Star, Trophy } from "lucide-react";
+import { Clock, LayoutGrid, PlusSquare, Star, Trophy } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { SeriesCard } from "@/components/SeriesCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { ContinueReading } from "@/components/ContinueReading";
+import { FavoritesUpdated } from "@/components/FavoritesUpdated";
 import { HScroll, SectionRow } from "@/components/SectionRow";
 import { Button } from "@/components/ui/button";
 import { fetchFavorites, fetchHistory, fetchSeries, KINDS } from "@/lib/queries";
