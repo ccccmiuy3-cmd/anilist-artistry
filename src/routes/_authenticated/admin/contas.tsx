@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Ban, Pencil, Plus, Save, Search, Shield, Trash2, Upload as UploadIcon } from "lucide-react";
+import { Award, Ban, Check, Pencil, Save, Search, Shield, Trash2, Upload as UploadIcon } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/AdminShell";
 import { subscriptionSeal } from "@/lib/subscription";
@@ -130,35 +130,48 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
     queryKey: ["admin-badges", account?.id],
     enabled: Boolean(account),
     queryFn: async () => {
+      if (!account) return [];
       const { data, error } = await supabase
         .from("profile_badges")
-        .select("id, name, image_url")
-        .eq("user_id", account!.id)
+        .select("id, name, image_url, event_id")
+        .eq("user_id", account.id)
         .order("position", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
   });
-  const [badgeDraft, setBadgeDraft] = useState({ name: "", image_url: "" });
-  useEffect(() => setBadgeDraft({ name: "", image_url: "" }), [account?.id]);
+  const badgeEvents = useQuery({
+    queryKey: ["admin-account-badge-events"],
+    enabled: Boolean(account),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("badge_events")
+        .select("id, name, image_url, active, ends_at")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
-  const addBadge = useMutation({
-    mutationFn: async () => {
+  const giveBadge = useMutation({
+    mutationFn: async (event: { id: string; name: string; image_url: string }) => {
       if (!account) return;
-      const name = badgeDraft.name.trim();
-      const image_url = badgeDraft.image_url.trim();
-      if (!name || !image_url) throw new Error("Preencha o nome e a URL da imagem do selo.");
       const { error } = await supabase
         .from("profile_badges")
-        .insert({ user_id: account.id, name, image_url, position: (badges.data?.length ?? 0) + 1 });
-      if (error) throw error;
+        .insert({
+          user_id: account.id,
+          name: event.name,
+          image_url: event.image_url,
+          event_id: event.id,
+          position: (badges.data?.length ?? 0) + 1,
+        });
+      if (error) throw new Error(error.code === "23505" ? "Este usuário já possui esse selo." : error.message);
     },
     onSuccess: () => {
-      toast.success("Selo adicionado!");
-      setBadgeDraft({ name: "", image_url: "" });
+      toast.success("Selo enviado para o perfil!");
       qc.invalidateQueries({ queryKey: ["admin-badges", account?.id] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível adicionar."),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível enviar o selo."),
   });
 
   const removeBadge = useMutation({
@@ -266,8 +279,8 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
           </div>
         </div>
         <div className="space-y-2 rounded-xl border border-border p-3">
-          <p className="text-sm font-bold">Selos extras</p>
-          <p className="text-xs text-muted-foreground">Emblemas exibidos ao lado do nome nos comentários e no perfil.</p>
+          <p className="text-sm font-bold">Selos do perfil</p>
+          <p className="text-xs text-muted-foreground">Envie um selo cadastrado ou remova os que este usuário já possui.</p>
           <div className="flex flex-wrap gap-2">
             {(badges.data ?? []).map((b) => (
               <span key={b.id} className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-2 py-1 text-xs">
@@ -283,28 +296,38 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
                 </button>
               </span>
             ))}
-            {badges.data?.length === 0 ? <span className="text-xs text-muted-foreground">Nenhum selo extra.</span> : null}
+            {badges.data?.length === 0 ? <span className="text-xs text-muted-foreground">Nenhum selo recebido.</span> : null}
           </div>
-          <div className="grid grid-cols-[1fr_2fr_auto] items-end gap-2">
-            <div className="space-y-1">
-              <Label className="text-xs">Nome</Label>
-              <Input
-                value={badgeDraft.name}
-                onChange={(e) => setBadgeDraft({ ...badgeDraft, name: e.target.value })}
-                placeholder="Beta Tester"
-              />
+          <div className="border-t border-border pt-3">
+            <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase text-muted-foreground">
+              <Award className="h-3.5 w-3.5" /> Catálogo de selos
+            </p>
+            <div className="grid max-h-56 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3">
+              {(badgeEvents.data ?? []).map((event) => {
+                const owned = badges.data?.some((badge) => badge.event_id === event.id) ?? false;
+                const expired = !event.active || Boolean(event.ends_at && new Date(event.ends_at) <= new Date());
+                return (
+                  <Button
+                    key={event.id}
+                    type="button"
+                    variant="outline"
+                    disabled={owned || giveBadge.isPending}
+                    onClick={() => giveBadge.mutate(event)}
+                    className="h-auto min-h-20 justify-start gap-2 whitespace-normal p-2 text-left"
+                    title={owned ? "Este usuário já possui o selo" : `Enviar ${event.name}`}
+                  >
+                    <img src={event.image_url} alt="" className="h-10 w-10 shrink-0 object-contain" />
+                    <span className="min-w-0">
+                      <span className="line-clamp-2 block text-xs font-semibold">{event.name}</span>
+                      <span className={`mt-1 flex items-center gap-1 text-[10px] ${owned ? "text-primary" : "text-muted-foreground"}`}>
+                        {owned ? <><Check className="h-3 w-3" /> Recebido</> : expired ? "Evento encerrado" : "Evento ativo"}
+                      </span>
+                    </span>
+                  </Button>
+                );
+              })}
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">URL da imagem</Label>
-              <Input
-                value={badgeDraft.image_url}
-                onChange={(e) => setBadgeDraft({ ...badgeDraft, image_url: e.target.value })}
-                placeholder="https://…/selo.webp"
-              />
-            </div>
-            <Button type="button" variant="outline" size="icon" disabled={addBadge.isPending} onClick={() => addBadge.mutate()} aria-label="Adicionar selo">
-              <Plus className="h-4 w-4" />
-            </Button>
+            {badgeEvents.data?.length === 0 ? <p className="py-3 text-xs text-muted-foreground">Nenhum selo cadastrado.</p> : null}
           </div>
         </div>
         <div className="space-y-2 rounded-xl border border-border p-3">
