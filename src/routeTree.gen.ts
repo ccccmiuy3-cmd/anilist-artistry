@@ -10,33 +10,158 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CatalogoRouteImport } from './routes/catalogo'
+import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as AuthenticatedBibliotecaRouteImport } from './routes/_authenticated/biblioteca'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
+import { Route as AuthenticatedAdminNovaRouteImport } from './routes/_authenticated/admin/nova'
+import { Route as ObraSlugIndexRouteImport } from './routes/obra/$slug/index'
+import { Route as ObraSlugChapterRouteImport } from './routes/obra/$slug/$chapter'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CatalogoRoute = CatalogoRouteImport.update({
+  id: '/catalogo',
+  path: '/catalogo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankingRoute = RankingRouteImport.update({
+  id: '/ranking',
+  path: '/ranking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedBibliotecaRoute = AuthenticatedBibliotecaRouteImport.update({
+  id: '/biblioteca',
+  path: '/biblioteca',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminIdRoute = AuthenticatedAdminIdRouteImport.update({
+  id: '/admin/$id',
+  path: '/admin/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminNovaRoute = AuthenticatedAdminNovaRouteImport.update({
+  id: '/admin/nova',
+  path: '/admin/nova',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ObraSlugIndexRoute = ObraSlugIndexRouteImport.update({
+  id: '/obra/$slug/',
+  path: '/obra/$slug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ObraSlugChapterRoute = ObraSlugChapterRouteImport.update({
+  id: '/obra/$slug/$chapter',
+  path: '/obra/$slug/$chapter',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/catalogo': typeof CatalogoRoute
+  '/ranking': typeof RankingRoute
+  '/biblioteca': typeof AuthenticatedBibliotecaRoute
+  '/admin/$id': typeof AuthenticatedAdminIdRoute
+  '/admin/nova': typeof AuthenticatedAdminNovaRoute
+  '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/obra/$slug/': typeof ObraSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/catalogo': typeof CatalogoRoute
+  '/ranking': typeof RankingRoute
+  '/biblioteca': typeof AuthenticatedBibliotecaRoute
+  '/admin/$id': typeof AuthenticatedAdminIdRoute
+  '/admin/nova': typeof AuthenticatedAdminNovaRoute
+  '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/obra/$slug': typeof ObraSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/catalogo': typeof CatalogoRoute
+  '/ranking': typeof RankingRoute
+  '/_authenticated/biblioteca': typeof AuthenticatedBibliotecaRoute
+  '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
+  '/_authenticated/admin/nova': typeof AuthenticatedAdminNovaRoute
+  '/obra/$slug/$chapter': typeof ObraSlugChapterRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/obra/$slug/': typeof ObraSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/catalogo'
+    | '/ranking'
+    | '/biblioteca'
+    | '/admin/$id'
+    | '/admin/nova'
+    | '/obra/$slug/$chapter'
+    | '/admin/'
+    | '/obra/$slug/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/catalogo'
+    | '/ranking'
+    | '/biblioteca'
+    | '/admin/$id'
+    | '/admin/nova'
+    | '/obra/$slug/$chapter'
+    | '/admin'
+    | '/obra/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/catalogo'
+    | '/ranking'
+    | '/_authenticated/biblioteca'
+    | '/_authenticated/admin/$id'
+    | '/_authenticated/admin/nova'
+    | '/obra/$slug/$chapter'
+    | '/_authenticated/admin/'
+    | '/obra/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  CatalogoRoute: typeof CatalogoRoute
+  RankingRoute: typeof RankingRoute
+  ObraSlugChapterRoute: typeof ObraSlugChapterRoute
+  ObraSlugIndexRoute: typeof ObraSlugIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +173,104 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogo': {
+      id: '/catalogo'
+      path: '/catalogo'
+      fullPath: '/catalogo'
+      preLoaderRoute: typeof CatalogoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ranking': {
+      id: '/ranking'
+      path: '/ranking'
+      fullPath: '/ranking'
+      preLoaderRoute: typeof RankingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/biblioteca': {
+      id: '/_authenticated/biblioteca'
+      path: '/biblioteca'
+      fullPath: '/biblioteca'
+      preLoaderRoute: typeof AuthenticatedBibliotecaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/$id': {
+      id: '/_authenticated/admin/$id'
+      path: '/admin/$id'
+      fullPath: '/admin/$id'
+      preLoaderRoute: typeof AuthenticatedAdminIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/nova': {
+      id: '/_authenticated/admin/nova'
+      path: '/admin/nova'
+      fullPath: '/admin/nova'
+      preLoaderRoute: typeof AuthenticatedAdminNovaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/obra/$slug/': {
+      id: '/obra/$slug/'
+      path: '/obra/$slug'
+      fullPath: '/obra/$slug/'
+      preLoaderRoute: typeof ObraSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/obra/$slug/$chapter': {
+      id: '/obra/$slug/$chapter'
+      path: '/obra/$slug/$chapter'
+      fullPath: '/obra/$slug/$chapter'
+      preLoaderRoute: typeof ObraSlugChapterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBibliotecaRoute: typeof AuthenticatedBibliotecaRoute
+  AuthenticatedAdminIdRoute: typeof AuthenticatedAdminIdRoute
+  AuthenticatedAdminNovaRoute: typeof AuthenticatedAdminNovaRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBibliotecaRoute: AuthenticatedBibliotecaRoute,
+  AuthenticatedAdminIdRoute: AuthenticatedAdminIdRoute,
+  AuthenticatedAdminNovaRoute: AuthenticatedAdminNovaRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  CatalogoRoute: CatalogoRoute,
+  RankingRoute: RankingRoute,
+  ObraSlugChapterRoute: ObraSlugChapterRoute,
+  ObraSlugIndexRoute: ObraSlugIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

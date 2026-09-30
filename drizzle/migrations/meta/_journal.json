@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790731008298,
+      "tag": "0000_create_manga_platform",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790731054119,
+      "tag": "0001_manga_storage_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790731416250,
+      "tag": "0002_increment_series_views",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790731677606,
+      "tag": "0003_seed_demo_series",
+      "breakpoints": true
+    }
+  ]
+}
