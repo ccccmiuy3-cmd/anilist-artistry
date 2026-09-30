@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, Clock, Heart, LayoutGrid, PlusSquare, Star, Trophy } from "lucide-react";
+import { Clock, Heart, LayoutGrid, PlusSquare, Star, Trophy } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { SeriesCard } from "@/components/SeriesCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { ContinueReading } from "@/components/ContinueReading";
 import { HScroll, SectionRow } from "@/components/SectionRow";
 import { Button } from "@/components/ui/button";
 import { fetchFavorites, fetchHistory, fetchSeries, KINDS } from "@/lib/queries";
-import { coverUrl, formatChapter } from "@/lib/media";
+import { coverUrl } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/")({
@@ -158,30 +159,7 @@ function Home() {
         ) : null}
 
         {user && (history.data?.length ?? 0) > 0 ? (
-          <SectionRow
-            icon={<BookOpen className="h-5 w-5" />}
-            title="Continue lendo"
-            subtitle="Toque na capa para continuar de onde parou."
-            action={
-              <Button asChild variant="ghost" size="sm" className="text-primary">
-                <Link to="/biblioteca">Ver todos</Link>
-              </Button>
-            }
-          >
-            <HScroll>
-              {history.data!.map((row) => (
-                <div key={row.series.id} className="w-[140px] shrink-0">
-                  <SeriesCard
-                    slug={row.series.slug}
-                    title={row.series.title}
-                    cover={row.series.cover_url}
-                    progress={row.progress}
-                    badge={row.chapters ? `Cap. ${formatChapter(row.chapters.number)}` : null}
-                  />
-                </div>
-              ))}
-            </HScroll>
-          </SectionRow>
+          <ContinueReading rows={history.data!} userId={user.id} />
         ) : null}
 
         {(topRated.data?.length ?? 0) > 0 ? (
