@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, Square, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { fetchSpeech, getAudioContext, SpeechError } from "@/lib/realistic-speech";
+import { fetchElevenSpeech, fetchSpeech, getAudioContext, SpeechError } from "@/lib/realistic-speech";
 
 const AI_VOICES = [
   { id: "Kore", label: "Kore (feminina)" },
@@ -11,6 +11,17 @@ const AI_VOICES = [
   { id: "Charon", label: "Charon (masculina grave)" },
   { id: "Orus", label: "Orus (masculina firme)" },
   { id: "Puck", label: "Puck (masculina animada)" },
+];
+
+const ELEVEN_VOICES = [
+  { id: "EXAVITQu4vr4xnSDxMaL", label: "Sarah (feminina)" },
+  { id: "FGY2WhTYpPnrIDTdsKH5", label: "Laura (feminina jovem)" },
+  { id: "Xb7hH8MSUJpSbSDYk0k2", label: "Alice (feminina suave)" },
+  { id: "pFZP5JQG7iQjIQuC4Bku", label: "Lily (feminina)" },
+  { id: "onwK4e9ZLuTAKqWW03F9", label: "Daniel (masculina)" },
+  { id: "nPczCjzI2devNBz1zQrb", label: "Brian (masculina grave)" },
+  { id: "JBFqnCBsd6RMkjVDRZzb", label: "George (masculina)" },
+  { id: "TX3LPaxmHKxFdv7VOQHJ", label: "Liam (masculina jovem)" },
 ];
 
 // Group sentences into ~700-char pieces for natural AI narration.
@@ -66,8 +77,9 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
   const [voiceUri, setVoiceUri] = useState("");
   const [rate, setRate] = useState(1);
   const [state, setState] = useState<"idle" | "playing" | "paused">("idle");
-  const [engine, setEngine] = useState<"ai" | "device">("ai");
+  const [engine, setEngine] = useState<"ai" | "elevenlabs" | "device">("elevenlabs");
   const [aiVoice, setAiVoice] = useState("Kore");
+  const [elevenVoice, setElevenVoice] = useState("EXAVITQu4vr4xnSDxMaL");
   const [loading, setLoading] = useState(false);
   const ai = useRef<{
     abort: AbortController | null;
@@ -93,8 +105,9 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
       const saved = JSON.parse(localStorage.getItem("novel-tts") ?? "{}");
       if (typeof saved.rate === "number") setRate(saved.rate);
       if (typeof saved.voice === "string") setVoiceUri(saved.voice);
-      if (saved.engine === "ai" || saved.engine === "device") setEngine(saved.engine);
+      if (saved.engine === "ai" || saved.engine === "device" || saved.engine === "elevenlabs") setEngine(saved.engine);
       if (typeof saved.aiVoice === "string") setAiVoice(saved.aiVoice);
+      if (typeof saved.elevenVoice === "string") setElevenVoice(saved.elevenVoice);
     } catch {
       /* ignore */
     }
@@ -116,8 +129,8 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
 
   useEffect(() => {
     if (!supported) return;
-    localStorage.setItem("novel-tts", JSON.stringify({ rate, voice: voiceUri, engine, aiVoice }));
-  }, [rate, voiceUri, engine, aiVoice, supported]);
+    localStorage.setItem("novel-tts", JSON.stringify({ rate, voice: voiceUri, engine, aiVoice, elevenVoice }));
+  }, [rate, voiceUri, engine, aiVoice, elevenVoice, supported]);
 
   const stopAi = useCallback(() => {
     ai.current.abort?.abort();
@@ -201,8 +214,8 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
     speak(p, c);
   }, []);
 
-  const aiSettings = useRef({ voice: aiVoice, rate });
-  aiSettings.current = { voice: aiVoice, rate };
+  const aiSettings = useRef({ voice: aiVoice, elevenVoice, rate, engine });
+  aiSettings.current = { voice: aiVoice, elevenVoice, rate, engine };
 
   const playAi = useCallback(
     async (startParagraph: number) => {
@@ -220,12 +233,14 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         /* resumed on next gesture */
       }
       setState("playing");
-      const voice = aiSettings.current.voice;
+      const useEleven = aiSettings.current.engine === "elevenlabs";
+      const voice = useEleven ? aiSettings.current.elevenVoice : aiSettings.current.voice;
+      const fetcher = useEleven ? fetchElevenSpeech : fetchSpeech;
       const get = (k: number) => {
         if (k >= chunks.length) return null;
         let pr = ai.current.cache.get(k);
         if (!pr) {
-          pr = fetchSpeech(chunks[k]!.text, voice, controller.signal);
+          pr = fetcher(chunks[k]!.text, voice, controller.signal);
           pr.catch(() => undefined);
           ai.current.cache.set(k, pr);
         }
@@ -288,7 +303,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
 
   // Chrome pauses forever after long idle; keep engine awake while playing.
   useEffect(() => {
-    if (state !== "playing" || engine === "ai") return;
+    if (state !== "playing" || engine !== "device") return;
     const t = window.setInterval(() => {
       const s = window.speechSynthesis;
       if (s.speaking && !s.paused) {
@@ -309,7 +324,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
   useEffect(() => {
     if (activeIndex == null || state === "idle") return;
     if (activeIndex !== pos.current.p) {
-      if (engine === "ai") void playAi(activeIndex);
+      if (engine !== "device") void playAi(activeIndex);
       else play(activeIndex, 0);
     }
   }, [activeIndex, state, play, playAi, engine]);
@@ -318,7 +333,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
 
   // Pause = cancel + remember position (native pause/resume is broken on Android).
   const toggle = () => {
-    if (engine === "ai") {
+    if (engine !== "device") {
       const c = getAudioContext();
       if (state === "playing") {
         void c.suspend();
@@ -344,7 +359,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
 
   const restartIfPlaying = () => {
     if (state === "idle") return;
-    if (engine === "ai") {
+    if (engine !== "device") {
       if (getAudioContext().state === "suspended") void getAudioContext().resume();
       setTimeout(() => void playAi(pos.current.p), 0);
     } else if (state === "playing") setTimeout(() => play(pos.current.p, pos.current.c), 0);
@@ -371,10 +386,11 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         value={engine}
         onChange={(e) => {
           stop();
-          setEngine(e.target.value as "ai" | "device");
+          setEngine(e.target.value as "ai" | "elevenlabs" | "device");
         }}
         aria-label="Tipo de voz"
       >
+        <option value="elevenlabs">Voz premium (ElevenLabs)</option>
         <option value="ai">Voz realista (IA)</option>
         <option value="device">Voz do aparelho</option>
       </select>
@@ -384,7 +400,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         onChange={(e) => {
           const r = Number(e.target.value);
           setRate(r);
-          if (engine === "ai") {
+          if (engine !== "device") {
             if (ai.current.source) ai.current.source.playbackRate.value = r;
           } else restartIfPlaying();
         }}
@@ -394,13 +410,26 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
           <option key={r} value={r}>{r}x</option>
         ))}
       </select>
-      {engine === "ai" ? (
+      {engine === "elevenlabs" ? (
+        <select
+          className="h-9 max-w-48 rounded-md border border-border bg-background px-2 text-xs"
+          value={elevenVoice}
+          onChange={(e) => {
+            setElevenVoice(e.target.value);
+            restartIfPlaying();
+          }}
+          aria-label="Voz"
+        >
+          {ELEVEN_VOICES.map((v) => (
+            <option key={v.id} value={v.id}>{v.label}</option>
+          ))}
+        </select>
+      ) : engine === "ai" ? (
         <select
           className="h-9 max-w-48 rounded-md border border-border bg-background px-2 text-xs"
           value={aiVoice}
           onChange={(e) => {
             setAiVoice(e.target.value);
-            aiSettings.current.voice = e.target.value;
             restartIfPlaying();
           }}
           aria-label="Voz"
@@ -425,7 +454,9 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         </select>
       ) : null}
       <p className="w-full text-xs text-muted-foreground">
-        {engine === "ai"
+        {engine === "elevenlabs"
+          ? "Vozes premium ultrarrealistas em português (requer login). Toque em um parágrafo para ouvir a partir dele."
+          : engine === "ai"
           ? "Voz natural de narrador em português (requer login). Toque em um parágrafo para ouvir a partir dele."
           : voices.length === 0
             ? "Nenhuma voz em português encontrada neste aparelho; será usada a voz padrão."
