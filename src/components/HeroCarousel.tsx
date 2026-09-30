@@ -39,8 +39,7 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
 
   if (allSlides.length === 0) return null;
 
-  const active = slides[index] ?? slides[0];
-  if (!active) return null;
+  const active = slides[index] ?? slides[0] ?? null;
   const latest = active.chapters[0];
   const go = (delta: number) =>
     setIndex((current) => (current + delta + slides.length) % slides.length);
