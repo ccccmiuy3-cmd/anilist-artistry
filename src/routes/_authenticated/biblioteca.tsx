@@ -131,11 +131,11 @@ function Colecao() {
   const remove = useMutation({
     mutationFn: async (seriesId: string) => {
       if (tab === "favoritos") {
-        await supabase.from("favorites").delete().eq("user_id", user!.id).eq("series_id", seriesId);
+        { const { error: dbErr } = await supabase.from("favorites").delete().eq("user_id", user!.id).eq("series_id", seriesId); if (dbErr) throw dbErr; }
       } else if (tab === "continuando") {
-        await supabase.from("reading_history").delete().eq("user_id", user!.id).eq("series_id", seriesId);
+        { const { error: dbErr } = await supabase.from("reading_history").delete().eq("user_id", user!.id).eq("series_id", seriesId); if (dbErr) throw dbErr; }
       } else {
-        await supabase.from("reading_status").delete().eq("user_id", user!.id).eq("series_id", seriesId);
+        { const { error: dbErr } = await supabase.from("reading_status").delete().eq("user_id", user!.id).eq("series_id", seriesId); if (dbErr) throw dbErr; }
       }
     },
     onSuccess: () => {

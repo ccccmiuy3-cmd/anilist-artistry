@@ -59,15 +59,15 @@ function ListaPage() {
 
   const toggleFollow = useMutation({
     mutationFn: async () => {
-      if (following.data) await supabase.from("list_follows").delete().eq("user_id", user!.id).eq("list_id", id);
-      else await supabase.from("list_follows").insert({ user_id: user!.id, list_id: id });
+      if (following.data) { const { error: dbErr } = await supabase.from("list_follows").delete().eq("user_id", user!.id).eq("list_id", id); if (dbErr) throw dbErr; }
+      else { const { error: dbErr } = await supabase.from("list_follows").insert({ user_id: user!.id, list_id: id }); if (dbErr) throw dbErr; }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["follow", id] }),
   });
 
   const removeItem = useMutation({
     mutationFn: async (seriesId: string) => {
-      await supabase.from("list_items").delete().eq("list_id", id).eq("series_id", seriesId);
+      { const { error: dbErr } = await supabase.from("list_items").delete().eq("list_id", id).eq("series_id", seriesId); if (dbErr) throw dbErr; }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["list", id] }),
   });

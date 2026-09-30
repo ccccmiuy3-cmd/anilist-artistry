@@ -65,13 +65,13 @@ function Historico() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ["hist-page"] });
   const removeOne = useMutation({
     mutationFn: async (id: string) => {
-      await supabase.from("reading_history").delete().eq("user_id", user!.id).eq("series_id", id);
+      { const { error: dbErr } = await supabase.from("reading_history").delete().eq("user_id", user!.id).eq("series_id", id); if (dbErr) throw dbErr; }
     },
     onSuccess: invalidate,
   });
   const clearAll = useMutation({
     mutationFn: async () => {
-      await supabase.from("reading_history").delete().eq("user_id", user!.id);
+      { const { error: dbErr } = await supabase.from("reading_history").delete().eq("user_id", user!.id); if (dbErr) throw dbErr; }
     },
     onSuccess: () => {
       invalidate();

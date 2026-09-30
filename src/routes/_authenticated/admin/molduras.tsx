@@ -63,7 +63,7 @@ function FramesAdmin() {
     onSuccess: refresh,
   });
   const rename = async (id: string, n: string) => {
-    await supabase.from("avatar_frames").update({ name: n }).eq("id", id);
+    { const { error: dbErr } = await supabase.from("avatar_frames").update({ name: n }).eq("id", id); if (dbErr) throw dbErr; }
     refresh();
   };
   const remove = useMutation({

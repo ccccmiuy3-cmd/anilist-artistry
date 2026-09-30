@@ -31,7 +31,7 @@ export function StatusButton({ userId, seriesId }: { userId: string; seriesId: s
   const set = useMutation({
     mutationFn: async (value: string | null) => {
       if (!value) {
-        await supabase.from("reading_status").delete().eq("user_id", userId).eq("series_id", seriesId);
+        { const { error: dbErr } = await supabase.from("reading_status").delete().eq("user_id", userId).eq("series_id", seriesId); if (dbErr) throw dbErr; }
       } else {
         const { error } = await supabase
           .from("reading_status")
@@ -95,7 +95,7 @@ export function AddToListButton({ userId, seriesId }: { userId: string; seriesId
   });
   const toggle = useMutation({
     mutationFn: async ({ id, has }: { id: string; has: boolean }) => {
-      if (has) await supabase.from("list_items").delete().eq("list_id", id).eq("series_id", seriesId);
+      if (has) { const { error: dbErr } = await supabase.from("list_items").delete().eq("list_id", id).eq("series_id", seriesId); if (dbErr) throw dbErr; }
       else {
         const { error } = await supabase.from("list_items").insert({ list_id: id, series_id: seriesId });
         if (error) throw error;

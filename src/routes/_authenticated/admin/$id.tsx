@@ -303,7 +303,7 @@ function ChaptersPanel({ seriesId, chapters, onChange }: { seriesId: string; cha
       if (!pages.length) throw new Error("Adicione páginas (upload ou links).");
       const { error } = await supabase.from("chapters").insert({ series_id: seriesId, number: Number(number), title: title.trim() || null, pages });
       if (error) throw error;
-      await supabase.from("series").update({ updated_at: new Date().toISOString() }).eq("id", seriesId);
+      { const { error: dbErr } = await supabase.from("series").update({ updated_at: new Date().toISOString() }).eq("id", seriesId); if (dbErr) throw dbErr; }
     },
     onSuccess: () => {
       toast.success("Capítulo publicado!");

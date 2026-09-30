@@ -126,8 +126,8 @@ function Perfil() {
 
   const follow = useMutation({
     mutationFn: async () => {
-      if (stats.data?.iFollow) await supabase.from("user_follows").delete().eq("follower_id", user!.id).eq("following_id", p!.id);
-      else await supabase.from("user_follows").insert({ follower_id: user!.id, following_id: p!.id });
+      if (stats.data?.iFollow) { const { error: dbErr } = await supabase.from("user_follows").delete().eq("follower_id", user!.id).eq("following_id", p!.id); if (dbErr) throw dbErr; }
+      else { const { error: dbErr } = await supabase.from("user_follows").insert({ follower_id: user!.id, following_id: p!.id }); if (dbErr) throw dbErr; }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profile-stats"] }),
   });
@@ -146,7 +146,7 @@ function Perfil() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      await supabase.from("profile_comments").delete().eq("id", id);
+      { const { error: dbErr } = await supabase.from("profile_comments").delete().eq("id", id); if (dbErr) throw dbErr; }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profile-comments"] }),
   });
