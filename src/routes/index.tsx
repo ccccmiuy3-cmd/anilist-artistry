@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutGrid, PlusSquare, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { SeriesCard } from "@/components/SeriesCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
@@ -9,7 +9,6 @@ import { ContinueReading } from "@/components/ContinueReading";
 import { FavoritesUpdated } from "@/components/FavoritesUpdated";
 import { Releases } from "@/components/Releases";
 import { RecentlyUpdated } from "@/components/RecentlyUpdated";
-import { TopRated } from "@/components/TopRated";
 import { HScroll, SectionRow } from "@/components/SectionRow";
 import { Button } from "@/components/ui/button";
 import { fetchFavorites, fetchHistory, fetchSeries, KINDS } from "@/lib/queries";
