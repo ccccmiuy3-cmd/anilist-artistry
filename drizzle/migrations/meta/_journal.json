@@ -8,6 +8,13 @@
       "when": 1790731008298,
       "tag": "0000_create_manga_platform",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790731054119,
+      "tag": "0001_manga_storage_policies",
+      "breakpoints": true
     }
   ]
 }
