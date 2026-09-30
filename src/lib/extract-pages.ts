@@ -29,6 +29,7 @@ async function fromPdf(file: File, onProgress?: ExtractProgress): Promise<File[]
   const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
   const base = file.name.replace(/\.pdf$/i, "");
   const out: File[] = [];
+  onProgress?.(0, doc.numPages);
   for (let p = 1; p <= doc.numPages; p++) {
     const page = await doc.getPage(p);
     const vp = page.getViewport({ scale: 2 });
@@ -39,16 +40,17 @@ async function fromPdf(file: File, onProgress?: ExtractProgress): Promise<File[]
     const blob = await new Promise<Blob>((r) => canvas.toBlob((b) => r(b!), "image/webp", 0.9));
     out.push(new File([blob], `${base}-${String(p).padStart(4, "0")}.webp`, { type: "image/webp" }));
     page.cleanup();
+    onProgress?.(p, doc.numPages);
   }
   return out;
 }
 
-export async function extractPages(files: File[]): Promise<File[]> {
+export async function extractPages(files: File[], onProgress?: ExtractProgress): Promise<File[]> {
   const result: File[] = [];
   for (const f of files) {
     const n = f.name.toLowerCase();
-    if (n.endsWith(".zip") || f.type.includes("zip")) result.push(...(await fromZip(f)));
-    else if (n.endsWith(".pdf") || f.type === "application/pdf") result.push(...(await fromPdf(f)));
+    if (n.endsWith(".zip") || f.type.includes("zip")) result.push(...(await fromZip(f, onProgress)));
+    else if (n.endsWith(".pdf") || f.type === "application/pdf") result.push(...(await fromPdf(f, onProgress)));
     else if (f.type.startsWith("image/")) result.push(f);
   }
   return result;
