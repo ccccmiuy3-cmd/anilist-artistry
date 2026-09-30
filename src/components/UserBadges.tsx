@@ -19,23 +19,27 @@ export function UserBadges({
 }) {
   const extra = badges ?? [];
   return (
-    <span className="inline-flex shrink-0 flex-wrap items-center gap-1">
+    <span className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
       <SubscriptionSeal tier={tier} size={size} />
       {extra.map((badge) => (
-        <img
+        <span
           key={badge.id}
-          src={badge.image_url}
-          alt={badge.name}
           title={badge.name}
-          style={{ width: size, height: size }}
-          className="inline-block shrink-0 cursor-help object-contain transition-transform hover:scale-110"
-          loading="lazy"
-        />
+          className="grid shrink-0 place-items-center rounded-lg border border-border bg-surface-2/70 p-1.5 shadow-[var(--shadow-card)] transition-transform motion-safe:hover:-translate-y-0.5"
+        >
+          <img
+            src={badge.image_url}
+            alt={badge.name}
+            style={{ width: size, height: size }}
+            className="block object-contain"
+            loading="lazy"
+          />
+        </span>
       ))}
       {isAdmin ? (
         <span
           title="Administrador"
-          className="inline-flex cursor-help items-center rounded border border-blue-700 bg-blue-700 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-white shadow-sm"
+          className="inline-flex h-8 shrink-0 cursor-help items-center rounded-md border border-primary/40 bg-primary/15 px-2.5 text-[10px] font-extrabold uppercase leading-none text-primary shadow-[var(--shadow-card)]"
         >
           Admin
         </span>
