@@ -45,11 +45,30 @@ const STATUS_PT: Record<string, string> = {
 
 export const searchAnilist = createServerFn({ method: "POST" })
   .inputValidator((input: { search: string }) => z.object({ search: z.string().min(1) }).parse(input))
-  .handler(async ({ data }): Promise<AnilistResult[]> => {
+  .handler(async ({ data }): Promise<AnilistResult[]> => runAnilistSearch(data));
+
+/** Busca no AniList; roda no servidor e, se o AniList bloquear o servidor (403), direto no navegador. */
+export async function searchAnilistSmart(search: string, server: (a: { data: { search: string } }) => Promise<AnilistResult[]>) {
+  try {
+    return await server({ data: { search } });
+  } catch (e) {
+    if (typeof window !== "undefined" && e instanceof Error && /\((403|5\d\d)\)/.test(e.message)) {
+      return runAnilistSearch({ search });
+    }
+    throw e;
+  }
+}
+
+async function runAnilistSearch(data: { search: string }): Promise<AnilistResult[]> {
+  {
     const gql = (query: string, variables: Record<string, unknown>) =>
       fetch("https://graphql.anilist.co", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...(typeof window === "undefined" ? { "User-Agent": "BetterManga/1.0 (+https://bettermanga.net)" } : {}),
+        },
         body: JSON.stringify({ query, variables }),
       });
     const raw = data.search.trim();
@@ -132,7 +151,8 @@ export const searchAnilist = createServerFn({ method: "POST" })
         averageScore: item.averageScore ? Math.round((item.averageScore / 10) * 10) / 10 : 0,
       };
     });
-  });
+  }
+}
 
 function decode(text: string) {
   return text

@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { findByAnilistId, uniqueSlug } from "@/lib/series-import";
 import { KINDS } from "@/lib/queries";
 import { useSession } from "@/hooks/useAuth";
-import { searchAnilist } from "@/lib/anilist.functions";
+import { searchAnilist, searchAnilistSmart } from "@/lib/anilist.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/nova")({
   staticData: { sitemap: false },
@@ -53,7 +53,7 @@ function NovaObra() {
 
   const fill = useMutation({
     mutationFn: async () => {
-      const results = await anilist({ data: { search: link.trim() } });
+      const results = await searchAnilistSmart(link.trim(), anilist);
       if (!results.length) throw new Error("Nada encontrado com esse link.");
       return results[0]!;
     },
