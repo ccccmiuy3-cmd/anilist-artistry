@@ -18,6 +18,7 @@ import { Route as AuthenticatedBibliotecaRouteImport } from './routes/_authentic
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as ListasIndexRouteImport } from './routes/listas/index'
 import { Route as ListasIdRouteImport } from './routes/listas/$id'
+import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
 import { Route as AuthenticatedAdminNovaRouteImport } from './routes/_authenticated/admin/nova'
@@ -68,6 +69,11 @@ const ListasIdRoute = ListasIdRouteImport.update({
   path: '/listas/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UUsernameRoute = UUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/listas/$id': typeof ListasIdRoute
+  '/u/$username': typeof UUsernameRoute
   '/listas/': typeof ListasIndexRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/nova': typeof AuthenticatedAdminNovaRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/listas/$id': typeof ListasIdRoute
+  '/u/$username': typeof UUsernameRoute
   '/listas': typeof ListasIndexRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/nova': typeof AuthenticatedAdminNovaRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/_authenticated/biblioteca': typeof AuthenticatedBibliotecaRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/listas/$id': typeof ListasIdRoute
+  '/u/$username': typeof UUsernameRoute
   '/listas/': typeof ListasIndexRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/nova': typeof AuthenticatedAdminNovaRoute
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/biblioteca'
     | '/historico'
     | '/listas/$id'
+    | '/u/$username'
     | '/listas/'
     | '/admin/$id'
     | '/admin/nova'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/biblioteca'
     | '/historico'
     | '/listas/$id'
+    | '/u/$username'
     | '/listas'
     | '/admin/$id'
     | '/admin/nova'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/_authenticated/biblioteca'
     | '/_authenticated/historico'
     | '/listas/$id'
+    | '/u/$username'
     | '/listas/'
     | '/_authenticated/admin/$id'
     | '/_authenticated/admin/nova'
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   CatalogoRoute: typeof CatalogoRoute
   RankingRoute: typeof RankingRoute
   ListasIdRoute: typeof ListasIdRoute
+  UUsernameRoute: typeof UUsernameRoute
   ListasIndexRoute: typeof ListasIndexRoute
   ObraSlugChapterRoute: typeof ObraSlugChapterRoute
   ObraSlugIndexRoute: typeof ObraSlugIndexRoute
@@ -267,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ListasIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/u/$username': {
+      id: '/u/$username'
+      path: '/u/$username'
+      fullPath: '/u/$username'
+      preLoaderRoute: typeof UUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/admin'
@@ -331,6 +351,7 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogoRoute: CatalogoRoute,
   RankingRoute: RankingRoute,
   ListasIdRoute: ListasIdRoute,
+  UUsernameRoute: UUsernameRoute,
   ListasIndexRoute: ListasIndexRoute,
   ObraSlugChapterRoute: ObraSlugChapterRoute,
   ObraSlugIndexRoute: ObraSlugIndexRoute,

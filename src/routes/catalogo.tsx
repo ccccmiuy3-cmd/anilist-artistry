@@ -3,11 +3,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { BookOpen, ChevronLeft, ChevronRight, Search, Star, User2 } from "lucide-react";
+import { BookOpen, Search, Star, User2 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { Chips, FORMATS } from "@/components/LibraryBits";
 import { supabase } from "@/integrations/supabase/client";
 import { coverUrl } from "@/lib/media";
+import { Pager } from "@/components/Pager";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -252,27 +253,3 @@ function Pesquisar() {
   );
 }
 
-export function Pager({ page, pages, onChange }: { page: number; pages: number; onChange: (p: number) => void }) {
-  if (pages <= 1) return null;
-  return (
-    <div className="mt-10 flex items-center justify-center gap-3">
-      <button
-        disabled={page <= 1}
-        onClick={() => onChange(page - 1)}
-        className="flex items-center gap-1 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-semibold disabled:opacity-40"
-      >
-        <ChevronLeft className="h-4 w-4" /> Anterior
-      </button>
-      <span className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-semibold">
-        {page}/{pages}
-      </span>
-      <button
-        disabled={page >= pages}
-        onClick={() => onChange(page + 1)}
-        className="flex items-center gap-1 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-semibold disabled:opacity-40"
-      >
-        Próxima <ChevronRight className="h-4 w-4" />
-      </button>
-    </div>
-  );
-}

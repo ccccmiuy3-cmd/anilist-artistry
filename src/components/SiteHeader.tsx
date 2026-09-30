@@ -16,11 +16,11 @@ import {
 
 const NAV = [
   { to: "/", label: "Início" },
-  { to: "/catalogo", label: "Catálogo" },
-  { to: "/biblioteca", label: "Coleção" },
+    { to: "/biblioteca", label: "Coleção" },
   { to: "/listas", label: "Listas" },
   { to: "/ranking", label: "Ranking" },
   { to: "/historico", label: "Histórico" },
+  { to: "/catalogo", label: "Pesquisar" },
 ] as const;
 
 export function SiteHeader() {
@@ -98,6 +98,11 @@ export function SiteHeader() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem asChild>
+                <Link to="/u/$username" params={{ username: profile?.username ?? "" }} className="flex items-center gap-2">
+                  <User2 className="h-4 w-4" /> Meu perfil
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link to="/biblioteca" className="flex items-center gap-2">
                   <BookMarked className="h-4 w-4" /> Minha biblioteca
