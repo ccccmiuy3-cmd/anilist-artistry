@@ -627,6 +627,33 @@ export type Database = {
         }
         Relationships: []
       }
+      support_messages: {
+        Row: {
+          body: string
+          created_at: string
+          from_staff: boolean
+          id: string
+          sender_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          from_staff?: boolean
+          id?: string
+          sender_id?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          from_staff?: boolean
+          id?: string
+          sender_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_follows: {
         Row: {
           created_at: string
