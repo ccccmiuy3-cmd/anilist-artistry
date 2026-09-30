@@ -394,21 +394,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
           <option key={r} value={r}>{r}x</option>
         ))}
       </select>
-      {engine === "elevenlabs" ? (
-        <select
-          className="h-9 max-w-48 rounded-md border border-border bg-background px-2 text-xs"
-          value={elevenVoice}
-          onChange={(e) => {
-            setElevenVoice(e.target.value);
-            restartIfPlaying();
-          }}
-          aria-label="Voz"
-        >
-          {ELEVEN_VOICES.map((v) => (
-            <option key={v.id} value={v.id}>{v.label}</option>
-          ))}
-        </select>
-      ) : engine === "ai" ? (
+      {engine === "ai" ? (
         <select
           className="h-9 max-w-48 rounded-md border border-border bg-background px-2 text-xs"
           value={aiVoice}
@@ -438,9 +424,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         </select>
       ) : null}
       <p className="w-full text-xs text-muted-foreground">
-        {engine === "elevenlabs"
-          ? "Vozes premium ultrarrealistas em português (requer login). Toque em um parágrafo para ouvir a partir dele."
-          : engine === "ai"
+        {engine === "ai"
           ? "Voz natural de narrador em português (requer login). Toque em um parágrafo para ouvir a partir dele."
           : voices.length === 0
             ? "Nenhuma voz em português encontrada neste aparelho; será usada a voz padrão."
