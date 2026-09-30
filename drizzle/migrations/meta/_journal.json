@@ -50,6 +50,13 @@
       "when": 1790733154839,
       "tag": "0006_xp_system",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790733168453,
+      "tag": "0007_protect_profile_xp",
+      "breakpoints": true
     }
   ]
 }
