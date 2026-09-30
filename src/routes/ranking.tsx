@@ -84,7 +84,8 @@ function Ranking() {
     const cfg = {
       1: {
         h: "h-[11.5rem] md:h-56",
-        av: "h-[5.75rem] w-[5.75rem] ring-[3px] ring-amber-400/90 md:h-[6.75rem] md:w-[6.75rem]",
+        av: "h-[5.75rem] w-[5.75rem] md:h-[6.75rem] md:w-[6.75rem]",
+        ring: "ring-[3px] ring-amber-400/90",
         bg: "from-amber-600/55 via-amber-900/85 to-zinc-950",
         border: "border-amber-400/35",
         glow: "from-amber-200/20",
@@ -92,7 +93,8 @@ function Ranking() {
       },
       2: {
         h: "h-[8.5rem] md:h-44",
-        av: "h-[4.5rem] w-[4.5rem] ring-2 ring-white/20 md:h-24 md:w-24",
+        av: "h-[4.5rem] w-[4.5rem] md:h-24 md:w-24",
+        ring: "ring-2 ring-white/20",
         bg: "from-slate-600/50 via-slate-800/90 to-zinc-950",
         border: "border-slate-500/30",
         glow: "from-white/15",
@@ -100,7 +102,8 @@ function Ranking() {
       },
       3: {
         h: "h-[7rem] md:h-36",
-        av: "h-[4.25rem] w-[4.25rem] ring-2 ring-white/20 md:h-[5.25rem] md:w-[5.25rem]",
+        av: "h-[4.25rem] w-[4.25rem] md:h-[5.25rem] md:w-[5.25rem]",
+        ring: "ring-2 ring-white/20",
         bg: "from-amber-900/45 via-amber-950/90 to-zinc-950",
         border: "border-amber-900/50",
         glow: "from-amber-500/10",
@@ -122,7 +125,7 @@ function Ranking() {
             aria-label={`Perfil de ${r.username}`}
             className={`relative outline-none transition hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-orange-500/70 ${cfg.av}`}
           >
-            <Avatar r={r} className={`absolute inset-0 h-full w-full rounded-full shadow-xl ring-offset-2 ring-offset-zinc-950 ${cfg.av}`} />
+            <Avatar r={r} className={`absolute inset-0 h-full w-full rounded-full shadow-xl ring-offset-2 ring-offset-zinc-950 ${cfg.ring}`} />
           </Link>
         </div>
         <div
