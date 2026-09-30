@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, BookMarked, LogOut, Search, Shield, User2 } from "lucide-react";
+import { Bell, BookMarked, Headset, LogOut, Search, Shield, User2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileNav } from "@/components/MobileNav";
+import { openSupportChat } from "@/components/SupportChat";
 import { useProfile, useRoles, useSession } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
