@@ -76,7 +76,7 @@ function SeriesPage() {
   const queryClient = useQueryClient();
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [expanded, setExpanded] = useState(false);
-  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
   const [chapterSearch, setChapterSearch] = useState("");
   const [commentSort, setCommentSort] = useState<"new" | "old">("new");
 
@@ -255,10 +255,12 @@ function SeriesPage() {
         body: draft.body,
         is_spoiler: draft.isSpoiler,
         image_url: imageUrl,
+        parent_id: replyTo?.id ?? null,
       });
       if (error) throw error;
     },
     onSuccess: () => {
+      setReplyTo(null);
       queryClient.invalidateQueries({ queryKey: ["comments", series.data?.id] });
       toast.success("Comentário publicado!");
     },
@@ -678,7 +680,7 @@ function SeriesPage() {
                 <CommentComposer
                   pending={postComment.isPending}
                   onSubmit={(draft) => postComment.mutate(draft)}
-                  replyTo={replyTo}
+                  replyTo={replyTo?.username ?? null}
                   onCancelReply={() => setReplyTo(null)}
                 />
               </div>
@@ -693,7 +695,7 @@ function SeriesPage() {
                   key={comment.id}
                   comment={comment}
                   userId={user?.id}
-                  onReply={user ? (name) => setReplyTo(name) : undefined}
+                  onReply={user ? (c) => setReplyTo({ id: c.id, username: c.author?.username ?? "leitor" }) : undefined}
                 />
               ))}
             </ul>

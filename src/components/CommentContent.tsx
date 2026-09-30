@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { EyeOff } from "lucide-react";
 import { getCommentImageUrl } from "@/lib/comments";
 
@@ -7,9 +8,44 @@ interface CommentContentProps {
   body: string;
   isSpoiler?: boolean | null;
   imageUrl?: string | null;
+  usernames?: string[];
 }
 
-export function CommentContent({ body, isSpoiler, imageUrl }: CommentContentProps) {
+function renderBody(body: string, usernames: string[]): ReactNode[] {
+  const sorted = [...usernames].sort((a, b) => b.length - a.length);
+  const nodes: ReactNode[] = [];
+  let rest = body;
+  let key = 0;
+  while (rest.length > 0) {
+    const at = rest.indexOf("@");
+    if (at === -1) {
+      nodes.push(rest);
+      break;
+    }
+    if (at > 0) nodes.push(rest.slice(0, at));
+    const after = rest.slice(at + 1);
+    const match = sorted.find((name) => after.startsWith(name));
+    if (match) {
+      nodes.push(
+        <Link
+          key={key++}
+          to="/u/$username"
+          params={{ username: match }}
+          className="rounded bg-primary/15 px-1 font-semibold text-primary transition-colors hover:bg-primary/25"
+        >
+          @{match}
+        </Link>,
+      );
+      rest = after.slice(match.length);
+    } else {
+      nodes.push("@");
+      rest = after;
+    }
+  }
+  return nodes;
+}
+
+export function CommentContent({ body, isSpoiler, imageUrl, usernames = [] }: CommentContentProps) {
   const [revealed, setRevealed] = useState(false);
   const hidden = Boolean(isSpoiler) && !revealed;
 
@@ -33,7 +69,9 @@ export function CommentContent({ body, isSpoiler, imageUrl }: CommentContentProp
       ) : (
         <>
           {body ? (
-            <p className="whitespace-pre-line text-sm text-muted-foreground">{body}</p>
+            <p className="whitespace-pre-line text-sm text-muted-foreground">
+              {renderBody(body, usernames)}
+            </p>
           ) : null}
           {image.data ? (
             <img
