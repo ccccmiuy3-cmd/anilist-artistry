@@ -477,7 +477,7 @@ function EditProfile({
         onOpenChange(v);
       }}
     >
-      <DialogContent className="max-w-md gap-0 overflow-hidden p-0" showCloseButton={false}>
+      <DialogContent className="max-w-md gap-0 overflow-hidden p-0 [&>button:last-child]:hidden">
         <DialogHeader className="sr-only">
           <DialogTitle>Editar perfil</DialogTitle>
         </DialogHeader>
