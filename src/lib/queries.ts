@@ -111,16 +111,22 @@ export async function fetchHistory(userId: string) {
 export async function fetchComments(seriesId: string) {
   const { data, error } = await supabase
     .from("comments")
-    .select("id, body, created_at, user_id, profiles(username, avatar_url)")
+    .select("id, body, created_at, user_id")
     .eq("series_id", seriesId)
     .order("created_at", { ascending: false })
     .limit(80);
   if (error) throw error;
-  return (data ?? []) as unknown as Array<{
-    id: string;
-    body: string;
-    created_at: string;
-    user_id: string;
-    profiles: { username: string; avatar_url: string | null } | null;
-  }>;
+  const rows = data ?? [];
+  const ids = [...new Set(rows.map((row) => row.user_id))];
+  const authors = new Map<string, { username: string; avatar_url: string | null }>();
+  if (ids.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, username, avatar_url")
+      .in("id", ids);
+    for (const profile of profiles ?? []) {
+      authors.set(profile.id, { username: profile.username, avatar_url: profile.avatar_url });
+    }
+  }
+  return rows.map((row) => ({ ...row, author: authors.get(row.user_id) ?? null }));
 }
