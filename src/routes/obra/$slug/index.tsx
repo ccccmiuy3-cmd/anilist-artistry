@@ -2,14 +2,18 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowDownWideNarrow,
   BookOpen,
   Check,
+  CheckCheck,
   ChevronDown,
   Eye,
+  EyeOff,
   Heart,
-  ListPlus,
   MessageCircle,
+  MessageSquare,
   Play,
+  RotateCcw,
   Send,
   Star,
 } from "lucide-react";
@@ -117,6 +121,39 @@ function SeriesPage() {
     queryKey: ["comments", series.data?.id],
     enabled: Boolean(series.data),
     queryFn: () => fetchComments(series.data!.id),
+  });
+
+  const chapterReads = useQuery({
+    queryKey: ["chapter-reads", slug, user?.id],
+    enabled: Boolean(user && series.data),
+    queryFn: async () => {
+      const chapterIds = series.data!.chapters.map((c) => c.id);
+      if (chapterIds.length === 0) return new Set<string>();
+      const { data } = await supabase
+        .from("chapter_reads")
+        .select("chapter_id")
+        .eq("user_id", user!.id)
+        .in("chapter_id", chapterIds);
+      return new Set((data ?? []).map((row) => row.chapter_id));
+    },
+  });
+
+  const chapterCommentCounts = useQuery({
+    queryKey: ["chapter-comment-counts", series.data?.id],
+    enabled: Boolean(series.data),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("comments")
+        .select("chapter_id")
+        .eq("series_id", series.data!.id)
+        .not("chapter_id", "is", null);
+      const counts = new Map<string, number>();
+      for (const row of data ?? []) {
+        if (row.chapter_id)
+          counts.set(row.chapter_id, (counts.get(row.chapter_id) ?? 0) + 1);
+      }
+      return counts;
+    },
   });
 
   const toggleFavorite = useMutation({
