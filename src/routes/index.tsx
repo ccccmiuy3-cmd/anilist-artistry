@@ -140,22 +140,7 @@ function Home() {
         </SectionRow>
 
         {user && (favorites.data?.length ?? 0) > 0 ? (
-          <SectionRow icon={<Heart className="h-5 w-5 text-gold" />} title="Favoritas atualizadas">
-            <HScroll>
-              {favorites.data!.map((item) => (
-                <div key={item.id} className="w-[140px] shrink-0">
-                  <SeriesCard
-                    slug={item.slug}
-                    title={item.title}
-                    cover={item.cover_url}
-                    rating={item.rating}
-                    favorite
-                    seriesId={item.id}
-                  />
-                </div>
-              ))}
-            </HScroll>
-          </SectionRow>
+          <FavoritesUpdated rows={favorites.data!} />
         ) : null}
 
         {user && (history.data?.length ?? 0) > 0 ? (
