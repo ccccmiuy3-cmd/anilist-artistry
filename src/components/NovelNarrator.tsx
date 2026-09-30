@@ -66,9 +66,8 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
   const [voiceUri, setVoiceUri] = useState("");
   const [rate, setRate] = useState(1);
   const [state, setState] = useState<"idle" | "playing" | "paused">("idle");
-  const [engine, setEngine] = useState<"ai" | "elevenlabs" | "device">("elevenlabs");
+  const [engine, setEngine] = useState<"ai" | "device">("ai");
   const [aiVoice, setAiVoice] = useState("Kore");
-  const [elevenVoice, setElevenVoice] = useState("EXAVITQu4vr4xnSDxMaL");
   const [loading, setLoading] = useState(false);
   const ai = useRef<{
     abort: AbortController | null;
@@ -94,9 +93,8 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
       const saved = JSON.parse(localStorage.getItem("novel-tts") ?? "{}");
       if (typeof saved.rate === "number") setRate(saved.rate);
       if (typeof saved.voice === "string") setVoiceUri(saved.voice);
-      if (saved.engine === "ai" || saved.engine === "device" || saved.engine === "elevenlabs") setEngine(saved.engine);
+      if (saved.engine === "ai" || saved.engine === "device") setEngine(saved.engine);
       if (typeof saved.aiVoice === "string") setAiVoice(saved.aiVoice);
-      if (typeof saved.elevenVoice === "string") setElevenVoice(saved.elevenVoice);
     } catch {
       /* ignore */
     }
@@ -118,8 +116,8 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
 
   useEffect(() => {
     if (!supported) return;
-    localStorage.setItem("novel-tts", JSON.stringify({ rate, voice: voiceUri, engine, aiVoice, elevenVoice }));
-  }, [rate, voiceUri, engine, aiVoice, elevenVoice, supported]);
+    localStorage.setItem("novel-tts", JSON.stringify({ rate, voice: voiceUri, engine, aiVoice }));
+  }, [rate, voiceUri, engine, aiVoice, supported]);
 
   const stopAi = useCallback(() => {
     ai.current.abort?.abort();
@@ -203,8 +201,8 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
     speak(p, c);
   }, []);
 
-  const aiSettings = useRef({ voice: aiVoice, elevenVoice, rate, engine });
-  aiSettings.current = { voice: aiVoice, elevenVoice, rate, engine };
+  const aiSettings = useRef({ voice: aiVoice, rate });
+  aiSettings.current = { voice: aiVoice, rate };
 
   const playAi = useCallback(
     async (startParagraph: number) => {
