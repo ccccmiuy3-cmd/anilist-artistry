@@ -58,6 +58,7 @@ function Home() {
     enabled: Boolean(user),
     queryFn: () => fetchFavorites(user!.id),
   });
+  const favoriteIds = new Set((favorites.data ?? []).map((item) => item.id));
   const history = useQuery({
     queryKey: ["history", user?.id],
     enabled: Boolean(user),
@@ -227,53 +228,20 @@ function Home() {
               </Button>
             }
           >
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {updated.data!.map((item) => (
-                <article
+                <SeriesCard
                   key={item.id}
-                  className="rounded-xl border border-border bg-surface p-3 shadow-[var(--shadow-card)]"
-                >
-                  <Link to="/obra/$slug" params={{ slug: item.slug }} className="flex gap-3">
-                    <img
-                      src={coverUrl(item.cover_url)}
-                      alt={item.title}
-                      className="h-28 w-20 shrink-0 rounded-lg object-cover"
-                    />
-                    <div className="min-w-0">
-                      {item.pinned ? (
-                        <span className="mb-1 inline-block rounded-md bg-primary px-2 py-0.5 text-[10px] font-bold uppercase text-primary-foreground">
-                          Fixada
-                        </span>
-                      ) : null}
-                      <p className="line-clamp-2 font-semibold leading-snug">{item.title}</p>
-                      <p className="mt-1 flex items-center gap-1 text-xs text-gold">
-                        <Star className="h-3 w-3 fill-gold" />
-                        {Number(item.rating).toFixed(1).replace(".", ",")}
-                        <span className="ml-2 text-muted-foreground">
-                          {item.chapters.length} caps.
-                        </span>
-                      </p>
-                    </div>
-                  </Link>
-                  <div className="mt-3 space-y-1.5">
-                    {item.chapters.slice(0, 2).map((chapter) => (
-                      <Link
-                        key={chapter.id}
-                        to="/obra/$slug/$chapter"
-                        params={{ slug: item.slug, chapter: formatChapter(chapter.number) }}
-                        className="flex items-center justify-between rounded-lg bg-surface-2 px-3 py-2 text-xs font-semibold transition-colors hover:bg-accent"
-                      >
-                        <span>Cap. {formatChapter(chapter.number)}</span>
-                        <span className="text-muted-foreground">{timeAgo(chapter.created_at)}</span>
-                      </Link>
-                    ))}
-                    {item.chapters.length === 0 ? (
-                      <p className="rounded-lg bg-surface-2 px-3 py-2 text-xs text-muted-foreground">
-                        Sem capítulos ainda
-                      </p>
-                    ) : null}
-                  </div>
-                </article>
+                  slug={item.slug}
+                  title={item.title}
+                  cover={item.cover_url}
+                  rating={item.rating}
+                  chapters={item.chapters.length}
+                  chapterList={item.chapters}
+                  favorite={favoriteIds.has(item.id)}
+                  seriesId={item.id}
+                  badge={item.pinned ? "Fixada" : null}
+                />
               ))}
             </div>
           </SectionRow>
