@@ -63,7 +63,7 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
 
             <div className="absolute inset-0 z-20 flex flex-col justify-end p-5 sm:p-8 lg:grid lg:grid-cols-[minmax(0,1fr)_12rem] lg:items-end lg:gap-10 lg:p-10">
               <div className="max-w-3xl">
-                <div className="mb-4 flex flex-wrap items-center gap-2 text-[0.68rem] font-extrabold uppercase tracking-[0.12em]">
+                <div className="mb-4 flex flex-wrap items-center gap-2 text-[0.68rem] font-extrabold uppercase">
                   <span className="rounded-full bg-primary px-3 py-1.5 text-primary-foreground shadow-[var(--shadow-glow)]">
                     Destaque
                   </span>
