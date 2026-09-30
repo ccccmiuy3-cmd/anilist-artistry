@@ -304,10 +304,10 @@ function ChaptersPanel({ seriesId, chapters, onChange }: { seriesId: string; cha
       const pasted = urls.split("\n").map((l) => l.trim()).filter(Boolean);
       const bad = pasted.find((u) => !/^https?:\/\/\S+$/i.test(u));
       if (bad) throw new Error(`Link inválido: ${bad.slice(0, 60)}`);
-      const uploaded = files.length ? await uploadFiles(seriesId, formatChapter(number), files) : [];
+      const uploaded = files.length ? await uploadFiles(seriesId, formatChapter(n), files) : [];
       const pages = [...uploaded, ...pasted];
       if (!pages.length) throw new Error("Adicione páginas (upload ou links).");
-      const { error } = await supabase.from("chapters").insert({ series_id: seriesId, number: Number(number), title: title.trim() || null, pages });
+      const { error } = await supabase.from("chapters").insert({ series_id: seriesId, number: n, title: title.trim() || null, pages });
       if (error) throw error;
       { const { error: dbErr } = await supabase.from("series").update({ updated_at: new Date().toISOString() }).eq("id", seriesId); if (dbErr) throw dbErr; }
     },
