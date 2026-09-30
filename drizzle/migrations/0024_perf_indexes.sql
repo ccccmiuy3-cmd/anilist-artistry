@@ -1,0 +1,11 @@
+CREATE INDEX IF NOT EXISTS idx_chapters_series ON public.chapters(series_id, number);
+CREATE INDEX IF NOT EXISTS idx_series_pub_updated ON public.series(published, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_comments_series_created ON public.comments(series_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_comments_chapter ON public.comments(chapter_id);
+CREATE INDEX IF NOT EXISTS idx_comment_likes_comment ON public.comment_likes(comment_id);
+CREATE INDEX IF NOT EXISTS idx_history_user_updated ON public.reading_history(user_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_history_series_updated ON public.reading_history(series_id, updated_at);
+CREATE INDEX IF NOT EXISTS idx_chapter_reads_user_created ON public.chapter_reads(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_xp_events_created ON public.xp_events(created_at, user_id);
+CREATE INDEX IF NOT EXISTS idx_profile_badges_user ON public.profile_badges(user_id, position);
+CREATE INDEX IF NOT EXISTS idx_favorites_user ON public.favorites(user_id, created_at DESC);

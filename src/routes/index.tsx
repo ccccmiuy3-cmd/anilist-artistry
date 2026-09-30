@@ -60,10 +60,7 @@ function Home() {
     queryKey: ["series", "updated"],
     queryFn: () => fetchSeries({ order: "updated_at", limit: 10, pinnedFirst: true }),
   });
-  const releases = useQuery({
-    queryKey: ["series", "releases"],
-    queryFn: () => fetchSeries({ order: "updated_at", limit: 14 }),
-  });
+  const releases = recent;
   const slider = useQuery({
     queryKey: ["series", "slider"],
     queryFn: () => fetchSeries({ order: "updated_at", limit: 10, inSlider: true }),
