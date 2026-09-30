@@ -28,7 +28,7 @@ import { fetchComments, fetchSeriesBySlug } from "@/lib/queries";
 import { coverUrl, formatChapter, timeAgo } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 import { AddToListButton, StatusButton } from "@/components/SeriesActions";
-import { CommentItem } from "@/components/CommentItem";
+import { CommentThreads } from "@/components/CommentThreads";
 import { CommentComposer, type CommentDraft } from "@/components/CommentComposer";
 import { uploadCommentImage } from "@/lib/comments";
 
@@ -690,14 +690,11 @@ function SeriesPage() {
               </p>
             )}
             <ul className="mt-8 space-y-5">
-              {sortedComments.map((comment) => (
-                <CommentItem
-                  key={comment.id}
-                  comment={comment}
-                  userId={user?.id}
-                  onReply={user ? (c) => setReplyTo({ id: c.id, username: c.author?.username ?? "leitor" }) : undefined}
-                />
-              ))}
+              <CommentThreads
+              comments={sortedComments}
+              userId={user?.id}
+              onReply={user ? (c) => setReplyTo({ id: c.id, username: c.author?.username ?? "leitor" }) : undefined}
+            />
             </ul>
           </section>
         </div>
