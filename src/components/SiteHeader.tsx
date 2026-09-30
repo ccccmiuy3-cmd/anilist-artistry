@@ -119,7 +119,13 @@ export function SiteHeader() {
               <DropdownMenuTrigger asChild>
                 <button className="flex min-w-0 items-center gap-2" aria-label="Conta">
                   <span className="relative shrink-0 pb-2">
-                    <FramedAvatar src={profile?.avatar_url} frame={profile?.avatar_frame} size={32} />
+                    <span className="relative z-10 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-foreground/10 bg-surface-2">
+                      {profile?.avatar_url ? (
+                        <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <User2 className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </span>
                     <span className="absolute -bottom-1 left-1/2 z-30 min-w-max -translate-x-1/2">
                       <span className="inline-flex h-[18px] items-center justify-center gap-1 rounded-full border border-foreground/10 bg-foreground/[0.07] px-1.5 text-[10px] font-semibold tracking-wide text-muted-foreground backdrop-blur-sm">
                         <span className="h-1 w-1 shrink-0 rounded-full bg-primary" />
