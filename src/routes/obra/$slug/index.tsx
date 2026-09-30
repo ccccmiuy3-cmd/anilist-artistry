@@ -220,28 +220,54 @@ function SeriesPage() {
       if (!user || !series.data) throw new Error("Entre para marcar como lido.");
       if (chapter.isRead) {
         const { error } = await supabase
-          .from("reading_history")
+          .from("chapter_reads")
           .delete()
           .eq("user_id", user.id)
-          .eq("series_id", series.data.id);
+          .eq("chapter_id", chapter.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("reading_history").upsert(
-          {
-            user_id: user.id,
-            series_id: series.data.id,
-            chapter_id: chapter.id,
-            progress: 100,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,series_id" },
-        );
+        const { error } = await supabase
+          .from("chapter_reads")
+          .upsert(
+            { user_id: user.id, chapter_id: chapter.id },
+            { onConflict: "user_id,chapter_id" },
+          );
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["history", slug, user?.id] });
-      toast.success("Atualizado!");
+      queryClient.invalidateQueries({ queryKey: ["chapter-reads", slug, user?.id] });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
+  });
+
+  const markAll = useMutation({
+    mutationFn: async (mode: "read" | "unread") => {
+      if (!user || !series.data) throw new Error("Entre para marcar como lido.");
+      const chapterIds = series.data.chapters.map((c) => c.id);
+      if (chapterIds.length === 0) return;
+      if (mode === "unread") {
+        const { error } = await supabase
+          .from("chapter_reads")
+          .delete()
+          .eq("user_id", user.id)
+          .in("chapter_id", chapterIds);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("chapter_reads")
+          .upsert(
+            chapterIds.map((chapter_id) => ({ user_id: user.id, chapter_id })),
+            { onConflict: "user_id,chapter_id" },
+          );
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_data, mode) => {
+      queryClient.invalidateQueries({ queryKey: ["chapter-reads", slug, user?.id] });
+      toast.success(
+        mode === "read" ? "Todos marcados como lidos!" : "Leitura desmarcada!",
+      );
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
   });
