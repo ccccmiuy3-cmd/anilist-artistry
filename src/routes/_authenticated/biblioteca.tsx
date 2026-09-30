@@ -10,6 +10,7 @@ import { useSession } from "@/hooks/useAuth";
 import { Pager } from "@/components/Pager";
 
 export const Route = createFileRoute("/_authenticated/biblioteca")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Minha Coleção — Better Mangá" },

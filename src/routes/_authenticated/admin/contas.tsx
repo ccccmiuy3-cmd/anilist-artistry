@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRoles, useSession } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/_authenticated/admin/contas")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Gerenciar contas — Better Mangá" },

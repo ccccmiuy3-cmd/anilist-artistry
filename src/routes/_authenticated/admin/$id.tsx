@@ -20,6 +20,7 @@ const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
 const STATUSES = ["Em andamento", "Completo", "Hiato", "Cancelado"];
 
 export const Route = createFileRoute("/_authenticated/admin/$id")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Editar obra e capítulos — Better Mangá" },
