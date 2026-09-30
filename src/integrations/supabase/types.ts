@@ -240,37 +240,49 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accent_color: string | null
+          avatar_frame: string | null
           avatar_url: string | null
           banned: boolean
           banner_url: string | null
           bio: string | null
+          comment_bg: string | null
           created_at: string
           display_name: string | null
           id: string
+          is_private: boolean
           level: number
           username: string
           xp: number
         }
         Insert: {
+          accent_color?: string | null
+          avatar_frame?: string | null
           avatar_url?: string | null
           banned?: boolean
           banner_url?: string | null
           bio?: string | null
+          comment_bg?: string | null
           created_at?: string
           display_name?: string | null
           id: string
+          is_private?: boolean
           level?: number
           username: string
           xp?: number
         }
         Update: {
+          accent_color?: string | null
+          avatar_frame?: string | null
           avatar_url?: string | null
           banned?: boolean
           banner_url?: string | null
           bio?: string | null
+          comment_bg?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
+          is_private?: boolean
           level?: number
           username?: string
           xp?: number

@@ -1,21 +1,29 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowLeft,
   ArrowUpRight,
+  Camera,
   ChevronRight,
   Crown,
+  FileText,
+  Frame,
   Heart,
   History,
+  ImageIcon,
   Library,
   ListOrdered,
+  Lock,
   MessageSquare,
+  Palette,
   Pencil,
   Send,
   Trash2,
   User2,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
@@ -60,7 +68,7 @@ function Perfil() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, display_name, bio, avatar_url, banner_url, level, xp, created_at")
+        .select("id, username, display_name, bio, avatar_url, banner_url, level, xp, created_at, accent_color, avatar_frame, comment_bg, is_private")
         .eq("username", username)
         .maybeSingle();
       if (error) throw error;
@@ -182,7 +190,10 @@ function Perfil() {
 
         <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
           <aside className="-mt-20 relative">
-            <div className="h-36 w-36 overflow-hidden rounded-full border-4 border-background bg-surface-2 ring-2 ring-primary">
+            <div
+              className="h-36 w-36 overflow-hidden rounded-full border-4 border-background bg-surface-2"
+              style={{ boxShadow: `0 0 0 2px ${frameColor(p.avatar_frame)}` }}
+            >
               {p.avatar_url ? (
                 <img src={p.avatar_url} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -190,7 +201,7 @@ function Perfil() {
               )}
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-2xl font-extrabold text-primary">@{p.username}</h1>
+              <h1 className="font-display text-2xl font-extrabold" style={{ color: p.accent_color ?? "var(--primary)" }}>@{p.username}</h1>
               <span className="rounded border border-border px-1.5 text-xs font-bold text-muted-foreground">Nv. {p.level}</span>
             </div>
             {p.display_name ? <p className="text-sm text-muted-foreground">{p.display_name}</p> : null}
@@ -299,7 +310,11 @@ function Perfil() {
             )}
             <ul className="mt-6 space-y-5">
               {(comments.data ?? []).map((c) => (
-                <li key={c.id} className="flex gap-3">
+                <li
+                  key={c.id}
+                  className="flex gap-3 rounded-xl p-3"
+                  style={p.comment_bg ? { background: p.comment_bg } : undefined}
+                >
                   <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-2 text-sm font-bold">
                     {c.author?.avatar_url ? <img src={c.author.avatar_url} alt="" className="h-full w-full object-cover" /> : (c.author?.username ?? "?")[0]?.toUpperCase()}
                   </span>
@@ -330,6 +345,45 @@ function Perfil() {
   );
 }
 
+const ACCENT_COLORS = ["#22d3ee", "#f97316", "#a78bfa", "#4ade80", "#f472b6", "#facc15", "#f87171", "#60a5fa"];
+
+const FRAMES = [
+  { id: "none", label: "Sem moldura", color: "var(--border)" },
+  { id: "cyan", label: "Ciano", color: "#22d3ee" },
+  { id: "gold", label: "Ouro", color: "#facc15" },
+  { id: "fire", label: "Fogo", color: "#f97316" },
+  { id: "sakura", label: "Sakura", color: "#f472b6" },
+  { id: "violet", label: "Violeta", color: "#a78bfa" },
+];
+
+function frameColor(frame?: string | null) {
+  return FRAMES.find((f) => f.id === frame)?.color ?? "var(--primary)";
+}
+
+const COMMENT_BGS = [
+  { id: "", label: "Padrão", value: "" },
+  { id: "blue", label: "Azul noturno", value: "linear-gradient(135deg, rgba(34,211,238,.12), rgba(96,165,250,.06))" },
+  { id: "purple", label: "Violeta", value: "linear-gradient(135deg, rgba(167,139,250,.14), rgba(244,114,182,.06))" },
+  { id: "green", label: "Verde", value: "linear-gradient(135deg, rgba(74,222,128,.12), rgba(34,211,238,.05))" },
+  { id: "fire", label: "Fogo", value: "linear-gradient(135deg, rgba(249,115,22,.14), rgba(250,204,21,.05))" },
+];
+
+type EditScreen = "main" | "identidade" | "cores" | "moldura" | "fundo" | "privacidade";
+
+type EditableProfile = {
+  id: string;
+  username: string;
+  display_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  banner_url: string | null;
+  level: number;
+  accent_color: string | null;
+  avatar_frame: string | null;
+  comment_bg: string | null;
+  is_private: boolean;
+};
+
 function EditProfile({
   open,
   onOpenChange,
@@ -337,45 +391,312 @@ function EditProfile({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  profile: { id: string; display_name: string | null; bio: string | null; avatar_url: string | null; banner_url: string | null };
+  profile: EditableProfile;
 }) {
   const qc = useQueryClient();
+  const [screen, setScreen] = useState<EditScreen>("main");
   const [form, setForm] = useState({
+    username: profile.username,
     display_name: profile.display_name ?? "",
     bio: profile.bio ?? "",
     avatar_url: profile.avatar_url ?? "",
     banner_url: profile.banner_url ?? "",
+    accent_color: profile.accent_color ?? "",
+    avatar_frame: profile.avatar_frame ?? "",
+    comment_bg: profile.comment_bg ?? "",
+    is_private: profile.is_private,
   });
+  const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
+  const avatarInput = useRef<HTMLInputElement>(null);
+  const bannerInput = useRef<HTMLInputElement>(null);
+
   const save = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (patch: Partial<typeof form>) => {
+      const next = { ...form, ...patch };
       const { error } = await supabase
         .from("profiles")
         .update({
-          display_name: form.display_name || null,
-          bio: form.bio || null,
-          avatar_url: form.avatar_url || null,
-          banner_url: form.banner_url || null,
+          username: next.username.trim() || profile.username,
+          display_name: next.display_name || null,
+          bio: next.bio || null,
+          avatar_url: next.avatar_url || null,
+          banner_url: next.banner_url || null,
+          accent_color: next.accent_color || null,
+          avatar_frame: next.avatar_frame || null,
+          comment_bg: next.comment_bg || null,
+          is_private: next.is_private,
         })
         .eq("id", profile.id);
       if (error) throw error;
+      setForm(next);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["public-profile"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
-      onOpenChange(false);
       toast.success("Perfil atualizado");
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao salvar"),
   });
+
+  async function upload(kind: "avatar" | "banner", file: File) {
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("Imagem maior que 20 MB");
+      return;
+    }
+    setUploading(kind);
+    try {
+      const ext = file.name.split(".").pop() ?? "png";
+      const path = `profiles/${profile.id}/${kind}-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("manga").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data } = await supabase.storage.from("manga").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (!data?.signedUrl) throw new Error("Falha ao gerar link da imagem");
+      save.mutate({ [kind === "avatar" ? "avatar_url" : "banner_url"]: data.signedUrl });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha no upload — tente colar um link de imagem");
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  const accent = form.accent_color || "var(--primary)";
+
+  const menuItems: { id: EditScreen; label: string; icon: typeof FileText; value?: string }[] = [
+    { id: "identidade", label: "Nome, nick e bio", icon: FileText },
+    { id: "cores", label: "Cores do menu", icon: Palette },
+    { id: "moldura", label: "Moldura do avatar", icon: Frame },
+    { id: "fundo", label: "Fundo nos comentários", icon: ImageIcon },
+    { id: "privacidade", label: "Privacidade", icon: Lock, value: form.is_private ? "Privado" : "Público" },
+  ];
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Editar perfil</DialogTitle></DialogHeader>
-        <Input placeholder="Nome de exibição" value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} />
-        <Textarea placeholder="Bio" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
-        <Input placeholder="URL do avatar" value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} />
-        <Input placeholder="URL do banner" value={form.banner_url} onChange={(e) => setForm({ ...form, banner_url: e.target.value })} />
-        <Button onClick={() => save.mutate()} disabled={save.isPending}>Salvar</Button>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) setScreen("main");
+        onOpenChange(v);
+      }}
+    >
+      <DialogContent className="max-w-md gap-0 overflow-hidden p-0 [&>button:last-child]:hidden">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Editar perfil</DialogTitle>
+        </DialogHeader>
+
+        <div className="flex items-center justify-between px-4 pt-4">
+          {screen === "main" ? (
+            <button
+              onClick={() => onOpenChange(false)}
+              className="flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1.5 text-sm font-semibold hover:bg-surface"
+            >
+              <X className="h-4 w-4" /> Cancelar
+            </button>
+          ) : (
+            <button
+              onClick={() => setScreen("main")}
+              className="flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1.5 text-sm font-semibold hover:bg-surface"
+            >
+              <ArrowLeft className="h-4 w-4" /> Voltar
+            </button>
+          )}
+          <button
+            onClick={() => onOpenChange(false)}
+            className="grid h-8 w-8 place-items-center rounded-full bg-surface-2 hover:bg-surface"
+            aria-label="Fechar"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {screen === "main" ? (
+          <>
+            <div className="relative mx-4 mt-4 h-32 overflow-hidden rounded-xl bg-surface-2">
+              {form.banner_url ? (
+                <img src={form.banner_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,var(--primary),transparent_70%)] opacity-30" />
+              )}
+              <button
+                onClick={() => bannerInput.current?.click()}
+                className="absolute inset-0 grid place-items-center bg-black/40 text-sm font-semibold opacity-0 transition hover:opacity-100"
+              >
+                <span className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> {uploading === "banner" ? "Enviando…" : "Alterar banner"}</span>
+              </button>
+              <input
+                ref={bannerInput}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void upload("banner", f);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
+            <div className="-mt-10 ml-8 relative h-20 w-20">
+              <div
+                className="h-20 w-20 overflow-hidden rounded-full border-4 border-background bg-surface-2"
+                style={{ boxShadow: `0 0 0 2px ${frameColor(form.avatar_frame || null)}` }}
+              >
+                {form.avatar_url ? (
+                  <img src={form.avatar_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="grid h-full w-full place-items-center"><User2 className="h-8 w-8 text-muted-foreground" /></div>
+                )}
+              </div>
+              <button
+                onClick={() => avatarInput.current?.click()}
+                className="absolute inset-0 grid place-items-center rounded-full bg-black/40 text-[11px] font-semibold opacity-0 transition hover:opacity-100"
+              >
+                <span className="flex flex-col items-center gap-0.5"><Camera className="h-4 w-4" /> {uploading === "avatar" ? "…" : "Foto"}</span>
+              </button>
+              <input
+                ref={avatarInput}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void upload("avatar", f);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
+            <div className="mt-3 px-6">
+              <p className="flex items-center gap-2 font-display text-lg font-bold">
+                {form.display_name || form.username}
+                <span className="rounded border border-border px-1.5 text-xs font-bold text-muted-foreground">Nv. {profile.level}</span>
+              </p>
+              <p className="text-sm" style={{ color: accent }}>@{form.username}</p>
+            </div>
+
+            <p className="mt-5 px-6 text-xs font-bold tracking-widest text-muted-foreground">EDITAR PERFIL</p>
+            <nav className="mt-2 space-y-2 px-4 pb-4">
+              {menuItems.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setScreen(m.id)}
+                  className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3.5 text-sm font-semibold hover:bg-surface-2"
+                >
+                  <m.icon className="h-4 w-4" style={{ color: accent }} /> {m.label}
+                  {m.value ? <span className="ml-auto text-xs font-normal text-muted-foreground">{m.value}</span> : null}
+                  <ChevronRight className={`h-4 w-4 ${m.value ? "" : "ml-auto"}`} style={{ color: accent }} />
+                </button>
+              ))}
+            </nav>
+          </>
+        ) : null}
+
+        {screen === "identidade" ? (
+          <div className="space-y-3 px-6 py-5">
+            <p className="text-xs font-bold tracking-widest text-muted-foreground">NOME, NICK E BIO</p>
+            <label className="block text-xs text-muted-foreground">
+              Nome de exibição
+              <Input className="mt-1" maxLength={50} value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} />
+            </label>
+            <label className="block text-xs text-muted-foreground">
+              Nick (@usuário)
+              <Input
+                className="mt-1"
+                maxLength={30}
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value.replace(/[^a-zA-Z0-9_.-]/g, "") })}
+              />
+            </label>
+            <label className="block text-xs text-muted-foreground">
+              Bio
+              <Textarea className="mt-1 min-h-24" maxLength={500} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
+            </label>
+            <label className="block text-xs text-muted-foreground">
+              Link do avatar (ou toque na foto na tela anterior)
+              <Input className="mt-1" value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} />
+            </label>
+            <label className="block text-xs text-muted-foreground">
+              Link do banner
+              <Input className="mt-1" value={form.banner_url} onChange={(e) => setForm({ ...form, banner_url: e.target.value })} />
+            </label>
+            <Button className="w-full" disabled={save.isPending || !form.username.trim()} onClick={() => save.mutate({}, { onSuccess: () => setScreen("main") })}>
+              Salvar
+            </Button>
+          </div>
+        ) : null}
+
+        {screen === "cores" ? (
+          <div className="space-y-4 px-6 py-5">
+            <p className="text-xs font-bold tracking-widest text-muted-foreground">CORES DO MENU</p>
+            <div className="grid grid-cols-4 gap-3">
+              {ACCENT_COLORS.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => save.mutate({ accent_color: c })}
+                  className={`h-12 rounded-xl border-2 transition ${form.accent_color === c ? "border-foreground" : "border-transparent"}`}
+                  style={{ background: c }}
+                  aria-label={c}
+                />
+              ))}
+            </div>
+            <Button variant="outline" className="w-full" onClick={() => save.mutate({ accent_color: "" })}>
+              Voltar à cor padrão
+            </Button>
+          </div>
+        ) : null}
+
+        {screen === "moldura" ? (
+          <div className="space-y-4 px-6 py-5">
+            <p className="text-xs font-bold tracking-widest text-muted-foreground">MOLDURA DO AVATAR</p>
+            <div className="grid grid-cols-3 gap-3">
+              {FRAMES.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => save.mutate({ avatar_frame: f.id === "none" ? "" : f.id })}
+                  className={`flex flex-col items-center gap-2 rounded-xl border p-3 text-xs ${(form.avatar_frame || "none") === f.id ? "border-primary bg-surface-2" : "border-border bg-surface"}`}
+                >
+                  <span className="h-10 w-10 rounded-full bg-surface-2" style={{ boxShadow: `0 0 0 3px ${f.color}` }} />
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {screen === "fundo" ? (
+          <div className="space-y-4 px-6 py-5">
+            <p className="text-xs font-bold tracking-widest text-muted-foreground">FUNDO NOS COMENTÁRIOS</p>
+            <div className="space-y-2">
+              {COMMENT_BGS.map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => save.mutate({ comment_bg: b.value })}
+                  className={`flex w-full items-center gap-3 rounded-xl border p-3 text-sm ${form.comment_bg === b.value ? "border-primary" : "border-border"}`}
+                >
+                  <span className="h-10 w-16 rounded-lg bg-surface-2" style={b.value ? { background: b.value } : undefined} />
+                  {b.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {screen === "privacidade" ? (
+          <div className="space-y-4 px-6 py-5">
+            <p className="text-xs font-bold tracking-widest text-muted-foreground">PRIVACIDADE</p>
+            {[
+              { v: false, label: "Público", desc: "Qualquer pessoa pode ver seu perfil, favoritos e comentários." },
+              { v: true, label: "Privado", desc: "Seu perfil fica discreto e só você gerencia quem interage." },
+            ].map((o) => (
+              <button
+                key={o.label}
+                onClick={() => save.mutate({ is_private: o.v })}
+                className={`w-full rounded-xl border p-4 text-left ${form.is_private === o.v ? "border-primary bg-surface-2" : "border-border bg-surface"}`}
+              >
+                <p className="flex items-center gap-2 text-sm font-bold"><Lock className="h-4 w-4" style={{ color: accent }} /> {o.label}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{o.desc}</p>
+              </button>
+            ))}
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );
