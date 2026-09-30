@@ -35,7 +35,7 @@ export const Route = createFileRoute("/api/tts")({
                   role: "user",
                   parts: [
                     {
-                      text: `Você é um narrador profissional de audiolivros brasileiros. Narre em português do Brasil com voz natural e envolvente: respeite as pausas da pontuação (vírgulas curtas, pontos longos), dê emoção e entonação distinta aos diálogos, mantenha ritmo fluido de leitura em voz alta, pronuncie nomes estrangeiros de forma suave e nunca leia em tom robótico ou apressado. Leia exatamente o texto a seguir, sem adicionar nem omitir nada:\n\n${text}`,
+                      text: `Atue como um dublador brasileiro premiado narrando um audiolivro de fantasia sombria. PERFORMANCE OBRIGATÓRIA: fale com emoção real e variação constante de tom, ritmo e intensidade — nunca monótono. Em diálogos, mude a voz como um ator: grito em momentos de fúria, sussurro em tensão, pausa dramática antes de revelações. Acelere em cenas de ação, desacelere em momentos tristes ou reflexivos. Respire entre parágrafos, alongue vogais em exclamações, dê peso às palavras de impacto. Interprete o sentimento de cada frase e expresse-o na voz. Idioma: português do Brasil. Leia exatamente o texto a seguir, sem adicionar nem omitir nada:\n\n${text}`,
                     },
                   ],
                 },
