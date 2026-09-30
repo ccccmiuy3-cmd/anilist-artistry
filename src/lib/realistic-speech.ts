@@ -74,24 +74,3 @@ export async function fetchSpeech(text: string, voice: string, signal: AbortSign
   for (let i = 0; i < out.length; i++) out[i] = view.getInt16(i * 2, true) / 32768;
   return out;
 }
-
-/** Fetches ElevenLabs MP3 audio for a text chunk and decodes it to samples. */
-export async function fetchElevenSpeech(text: string, voice: string, signal: AbortSignal): Promise<Float32Array> {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  if (!token) throw new SpeechError("Faça login para usar a voz premium", 401);
-  const res = await fetch("/api/elevenlabs-tts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ text, voice }),
-    signal,
-  });
-  if (!res.ok) {
-    const msg = await res.text().catch(() => "");
-    throw new SpeechError(msg || `Erro ${res.status}`, res.status);
-  }
-  const bytes = await res.arrayBuffer();
-  if (bytes.byteLength < 100) throw new SpeechError("Áudio incompleto", 502);
-  const decoded = await getAudioContext().decodeAudioData(bytes);
-  return decoded.getChannelData(0).slice();
-}
