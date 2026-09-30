@@ -35,7 +35,7 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
   return (
     <section
       aria-label="Destaques"
-      className="relative min-h-[35rem] overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-hero)] ring-1 ring-border sm:min-h-[38rem] lg:min-h-[31rem]"
+      className="relative h-[78svh] max-h-[54rem] min-h-[36rem] w-full overflow-hidden bg-surface"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >

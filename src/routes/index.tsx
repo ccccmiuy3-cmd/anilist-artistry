@@ -80,11 +80,9 @@ function Home() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
+      <HeroCarousel items={updated.data ?? []} />
       <main className="mx-auto max-w-7xl px-4 py-8">
         <h1 className="sr-only">Better Mangá — ler mangás, manhwas e comics online</h1>
-        <div className="mb-8">
-          <HeroCarousel items={updated.data ?? []} />
-        </div>
         {empty ? (
           <div className="rounded-2xl border border-border bg-surface p-10 text-center">
             <h1 className="font-display text-2xl font-extrabold">Nenhuma obra publicada ainda</h1>
