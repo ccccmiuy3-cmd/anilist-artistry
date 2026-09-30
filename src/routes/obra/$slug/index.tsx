@@ -12,8 +12,6 @@ import {
   Play,
   Send,
   Star,
-  ThumbsDown,
-  ThumbsUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
@@ -24,6 +22,7 @@ import { fetchComments, fetchSeriesBySlug } from "@/lib/queries";
 import { coverUrl, formatChapter, timeAgo } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 import { AddToListButton, StatusButton } from "@/components/SeriesActions";
+import { CommentLikeButton } from "@/components/CommentLikeButton";
 
 export const Route = createFileRoute("/obra/$slug/")({
   head: () => ({
@@ -547,12 +546,7 @@ function SeriesPage() {
                       {comment.body}
                     </p>
                     <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <ThumbsUp className="h-3.5 w-3.5" /> 0
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <ThumbsDown className="h-3.5 w-3.5" /> 0
-                      </span>
+                      <CommentLikeButton commentId={comment.id} userId={user?.id} />
                     </div>
                   </div>
                 </li>

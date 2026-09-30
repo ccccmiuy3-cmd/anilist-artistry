@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSeriesBySlug } from "@/lib/queries";
 import { formatChapter, timeAgo } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
+import { CommentLikeButton } from "@/components/CommentLikeButton";
 
 export const Route = createFileRoute("/obra/$slug/$chapter")({
   head: () => ({
@@ -341,6 +342,9 @@ function Reader() {
                   <span className="text-xs text-muted-foreground">{timeAgo(comment.created_at)}</span>
                 </div>
                 <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{comment.body}</p>
+                <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+                  <CommentLikeButton commentId={comment.id} userId={user?.id} />
+                </div>
               </div>
             </li>
           ))}
