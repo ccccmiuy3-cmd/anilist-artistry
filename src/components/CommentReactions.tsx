@@ -15,17 +15,24 @@ export function CommentReactions({
   const votes = useQuery({
     queryKey: ["comment-likes", commentId, userId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("comment_likes")
-        .select("user_id, value")
-        .eq("comment_id", commentId);
-      if (error) throw error;
-      const rows = (data ?? []) as { user_id: string; value: number }[];
-      const mine = userId ? rows.find((r) => r.user_id === userId)?.value ?? 0 : 0;
+      const [countsRes, mineRes] = await Promise.all([
+        supabase.rpc("comment_vote_counts", { _comment_id: commentId }),
+        userId
+          ? supabase
+              .from("comment_likes")
+              .select("value")
+              .eq("comment_id", commentId)
+              .eq("user_id", userId)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
+      if (countsRes.error) throw countsRes.error;
+      if (mineRes.error) throw mineRes.error;
+      const counts = countsRes.data?.[0];
       return {
-        likes: rows.filter((r) => r.value > 0).length,
-        dislikes: rows.filter((r) => r.value < 0).length,
-        mine,
+        likes: Number(counts?.likes ?? 0),
+        dislikes: Number(counts?.dislikes ?? 0),
+        mine: mineRes.data?.value ?? 0,
       };
     },
   });
