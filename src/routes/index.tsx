@@ -31,7 +31,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { user } = useSession();
-  const [kind, setKind] = useState<string>("Comic");
+  const [kind, setKind] = useState<string>("Manga");
 
   const byKind = useQuery({
     queryKey: ["series", "kind", kind],
