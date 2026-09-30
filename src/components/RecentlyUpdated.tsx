@@ -58,7 +58,7 @@ export function RecentlyUpdated({ rows }: { rows: SeriesRow[] }) {
 
       <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
         {rows.map((item) => {
-          const [latest, previous] = item.chapters;
+          const [latest, previous] = item.chapters ?? [];
           return (
             <div
               key={item.id}
