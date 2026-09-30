@@ -144,6 +144,30 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
               </div>
             </div>
 
+            <div className="hidden w-56 shrink-0 flex-col gap-2.5 xl:flex">
+              <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">Nota</span>
+                <span className="flex items-center gap-1 font-display text-base font-black text-primary">
+                  <Star className="h-4 w-4 fill-current" />
+                  {active.rating.toFixed(1)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">Status</span>
+                <span className="text-xs font-bold capitalize text-foreground/90">{active.status}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">Capítulos</span>
+                <span className="text-xs font-bold text-foreground/90">{active.chapters.length}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">Views</span>
+                <span className="text-xs font-bold text-foreground/90">
+                  {new Intl.NumberFormat("pt-BR", { notation: "compact" }).format(active.views ?? 0)}
+                </span>
+              </div>
+            </div>
+
             {slides.length > 1 ? (
               <div className="hidden shrink-0 flex-col items-center gap-3 md:flex">
                 <Button
