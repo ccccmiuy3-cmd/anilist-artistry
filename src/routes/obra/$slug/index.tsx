@@ -12,8 +12,6 @@ import {
   Play,
   Send,
   Star,
-  ThumbsDown,
-  ThumbsUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
@@ -24,6 +22,7 @@ import { fetchComments, fetchSeriesBySlug } from "@/lib/queries";
 import { coverUrl, formatChapter, timeAgo } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 import { AddToListButton, StatusButton } from "@/components/SeriesActions";
+import { CommentLikeButton } from "@/components/CommentLikeButton";
 
 export const Route = createFileRoute("/obra/$slug/")({
   head: () => ({
@@ -175,6 +174,37 @@ function SeriesPage() {
     onSuccess: () => {
       setBody("");
       queryClient.invalidateQueries({ queryKey: ["comments", series.data?.id] });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
+  });
+
+  const toggleRead = useMutation({
+    mutationFn: async (chapter: { id: string; isRead: boolean }) => {
+      if (!user || !series.data) throw new Error("Entre para marcar como lido.");
+      if (chapter.isRead) {
+        const { error } = await supabase
+          .from("reading_history")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("series_id", series.data.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("reading_history").upsert(
+          {
+            user_id: user.id,
+            series_id: series.data.id,
+            chapter_id: chapter.id,
+            progress: 100,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,series_id" },
+        );
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["history", slug, user?.id] });
+      toast.success("Atualizado!");
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
   });
@@ -436,11 +466,11 @@ function SeriesPage() {
               {chapters.map((chapter) => {
                 const isRead = readNumbers.has(chapter.number);
                 return (
-                  <li key={chapter.id}>
+                  <li key={chapter.id} className="flex items-center">
                     <Link
                       to="/obra/$slug/$chapter"
                       params={{ slug: obra.slug, chapter: formatChapter(chapter.number) }}
-                      className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2/60"
+                      className="flex min-w-0 flex-1 items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2/60"
                     >
                       <span
                         className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg text-sm font-bold ${
@@ -475,6 +505,22 @@ function SeriesPage() {
                         <Eye className="h-4 w-4" />
                       </span>
                     </Link>
+                    {user ? (
+                      <button
+                        type="button"
+                        disabled={toggleRead.isPending}
+                        onClick={() => toggleRead.mutate({ id: chapter.id, isRead })}
+                        title={isRead ? "Desmarcar como lido" : "Marcar como lido"}
+                        aria-label={isRead ? "Desmarcar como lido" : "Marcar como lido"}
+                        className={`mr-4 grid h-8 w-8 shrink-0 place-items-center rounded-md border transition-colors ${
+                          isRead
+                            ? "border-primary/50 bg-primary/15 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                        }`}
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                    ) : null}
                   </li>
                 );
               })}
@@ -547,12 +593,7 @@ function SeriesPage() {
                       {comment.body}
                     </p>
                     <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <ThumbsUp className="h-3.5 w-3.5" /> 0
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <ThumbsDown className="h-3.5 w-3.5" /> 0
-                      </span>
+                      <CommentLikeButton commentId={comment.id} userId={user?.id} />
                     </div>
                   </div>
                 </li>
