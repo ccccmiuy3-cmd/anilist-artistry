@@ -134,6 +134,8 @@ export type Database = {
           chapter_id: string | null
           created_at: string
           id: string
+          image_url: string | null
+          is_spoiler: boolean
           series_id: string
           user_id: string
         }
@@ -142,6 +144,8 @@ export type Database = {
           chapter_id?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
+          is_spoiler?: boolean
           series_id: string
           user_id: string
         }
@@ -150,6 +154,8 @@ export type Database = {
           chapter_id?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
+          is_spoiler?: boolean
           series_id?: string
           user_id?: string
         }
