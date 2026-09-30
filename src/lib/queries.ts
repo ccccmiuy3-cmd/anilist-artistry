@@ -111,7 +111,7 @@ export async function fetchHistory(userId: string) {
 export async function fetchComments(seriesId: string) {
   const { data, error } = await supabase
     .from("comments")
-    .select("id, body, created_at, user_id")
+    .select("id, body, created_at, user_id, is_spoiler, image_url")
     .eq("series_id", seriesId)
     .order("created_at", { ascending: false })
     .limit(80);
