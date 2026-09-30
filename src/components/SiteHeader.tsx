@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { BookMarked, LogOut, Search, Shield, User2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { MobileNav } from "@/components/MobileNav";
 import { useProfile, useRoles, useSession } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
@@ -120,8 +121,10 @@ export function SiteHeader() {
             <Link to="/auth">Entrar</Link>
           </Button>
         )}
-      </div>
-    </header>
+          </div>
+        </header>
+        <MobileNav />
+      </>
   );
 }
 
