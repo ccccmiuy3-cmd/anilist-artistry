@@ -69,7 +69,7 @@ export function TabButton({
   onClick: () => void;
   icon: ReactNode;
   label: string;
-  count?: number;
+  count?: number | undefined;
 }) {
   return (
     <button
