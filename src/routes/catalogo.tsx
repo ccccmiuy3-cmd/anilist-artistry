@@ -29,8 +29,10 @@ export const Route = createFileRoute("/catalogo")({
       { property: "og:title", content: "Pesquisar — Better Mangá" },
       { property: "og:description", content: "Busque mangás, manhwas e comics com filtros." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://bettermanga.net/catalogo" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://bettermanga.net/catalogo" }],
   }),
   component: Pesquisar,
 });

@@ -28,8 +28,10 @@ export const Route = createFileRoute("/listas/")({
       { property: "og:title", content: "Listas — Better Mangá" },
       { property: "og:description", content: "Organize obras e descubra listas da comunidade." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://bettermanga.net/listas" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://bettermanga.net/listas" }],
   }),
   component: ListasPage,
 });

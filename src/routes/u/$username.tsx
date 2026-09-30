@@ -47,8 +47,10 @@ export const Route = createFileRoute("/u/$username")({
       { property: "og:title", content: `@${params.username} — Better Mangá` },
       { property: "og:description", content: "Perfil de leitor no Better Mangá." },
       { property: "og:type", content: "profile" },
+      { property: "og:url", content: `https://bettermanga.net/u/${encodeURIComponent(params.username)}` },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: `https://bettermanga.net/u/${encodeURIComponent(params.username)}` }],
   }),
   component: Perfil,
 });

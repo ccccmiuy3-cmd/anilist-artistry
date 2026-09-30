@@ -25,7 +25,11 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "Catálogo de mangás, manhwas e comics com capítulos atualizados.",
       },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://bettermanga.net/" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://bettermanga.net/" }],
   }),
   component: Home,
 });

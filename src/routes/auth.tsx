@@ -19,6 +19,8 @@ export const Route = createFileRoute("/auth")({
       },
       { property: "og:title", content: "Entrar no Better Mangá" },
       { property: "og:description", content: "Favoritos, histórico e comentários na sua conta." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,

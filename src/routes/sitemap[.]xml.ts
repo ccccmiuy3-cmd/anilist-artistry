@@ -44,13 +44,13 @@ export const Route = createFileRoute("/sitemap.xml")({
         const listRoute = router.routesById["/listas/$id"];
         if (listRoute) {
           for (let offset = 0; ; ) {
-            const { data, error } = await supabase.from("lists").select("id, updated_at").eq("is_public", true).order("id").range(offset, offset + 999);
+            const { data, error } = await supabase.from("lists").select("id").eq("is_public", true).order("id").range(offset, offset + 999);
             if (error) throw error;
             if (!data.length) break;
             for (const row of data) {
               const location = router.buildLocation({ to: "/listas/$id", params: { id: row.id } });
               const path = sitemapPathForLocation(router, location, listRoute.id);
-              if (path) entries.push({ path, lastmod: row.updated_at });
+              if (path) entries.push({ path });
             }
             offset += data.length;
           }
