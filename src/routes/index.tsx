@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, LayoutGrid, PlusSquare, Star, Trophy } from "lucide-react";
+import { LayoutGrid, PlusSquare, Star, Trophy } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { SeriesCard } from "@/components/SeriesCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { ContinueReading } from "@/components/ContinueReading";
 import { FavoritesUpdated } from "@/components/FavoritesUpdated";
 import { Releases } from "@/components/Releases";
+import { RecentlyUpdated } from "@/components/RecentlyUpdated";
 import { HScroll, SectionRow } from "@/components/SectionRow";
 import { Button } from "@/components/ui/button";
 import { fetchFavorites, fetchHistory, fetchSeries, KINDS } from "@/lib/queries";
@@ -56,7 +57,7 @@ function Home() {
   });
   const updated = useQuery({
     queryKey: ["series", "updated"],
-    queryFn: () => fetchSeries({ order: "updated_at", limit: 12, pinnedFirst: true }),
+    queryFn: () => fetchSeries({ order: "updated_at", limit: 10, pinnedFirst: true }),
   });
   const releases = useQuery({
     queryKey: ["series", "releases"],
@@ -210,36 +211,7 @@ function Home() {
           </SectionRow>
         ) : null}
 
-        {(updated.data?.length ?? 0) > 0 ? (
-          <SectionRow
-            icon={<Clock className="h-5 w-5" />}
-            title="Atualizados recentes"
-            action={
-              <Button asChild variant="ghost" size="sm" className="text-primary">
-                <Link to="/catalogo" search={{ q: "", kind: "Todos" }}>
-                  Ver todos
-                </Link>
-              </Button>
-            }
-          >
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {updated.data!.map((item) => (
-                <SeriesCard
-                  key={item.id}
-                  slug={item.slug}
-                  title={item.title}
-                  cover={item.cover_url}
-                  rating={item.rating}
-                  chapters={item.chapters.length}
-                  chapterList={item.chapters}
-                  favorite={favoriteIds.has(item.id)}
-                  seriesId={item.id}
-                  badge={item.pinned ? "Fixada" : null}
-                />
-              ))}
-            </div>
-          </SectionRow>
-        ) : null}
+        {(updated.data?.length ?? 0) > 0 ? <RecentlyUpdated rows={updated.data!} /> : null}
 
         {(ranking.data?.length ?? 0) > 0 ? (
           <SectionRow
