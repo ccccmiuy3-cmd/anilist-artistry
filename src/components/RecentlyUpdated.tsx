@@ -134,7 +134,7 @@ export function RecentlyUpdated({ rows }: { rows: SeriesRow[] }) {
                     <Link
                       to="/obra/$slug/$chapter"
                       params={{ slug: item.slug, chapter: formatChapter(latest.number) }}
-                      className="group/cap relative z-0 flex min-h-[2.125rem] w-full origin-center transform-gpu items-center justify-between gap-1.5 rounded-lg bg-primary/10 px-2 py-1.5 text-xs no-underline shadow-[inset_0_0_0_1px_var(--primary)]/35 ring-1 ring-primary/35 transition-[transform,colors,filter,box-shadow] duration-[350ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:z-10 hover:brightness-110 motion-safe:hover:scale-[1.035] motion-reduce:hover:scale-100 active:scale-[0.99] active:duration-[150ms] active:ease-out"
+                      className="group/cap relative z-0 flex min-h-[2.125rem] w-full origin-center transform-gpu items-center justify-between gap-1.5 rounded-lg bg-primary/10 px-2 py-1.5 text-xs no-underline ring-1 ring-primary/35 transition-[transform,colors,filter,box-shadow] duration-[350ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:z-10 hover:brightness-110 motion-safe:hover:scale-[1.035] motion-reduce:hover:scale-100 active:scale-[0.99] active:duration-[150ms] active:ease-out"
                     >
                       <span className="inline-flex min-w-0 flex-1 items-center gap-1 truncate text-left text-xs font-bold text-foreground/90 transition-colors duration-[350ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/cap:text-foreground">
                         Cap. {formatChapter(latest.number)}
