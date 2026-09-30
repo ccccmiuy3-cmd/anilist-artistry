@@ -1,0 +1,219 @@
+import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Ban, Pencil, Save, Search, Shield, Upload as UploadIcon } from "lucide-react";
+import { toast } from "sonner";
+import { AdminShell } from "@/components/AdminShell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useRoles, useSession } from "@/hooks/useAuth";
+
+export const Route = createFileRoute("/_authenticated/admin/contas")({
+  head: () => ({
+    meta: [
+      { title: "Gerenciar contas — MangaVerso" },
+      { name: "description", content: "Edite perfis, cargos, XP e bloqueios dos leitores." },
+      { property: "og:title", content: "Gerenciar contas — MangaVerso" },
+      { property: "og:description", content: "Gestão de contas e cargos." },
+    ],
+  }),
+  component: Contas,
+});
+
+type Account = {
+  id: string; username: string; display_name: string | null; avatar_url: string | null; bio: string | null;
+  level: number; xp: number; banned: boolean; created_at: string; roles: string[];
+};
+
+const ROLES = [
+  { key: "admin", label: "Admin", desc: "Controle total do site" },
+  { key: "uploader", label: "Uploader", desc: "Publica obras e capítulos" },
+] as const;
+
+function Contas() {
+  const { user } = useSession();
+  const { isAdmin } = useRoles(user?.id);
+  const [q, setQ] = useState("");
+  const [editing, setEditing] = useState<Account | null>(null);
+
+  const accounts = useQuery({
+    queryKey: ["admin-accounts"],
+    enabled: isAdmin,
+    queryFn: async () => {
+      const [p, r] = await Promise.all([
+        supabase.from("profiles").select("id, username, display_name, avatar_url, bio, level, xp, banned, created_at").order("created_at", { ascending: false }),
+        supabase.from("user_roles").select("user_id, role"),
+      ]);
+      if (p.error) throw p.error;
+      return (p.data ?? []).map((a) => ({ ...a, roles: (r.data ?? []).filter((x) => x.user_id === a.id).map((x) => x.role as string) })) as Account[];
+    },
+  });
+
+  const rows = useMemo(
+    () => (accounts.data ?? []).filter((a) => `${a.username} ${a.display_name ?? ""}`.toLowerCase().includes(q.toLowerCase())),
+    [accounts.data, q],
+  );
+
+  return (
+    <AdminShell adminOnly title="Contas" subtitle={`${accounts.data?.length ?? 0} contas cadastradas`}>
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nome ou @usuário…" className="h-11 bg-surface pl-9" />
+      </div>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
+        {rows.map((a) => (
+          <div key={a.id} className={`flex items-center gap-4 rounded-2xl border bg-surface p-4 ${a.banned ? "border-destructive/50" : "border-border"}`}>
+            <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-2 text-lg font-bold text-primary ring-2 ring-border">
+              {a.avatar_url ? <img src={a.avatar_url} alt="" className="h-full w-full object-cover" /> : a.username.slice(0, 2).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Link to="/u/$username" params={{ username: a.username }} className="truncate font-bold hover:text-primary">
+                  {a.display_name || a.username}
+                </Link>
+                <span className="rounded border border-border px-1.5 text-[10px] font-bold text-muted-foreground">Nv. {a.level}</span>
+                {a.roles.map((r) => (
+                  <span key={r} className="flex items-center gap-0.5 rounded bg-primary/15 px-1.5 text-[10px] font-bold uppercase text-primary">
+                    {r === "admin" ? <Shield className="h-2.5 w-2.5" /> : <UploadIcon className="h-2.5 w-2.5" />} {r}
+                  </span>
+                ))}
+                {a.banned ? (
+                  <span className="flex items-center gap-0.5 rounded bg-destructive/15 px-1.5 text-[10px] font-bold text-destructive">
+                    <Ban className="h-2.5 w-2.5" /> Bloqueado
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                @{a.username} · {a.xp.toLocaleString("pt-BR")} XP · desde {new Date(a.created_at).toLocaleDateString("pt-BR")}
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setEditing(a)}>
+              <Pencil className="mr-1.5 h-3.5 w-3.5" /> Editar
+            </Button>
+          </div>
+        ))}
+      </div>
+      {rows.length === 0 && !accounts.isLoading ? <p className="mt-10 text-center text-sm text-muted-foreground">Nenhuma conta encontrada.</p> : null}
+
+      <AccountDialog account={editing} selfId={user?.id} onClose={() => setEditing(null)} />
+    </AdminShell>
+  );
+}
+
+function AccountDialog({ account, selfId, onClose }: { account: Account | null; selfId?: string; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [f, setF] = useState({ username: "", display_name: "", avatar_url: "", bio: "", xp: "0", banned: false, roles: [] as string[] });
+  useEffect(() => {
+    if (!account) return;
+    setF({
+      username: account.username,
+      display_name: account.display_name ?? "",
+      avatar_url: account.avatar_url ?? "",
+      bio: account.bio ?? "",
+      xp: String(account.xp),
+      banned: account.banned,
+      roles: account.roles,
+    });
+  }, [account]);
+  const isSelf = account?.id === selfId;
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!account) return;
+      const username = f.username.trim().toLowerCase().replace(/[^a-z0-9_.]/g, "");
+      if (username.length < 3) throw new Error("Usuário precisa ter 3+ caracteres (letras, números, _ ou .).");
+      const xp = Math.max(0, Math.floor(Number(f.xp) || 0));
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          username,
+          display_name: f.display_name.trim().slice(0, 60) || null,
+          avatar_url: f.avatar_url.trim() || null,
+          bio: f.bio.trim().slice(0, 500) || null,
+          xp,
+          level: 1 + Math.floor(xp / 1000),
+          banned: isSelf ? false : f.banned,
+        })
+        .eq("id", account.id);
+      if (error) throw error.message.includes("duplicate") ? new Error("Esse @usuário já existe.") : error;
+      for (const r of ROLES) {
+        const had = account.roles.includes(r.key);
+        const has = f.roles.includes(r.key);
+        if (had === has || (isSelf && r.key === "admin")) continue;
+        const res = has
+          ? await supabase.from("user_roles").insert({ user_id: account.id, role: r.key })
+          : await supabase.from("user_roles").delete().eq("user_id", account.id).eq("role", r.key);
+        if (res.error) throw res.error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Conta atualizada!");
+      qc.invalidateQueries({ queryKey: ["admin-accounts"] });
+      onClose();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível salvar."),
+  });
+
+  return (
+    <Dialog open={Boolean(account)} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Editar conta</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label>@usuário</Label>
+            <Input value={f.username} onChange={(e) => setF({ ...f, username: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Nome de exibição</Label>
+            <Input value={f.display_name} onChange={(e) => setF({ ...f, display_name: e.target.value })} />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label>URL do avatar</Label>
+          <Input value={f.avatar_url} onChange={(e) => setF({ ...f, avatar_url: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Bio</Label>
+          <Textarea value={f.bio} onChange={(e) => setF({ ...f, bio: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>XP (nível = 1 + XP ÷ 1000)</Label>
+          <Input type="number" min={0} value={f.xp} onChange={(e) => setF({ ...f, xp: e.target.value })} />
+        </div>
+        <div className="space-y-2 rounded-xl border border-border p-3">
+          <p className="text-sm font-bold">Cargos</p>
+          {ROLES.map((r) => (
+            <label key={r.key} className="flex items-center justify-between text-sm">
+              <span>
+                <span className="font-semibold">{r.label}</span> <span className="text-xs text-muted-foreground">— {r.desc}</span>
+              </span>
+              <Switch
+                disabled={isSelf && r.key === "admin"}
+                checked={f.roles.includes(r.key)}
+                onCheckedChange={(v) => setF({ ...f, roles: v ? [...f.roles, r.key] : f.roles.filter((x) => x !== r.key) })}
+              />
+            </label>
+          ))}
+        </div>
+        <label className="flex items-center justify-between rounded-xl border border-destructive/40 p-3 text-sm">
+          <span>
+            <span className="font-semibold text-destructive">Bloquear conta</span>
+            <span className="block text-xs text-muted-foreground">Impede de comentar no site.</span>
+          </span>
+          <Switch disabled={isSelf} checked={f.banned} onCheckedChange={(v) => setF({ ...f, banned: v })} />
+        </label>
+        <Button disabled={save.isPending} onClick={() => save.mutate()} className="w-full font-semibold">
+          <Save className="mr-2 h-4 w-4" /> {save.isPending ? "Salvando…" : "Salvar conta"}
+        </Button>
+      </DialogContent>
+    </Dialog>
+  );
+}

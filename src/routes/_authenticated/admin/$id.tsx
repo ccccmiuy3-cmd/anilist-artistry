@@ -1,91 +1,309 @@
-import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileImage, Link2, Pencil, Save, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { SiteHeader } from "@/components/SiteHeader";
+import { AdminShell } from "@/components/AdminShell";
+import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { coverUrl, formatChapter, timeAgo } from "@/lib/media";
+import { coverUrl, formatChapter, slugify, timeAgo } from "@/lib/media";
+import { KINDS } from "@/lib/queries";
+import { useRoles, useSession } from "@/hooks/useAuth";
 
 const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
+const STATUSES = ["Em andamento", "Completo", "Hiato", "Cancelado"];
 
 export const Route = createFileRoute("/_authenticated/admin/$id")({
   head: () => ({
     meta: [
-      { title: "Publicar capítulos — MangaVerso" },
-      { name: "description", content: "Envie as páginas e publique novos capítulos da obra." },
-      { property: "og:title", content: "Publicar capítulos — MangaVerso" },
-      { property: "og:description", content: "Upload de páginas e publicação de capítulos." },
+      { title: "Editar obra e capítulos — MangaVerso" },
+      { name: "description", content: "Edite a obra, envie páginas e gerencie os capítulos." },
+      { property: "og:title", content: "Editar obra — MangaVerso" },
+      { property: "og:description", content: "Gestão de obra e capítulos." },
     ],
   }),
-  component: ChapterManager,
+  component: SeriesEditor,
 });
 
-function ChapterManager() {
+type Chapter = { id: string; number: number; title: string | null; pages: unknown; published: boolean; created_at: string };
+const pagesOf = (p: unknown) => (Array.isArray(p) ? (p as string[]) : []);
+
+async function uploadFiles(seriesId: string, chapterNumber: string, files: File[], offset = 0) {
+  const out: string[] = [];
+  const ordered = [...files].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  for (const [i, file] of ordered.entries()) {
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `${seriesId}/${chapterNumber}/${Date.now()}-${String(offset + i + 1).padStart(3, "0")}.${ext}`;
+    const { error } = await supabase.storage.from("manga").upload(path, file, { upsert: true, contentType: file.type });
+    if (error) throw error;
+    const { data, error: e2 } = await supabase.storage.from("manga").createSignedUrl(path, TEN_YEARS);
+    if (e2) throw e2;
+    out.push(data.signedUrl);
+  }
+  return out;
+}
+
+function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) => void }) {
+  const [over, setOver] = useState(false);
+  return (
+    <label
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        setFiles(Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/")));
+      }}
+      className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
+        over ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/60"
+      }`}
+    >
+      <Upload className="h-7 w-7 text-primary" />
+      <p className="text-sm font-semibold">{files.length ? `${files.length} imagem(ns) selecionada(s)` : "Arraste as páginas ou clique para escolher"}</p>
+      <p className="text-xs text-muted-foreground">Ordenadas pelo nome do arquivo (01.jpg, 02.jpg…)</p>
+      <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => setFiles(Array.from(e.target.files ?? []))} />
+    </label>
+  );
+}
+
+function SeriesEditor() {
   const { id } = Route.useParams();
-  const queryClient = useQueryClient();
-  const [number, setNumber] = useState("");
-  const [title, setTitle] = useState("");
-  const [urls, setUrls] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
-  const [busy, setBusy] = useState(false);
+  const { user } = useSession();
+  const { isStaff, isAdmin } = useRoles(user?.id);
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [tab, setTab] = useState<"chapters" | "info">("chapters");
 
   const series = useQuery({
     queryKey: ["admin-series", id],
+    enabled: isStaff,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("series")
-        .select("id, slug, title, cover_url, kind, published, chapters(id, number, title, pages, created_at)")
+        .select("*, chapters(id, number, title, pages, published, created_at)")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
       return data;
     },
   });
+  const obra = series.data;
+  const chapters = [...((obra?.chapters ?? []) as Chapter[])].sort((a, b) => Number(b.number) - Number(a.number));
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["admin-series", id] });
+    qc.invalidateQueries({ queryKey: ["admin-series"] });
+  };
 
-  async function uploadPages(chapterNumber: string) {
-    const uploaded: string[] = [];
-    const ordered = [...files].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-    for (const [index, file] of ordered.entries()) {
-      const extension = file.name.split(".").pop() ?? "jpg";
-      const path = `${id}/${chapterNumber}/${String(index + 1).padStart(3, "0")}.${extension}`;
-      const { error } = await supabase.storage
-        .from("manga")
-        .upload(path, file, { upsert: true, contentType: file.type });
+  const removeSeries = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("series").delete().eq("id", id);
       if (error) throw error;
-      const { data, error: signError } = await supabase.storage
-        .from("manga")
-        .createSignedUrl(path, TEN_YEARS);
-      if (signError) throw signError;
-      uploaded.push(data.signedUrl);
-    }
-    return uploaded;
-  }
+    },
+    onSuccess: () => {
+      toast.success("Obra apagada.");
+      qc.invalidateQueries({ queryKey: ["admin-series"] });
+      navigate({ to: "/admin/obras" });
+    },
+    onError: () => toast.error("Não foi possível apagar."),
+  });
+
+  return (
+    <AdminShell
+      title={obra?.title ?? "Carregando…"}
+      subtitle={obra ? `${obra.kind} · ${chapters.length} capítulos` : undefined}
+      actions={
+        <div className="flex gap-2">
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/admin/obras">
+              <ArrowLeft className="mr-1.5 h-4 w-4" /> Obras
+            </Link>
+          </Button>
+          {obra ? (
+            <Button asChild variant="outline" size="sm">
+              <Link to="/obra/$slug" params={{ slug: obra.slug }}>
+                <ExternalLink className="mr-1.5 h-4 w-4" /> Ver no site
+              </Link>
+            </Button>
+          ) : null}
+          {isAdmin && obra ? (
+            <ConfirmDelete title={`Apagar "${obra.title}"?`} description="A obra e todos os capítulos serão apagados permanentemente." onConfirm={() => removeSeries.mutate()}>
+              <Button variant="outline" size="sm" className="border-destructive/50 text-destructive">
+                <Trash2 className="mr-1.5 h-4 w-4" /> Apagar obra
+              </Button>
+            </ConfirmDelete>
+          ) : null}
+        </div>
+      }
+    >
+      {obra ? (
+        <>
+          <div className="relative mb-6 overflow-hidden rounded-2xl border border-border">
+            <img src={coverUrl(obra.banner_url ?? obra.cover_url)} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25 blur-sm" />
+            <div className="relative flex items-center gap-5 bg-gradient-to-r from-background via-background/80 to-transparent p-5">
+              <img src={coverUrl(obra.cover_url)} alt={obra.title} className="h-36 w-24 rounded-xl object-cover shadow-lg" />
+              <div className="min-w-0">
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${obra.published ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+                  {obra.published ? "Publicada" : "Rascunho"}
+                </span>
+                <h2 className="mt-2 font-display text-2xl font-extrabold">{obra.title}</h2>
+                <p className="mt-1 line-clamp-2 max-w-xl text-sm text-muted-foreground">{obra.synopsis}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-5 inline-flex rounded-xl border border-border bg-surface p-1">
+            {([
+              ["chapters", "Capítulos"],
+              ["info", "Editar obra"],
+            ] as const).map(([k, l]) => (
+              <button key={k} onClick={() => setTab(k)} className={`rounded-lg px-5 py-2 text-sm font-semibold ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                {l}
+              </button>
+            ))}
+          </div>
+
+          {tab === "info" ? <InfoForm obra={obra} onSaved={refresh} /> : <ChaptersPanel seriesId={id} chapters={chapters} onChange={refresh} />}
+        </>
+      ) : null}
+    </AdminShell>
+  );
+}
+
+type Obra = {
+  id: string; title: string; slug: string; alt_titles: string | null; synopsis: string | null; cover_url: string | null;
+  banner_url: string | null; kind: string; status: string; author: string | null; artist: string | null; genres: string[];
+  published: boolean; pinned: boolean;
+};
+
+function InfoForm({ obra, onSaved }: { obra: Obra; onSaved: () => void }) {
+  const [f, setF] = useState({ ...obra, genresText: obra.genres.join(", ") });
+  useEffect(() => setF({ ...obra, genresText: obra.genres.join(", ") }), [obra]);
+  const set = (k: keyof typeof f, v: unknown) => setF((p) => ({ ...p, [k]: v }));
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!f.title.trim()) throw new Error("Título obrigatório.");
+      const { error } = await supabase
+        .from("series")
+        .update({
+          title: f.title.trim(),
+          slug: slugify(f.slug || f.title),
+          alt_titles: f.alt_titles || null,
+          synopsis: f.synopsis || null,
+          cover_url: f.cover_url || null,
+          banner_url: f.banner_url || null,
+          kind: f.kind,
+          status: f.status,
+          author: f.author || null,
+          artist: f.artist || null,
+          genres: f.genresText.split(",").map((g) => g.trim()).filter(Boolean),
+          published: f.published,
+          pinned: f.pinned,
+        })
+        .eq("id", obra.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Obra salva!");
+      onSaved();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível salvar."),
+  });
+
+  const field = (label: string, k: keyof typeof f, ph?: string) => (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <Input value={(f[k] as string) ?? ""} placeholder={ph} onChange={(e) => set(k, e.target.value)} className="bg-background" />
+    </div>
+  );
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        save.mutate();
+      }}
+      className="grid gap-6 lg:grid-cols-[1fr_280px]"
+    >
+      <div className="space-y-4 rounded-2xl border border-border bg-surface p-5">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {field("Título", "title")}
+          {field("Slug (URL)", "slug")}
+        </div>
+        {field("Títulos alternativos", "alt_titles")}
+        <div className="space-y-1.5">
+          <Label>Sinopse</Label>
+          <Textarea value={f.synopsis ?? ""} onChange={(e) => set("synopsis", e.target.value)} className="min-h-32 bg-background" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Tipo</Label>
+            <select value={f.kind} onChange={(e) => set("kind", e.target.value)} className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm">
+              {KINDS.map((k) => <option key={k}>{k}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Status</Label>
+            <select value={f.status} onChange={(e) => set("status", e.target.value)} className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm">
+              {[...new Set([f.status, ...STATUSES])].map((s) => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          {field("Autor", "author")}
+          {field("Artista", "artist")}
+        </div>
+        {field("Gêneros (separados por vírgula)", "genresText", "Ação, Fantasia")}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {field("URL da capa", "cover_url", "https://…")}
+          {field("URL do banner", "banner_url", "https://…")}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-border bg-surface p-5">
+          <p className="text-sm font-bold">Capa</p>
+          <img src={coverUrl(f.cover_url)} alt="" className="mt-3 aspect-[2/3] w-full rounded-xl object-cover" />
+        </div>
+        <div className="space-y-4 rounded-2xl border border-border bg-surface p-5">
+          <label className="flex items-center justify-between text-sm font-semibold">
+            Publicada <Switch checked={f.published} onCheckedChange={(v) => set("published", v)} />
+          </label>
+          <label className="flex items-center justify-between text-sm font-semibold">
+            Fixar em destaque <Switch checked={f.pinned} onCheckedChange={(v) => set("pinned", v)} />
+          </label>
+          <Button type="submit" disabled={save.isPending} className="w-full font-semibold">
+            <Save className="mr-2 h-4 w-4" /> {save.isPending ? "Salvando…" : "Salvar alterações"}
+          </Button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function ChaptersPanel({ seriesId, chapters, onChange }: { seriesId: string; chapters: Chapter[]; onChange: () => void }) {
+  const [number, setNumber] = useState("");
+  const [title, setTitle] = useState("");
+  const [urls, setUrls] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [editing, setEditing] = useState<Chapter | null>(null);
 
   const publish = useMutation({
     mutationFn: async () => {
-      setBusy(true);
-      const pasted = urls
-        .split("\n")
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
-      const uploaded = files.length > 0 ? await uploadPages(formatChapter(number)) : [];
+      const pasted = urls.split("\n").map((l) => l.trim()).filter(Boolean);
+      const uploaded = files.length ? await uploadFiles(seriesId, formatChapter(number), files) : [];
       const pages = [...uploaded, ...pasted];
-      if (pages.length === 0) throw new Error("Adicione páginas (upload ou links).");
-
-      const { error } = await supabase.from("chapters").insert({
-        series_id: id,
-        number: Number(number),
-        title: title.trim() || null,
-        pages,
-      });
+      if (!pages.length) throw new Error("Adicione páginas (upload ou links).");
+      const { error } = await supabase.from("chapters").insert({ series_id: seriesId, number: Number(number), title: title.trim() || null, pages });
       if (error) throw error;
-
-      await supabase.from("series").update({ updated_at: new Date().toISOString() }).eq("id", id);
+      await supabase.from("series").update({ updated_at: new Date().toISOString() }).eq("id", seriesId);
     },
     onSuccess: () => {
       toast.success("Capítulo publicado!");
@@ -93,154 +311,170 @@ function ChapterManager() {
       setTitle("");
       setUrls("");
       setFiles([]);
-      queryClient.invalidateQueries({ queryKey: ["admin-series", id] });
+      onChange();
     },
-    onError: (error) =>
-      toast.error(error instanceof Error ? error.message : "Não foi possível publicar."),
-    onSettled: () => setBusy(false),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível publicar."),
   });
 
-  const removeChapter = useMutation({
-    mutationFn: async (chapterId: string) => {
-      const { error } = await supabase.from("chapters").delete().eq("id", chapterId);
+  const remove = useMutation({
+    mutationFn: async (cid: string) => {
+      const { error } = await supabase.from("chapters").delete().eq("id", cid);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-series", id] }),
+    onSuccess: () => {
+      toast.success("Capítulo apagado.");
+      onChange();
+    },
     onError: () => toast.error("Não foi possível apagar."),
   });
 
-  const obra = series.data;
-  const chapters = [...(obra?.chapters ?? [])].sort((a, b) => Number(b.number) - Number(a.number));
+  const togglePub = useMutation({
+    mutationFn: async (c: Chapter) => {
+      const { error } = await supabase.from("chapters").update({ published: !c.published }).eq("id", c.id);
+      if (error) throw error;
+    },
+    onSuccess: onChange,
+  });
 
   return (
-    <div className="min-h-screen">
-      <SiteHeader />
-      <main className="mx-auto max-w-3xl px-4 py-8">
-        <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link to="/admin">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Voltar ao painel
-          </Link>
+    <div className="grid gap-6 xl:grid-cols-[400px_1fr]">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          publish.mutate();
+        }}
+        className="h-fit space-y-4 rounded-2xl border border-border bg-surface p-5"
+      >
+        <h3 className="flex items-center gap-2 font-display text-lg font-extrabold">
+          <Upload className="h-5 w-5 text-primary" /> Novo capítulo
+        </h3>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-1.5">
+            <Label>Número</Label>
+            <Input required value={number} onChange={(e) => setNumber(e.target.value)} placeholder={String((chapters[0]?.number ?? 0) + 1)} inputMode="decimal" className="bg-background" />
+          </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label>Título (opcional)</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="bg-background" />
+          </div>
+        </div>
+        <DropZone files={files} setFiles={setFiles} />
+        <div className="space-y-1.5">
+          <Label className="flex items-center gap-1.5"><Link2 className="h-3.5 w-3.5" /> Ou links das páginas (um por linha)</Label>
+          <Textarea value={urls} onChange={(e) => setUrls(e.target.value)} className="min-h-24 bg-background font-mono text-xs" placeholder={"https://…/01.jpg\nhttps://…/02.jpg"} />
+        </div>
+        <Button type="submit" disabled={publish.isPending || !number.trim()} className="w-full font-semibold">
+          {publish.isPending ? "Enviando…" : "Publicar capítulo"}
         </Button>
+      </form>
 
-        {obra ? (
-          <div className="flex items-center gap-4">
-            <img
-              src={coverUrl(obra.cover_url)}
-              alt={obra.title}
-              className="h-24 w-16 rounded-lg object-cover"
-            />
-            <div>
-              <h1 className="font-display text-2xl font-extrabold">{obra.title}</h1>
-              <p className="text-sm text-muted-foreground">
-                {obra.kind} · {chapters.length} capítulos ·{" "}
-                <Link to="/obra/$slug" params={{ slug: obra.slug }} className="text-primary">
-                  ver no site
-                </Link>
-              </p>
-            </div>
-          </div>
-        ) : (
-          <p className="text-muted-foreground">Carregando…</p>
-        )}
-
-        <form
-          className="mt-8 space-y-4 rounded-2xl border border-border bg-surface p-5"
-          onSubmit={(event) => {
-            event.preventDefault();
-            publish.mutate();
-          }}
-        >
-          <h2 className="section-title">
-            <Upload className="h-5 w-5 text-primary" /> Novo capítulo
-          </h2>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <Label>Número</Label>
-              <Input
-                required
-                value={number}
-                onChange={(event) => setNumber(event.target.value)}
-                placeholder="1"
-                inputMode="decimal"
-                className="bg-background"
-              />
-            </div>
-            <div className="col-span-2 space-y-1.5">
-              <Label>Título (opcional)</Label>
-              <Input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                className="bg-background"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Páginas (imagens)</Label>
-            <Input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
-              className="bg-background"
-            />
-            <p className="text-xs text-muted-foreground">
-              As imagens são ordenadas pelo nome do arquivo (01.jpg, 02.jpg…).
-              {files.length > 0 ? ` ${files.length} arquivo(s) selecionado(s).` : ""}
-            </p>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Ou cole links das páginas (um por linha)</Label>
-            <Textarea
-              value={urls}
-              onChange={(event) => setUrls(event.target.value)}
-              className="min-h-24 bg-background font-mono text-xs"
-              placeholder={"https://…/01.jpg\nhttps://…/02.jpg"}
-            />
-          </div>
-
-          <Button type="submit" disabled={busy || number.trim() === ""} className="w-full font-semibold">
-            {busy ? "Publicando…" : "Publicar capítulo"}
-          </Button>
-        </form>
-
-        <section className="mt-8">
-          <h2 className="section-title">Capítulos publicados</h2>
-          <div className="mt-4 space-y-2">
-            {chapters.map((chapter) => (
-              <div
-                key={chapter.id}
-                className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3 text-sm"
-              >
-                <span className="font-semibold">
-                  Capítulo {formatChapter(chapter.number)}
-                  {chapter.title ? (
-                    <span className="ml-2 font-normal text-muted-foreground">{chapter.title}</span>
-                  ) : null}
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    {Array.isArray(chapter.pages) ? chapter.pages.length : 0} páginas ·{" "}
-                    {timeAgo(chapter.created_at)}
-                  </span>
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeChapter.mutate(chapter.id)}
-                  title="Apagar capítulo"
-                >
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h3 className="font-display text-lg font-extrabold">Capítulos</h3>
+          <span className="text-xs text-muted-foreground">{chapters.length} no total</span>
+        </div>
+        <div className="max-h-[640px] overflow-y-auto">
+          {chapters.map((c) => (
+            <div key={c.id} className="flex items-center gap-4 border-b border-border px-5 py-3.5 last:border-0 hover:bg-surface-2/50">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-surface-2 text-sm font-bold">{formatChapter(c.number)}</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold">
+                  Capítulo {formatChapter(c.number)}
+                  {c.title ? <span className="ml-2 font-normal text-muted-foreground">{c.title}</span> : null}
+                </p>
+                <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <FileImage className="h-3 w-3" /> {pagesOf(c.pages).length} páginas · {timeAgo(c.created_at)}
+                  {!c.published ? <span className="rounded bg-muted px-1.5 font-bold">Oculto</span> : null}
+                </p>
+              </div>
+              <Switch checked={c.published} onCheckedChange={() => togglePub.mutate(c)} title="Visível no site" />
+              <Button variant="ghost" size="icon" title="Editar" onClick={() => setEditing(c)}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <ConfirmDelete title={`Apagar capítulo ${formatChapter(c.number)}?`} description="Essa ação não pode ser desfeita." onConfirm={() => remove.mutate(c.id)}>
+                <Button variant="ghost" size="icon" title="Apagar">
                   <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </ConfirmDelete>
+            </div>
+          ))}
+          {chapters.length === 0 ? <p className="p-10 text-center text-sm text-muted-foreground">Nenhum capítulo publicado ainda.</p> : null}
+        </div>
+      </div>
+
+      <ChapterDialog seriesId={seriesId} chapter={editing} onClose={() => setEditing(null)} onSaved={onChange} />
+    </div>
+  );
+}
+
+function ChapterDialog({ seriesId, chapter, onClose, onSaved }: { seriesId: string; chapter: Chapter | null; onClose: () => void; onSaved: () => void }) {
+  const [number, setNumber] = useState("");
+  const [title, setTitle] = useState("");
+  const [pages, setPages] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  useEffect(() => {
+    if (!chapter) return;
+    setNumber(String(chapter.number));
+    setTitle(chapter.title ?? "");
+    setPages(pagesOf(chapter.pages));
+    setFiles([]);
+  }, [chapter]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!chapter) return;
+      const extra = files.length ? await uploadFiles(seriesId, formatChapter(number), files, pages.length) : [];
+      const all = [...pages.map((p) => p.trim()).filter(Boolean), ...extra];
+      const { error } = await supabase.from("chapters").update({ number: Number(number), title: title.trim() || null, pages: all }).eq("id", chapter.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Capítulo atualizado!");
+      onSaved();
+      onClose();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível salvar."),
+  });
+
+  return (
+    <Dialog open={Boolean(chapter)} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Editar capítulo</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-1.5">
+            <Label>Número</Label>
+            <Input value={number} onChange={(e) => setNumber(e.target.value)} />
+          </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label>Título</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Páginas ({pages.length}) — links editáveis</Label>
+          <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+            {pages.map((p, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <img src={p} alt="" className="h-12 w-9 shrink-0 rounded object-cover" />
+                <span className="w-6 text-xs text-muted-foreground">{i + 1}</span>
+                <Input value={p} onChange={(e) => setPages(pages.map((x, j) => (j === i ? e.target.value : x)))} className="font-mono text-xs" />
+                <Button variant="ghost" size="icon" onClick={() => setPages(pages.filter((_, j) => j !== i))}>
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             ))}
-            {chapters.length === 0 ? (
-              <p className="rounded-lg border border-border bg-surface px-4 py-6 text-center text-sm text-muted-foreground">
-                Nenhum capítulo publicado ainda.
-              </p>
-            ) : null}
           </div>
-        </section>
-      </main>
-    </div>
+          <Button variant="outline" size="sm" onClick={() => setPages([...pages, ""])}>
+            <Link2 className="mr-1.5 h-3.5 w-3.5" /> Adicionar link
+          </Button>
+        </div>
+        <DropZone files={files} setFiles={setFiles} />
+        <Button disabled={save.isPending} onClick={() => save.mutate()} className="w-full font-semibold">
+          <Save className="mr-2 h-4 w-4" /> {save.isPending ? "Salvando…" : "Salvar capítulo"}
+        </Button>
+      </DialogContent>
+    </Dialog>
   );
 }
