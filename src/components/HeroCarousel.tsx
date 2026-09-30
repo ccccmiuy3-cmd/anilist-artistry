@@ -53,23 +53,25 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="no-scrollbar mx-auto mb-4 flex max-w-7xl items-center gap-1 overflow-x-auto px-4 md:mb-5 md:justify-center">
-        {["Todos", ...kinds].map((label) => (
-          <Button
-            key={label}
-            type="button"
-            size="sm"
-            variant={kind === label ? "default" : "ghost"}
-            onClick={() => setKind(label)}
-            className={`h-8 shrink-0 rounded-full px-4 text-xs font-semibold ${
-              kind === label
-                ? "shadow-[var(--shadow-glow)]"
-                : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
-            }`}
-          >
-            {label}
-          </Button>
-        ))}
+      <div className="mx-auto mb-4 flex w-full max-w-7xl justify-start px-4 md:mb-5 md:justify-center md:px-6">
+        <div className="no-scrollbar inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full border border-foreground/10 bg-card/70 px-1.5 py-1 backdrop-blur-sm">
+          {["Todos", ...kinds].map((label) => (
+            <Button
+              key={label}
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setKind(label)}
+              className={`h-7 shrink-0 rounded-full px-3.5 text-[11px] font-semibold whitespace-nowrap transition-all duration-200 ease-out active:scale-[0.97] ${
+                kind === label
+                  ? "bg-primary text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary"
+                  : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+              }`}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 md:px-6">
