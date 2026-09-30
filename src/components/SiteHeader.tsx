@@ -149,6 +149,7 @@ export function SiteFooter() {
           </Link>
         </div>
       </div>
+      <div aria-hidden className="h-[calc(4rem+env(safe-area-inset-bottom))] sm:hidden" />
     </footer>
   );
 }
