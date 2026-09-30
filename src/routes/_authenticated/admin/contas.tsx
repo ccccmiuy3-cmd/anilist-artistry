@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/admin/contas")({
 
 type Account = {
   id: string; username: string; display_name: string | null; avatar_url: string | null; bio: string | null;
-  level: number; xp: number; banned: boolean; created_at: string; roles: string[];
+  level: number; xp: number; banned: boolean; created_at: string; roles: string[]; subscription_tier: string;
 };
 
 const ROLES = [

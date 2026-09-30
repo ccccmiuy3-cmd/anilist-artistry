@@ -36,6 +36,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useAuth";
 import { coverUrl, timeAgo } from "@/lib/media";
 import { FramedAvatar } from "@/components/FramedAvatar";
+import { SubscriptionSeal } from "@/components/SubscriptionSeal";
 
 export const Route = createFileRoute("/u/$username")({
   head: ({ params }) => ({
