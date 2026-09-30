@@ -4,7 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowUpRight,
+  Ban,
+  BookmarkPlus,
+  BookOpen,
   Camera,
+  Check,
   ChevronLeft,
   ChevronRight,
   Crown,
@@ -19,9 +23,11 @@ import {
   MessageSquare,
   Palette,
   Pencil,
+  Play,
   ShieldCheck,
   Send,
   Sparkles,
+  Star,
   Tag,
   Trophy,
   Trash2,
@@ -59,11 +65,22 @@ export const Route = createFileRoute("/u/$username")({
   component: Perfil,
 });
 
+type ProfileSeries = {
+  id: string;
+  slug: string;
+  title: string;
+  cover_url: string | null;
+  kind: string;
+  rating: number;
+  chapters: { number: number }[];
+};
+
 function Perfil() {
   const { username } = Route.useParams();
   const { user } = useSession();
   const qc = useQueryClient();
   const [tab, setTab] = useState<"colecao" | "listas" | "comentarios" | "tags">("colecao");
+  const [collectionTab, setCollectionTab] = useState<"favoritos" | "continuando" | "interessado" | "lendo" | "lido" | "dropado" | "planejo">("favoritos");
   const [body, setBody] = useState("");
   const [editing, setEditing] = useState(false);
 
@@ -87,10 +104,12 @@ function Perfil() {
     enabled: Boolean(p),
     queryFn: async () => {
       if (!p) throw new Error("Perfil não encontrado");
-      const [followers, following, favs, mine, lists, profileComments, workComments, badges, roles, totalRank, weeklyRank] = await Promise.all([
+      const [followers, following, favs, readingStatuses, readingHistory, mine, lists, profileComments, workComments, badges, roles, totalRank, weeklyRank] = await Promise.all([
         supabase.from("user_follows").select("*", { count: "exact", head: true }).eq("following_id", p.id),
         supabase.from("user_follows").select("*", { count: "exact", head: true }).eq("follower_id", p.id),
-        supabase.from("favorites").select("series(id, slug, title, cover_url)").eq("user_id", p.id).limit(24),
+        supabase.from("favorites").select("created_at, series(id, slug, title, cover_url, kind, rating, chapters(number))").eq("user_id", p.id).order("created_at", { ascending: false }).limit(48),
+        supabase.from("reading_status").select("status, updated_at, series(id, slug, title, cover_url, kind, rating, chapters(number))").eq("user_id", p.id).order("updated_at", { ascending: false }).limit(48),
+        supabase.from("reading_history").select("updated_at, series_id, chapters(number), series(id, slug, title, cover_url, kind, rating, chapters(number))").eq("user_id", p.id).order("updated_at", { ascending: false }).limit(48),
         user
           ? supabase.from("user_follows").select("follower_id").eq("follower_id", user.id).eq("following_id", p.id).maybeSingle()
           : Promise.resolve({ data: null }),
@@ -107,9 +126,13 @@ function Perfil() {
       return {
         followers: followers.count ?? 0,
         following: following.count ?? 0,
-        favorites: ((favs.data ?? []) as unknown as { series: { id: string; slug: string; title: string; cover_url: string | null } | null }[])
+        favorites: ((favs.data ?? []) as unknown as { created_at: string; series: ProfileSeries | null }[])
           .map((f) => f.series)
           .filter((x): x is NonNullable<typeof x> => Boolean(x)),
+        readingStatuses: ((readingStatuses.data ?? []) as unknown as { status: string; updated_at: string; series: ProfileSeries | null }[])
+          .filter((row): row is { status: string; updated_at: string; series: ProfileSeries } => Boolean(row.series)),
+        readingHistory: ((readingHistory.data ?? []) as unknown as { updated_at: string; series_id: string; chapters: { number: number } | null; series: ProfileSeries | null }[])
+          .filter((row): row is { updated_at: string; series_id: string; chapters: { number: number } | null; series: ProfileSeries } => Boolean(row.series)),
         iFollow: Boolean(mine.data),
         publicLists: lists.data ?? [],
         comments: (profileComments.count ?? 0) + (workComments.count ?? 0),
@@ -196,6 +219,28 @@ function Perfil() {
         { to: "/historico", label: "Histórico", icon: History },
       ]
     : [];
+  const collectionTabs = [
+    { id: "favoritos", label: "Favoritos", shortLabel: "Favoritos", icon: Heart },
+    { id: "continuando", label: "Continue lendo", shortLabel: "Continue", icon: BookOpen },
+    { id: "interessado", label: "Interessado", shortLabel: "Interessado", icon: Sparkles },
+    { id: "lendo", label: "Lendo", shortLabel: "Lendo", icon: Play },
+    { id: "lido", label: "Lido", shortLabel: "Lido", icon: Check },
+    { id: "dropado", label: "Dropado", shortLabel: "Dropado", icon: Ban },
+    { id: "planejo", label: "Planejo Ler", shortLabel: "Planejo Ler", icon: BookmarkPlus },
+  ] as const;
+  const continuedSeries = (() => {
+    const seen = new Set<string>();
+    return (stats.data?.readingHistory ?? []).filter((row) => {
+      if (seen.has(row.series_id)) return false;
+      seen.add(row.series_id);
+      return true;
+    }).map((row) => row.series);
+  })();
+  const collectionItems = collectionTab === "favoritos"
+    ? (stats.data?.favorites ?? [])
+    : collectionTab === "continuando"
+      ? continuedSeries
+      : (stats.data?.readingStatuses ?? []).filter((row) => row.status === collectionTab).map((row) => row.series);
 
   return (
     <div className="min-h-screen">
@@ -302,18 +347,74 @@ function Perfil() {
 
             {tab === "colecao" ? (
               <div className="mt-5">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="font-display text-lg font-bold">Coleção</h2>
-                  <span className="text-xs text-muted-foreground">{stats.data?.favorites.length ?? 0} obras</span>
+                <div className="mb-5 overflow-x-auto rounded-lg border border-border bg-background/70 p-1.5 backdrop-blur-xl no-scrollbar md:hidden">
+                  <div className="flex min-w-max items-center gap-1">
+                    {collectionTabs.map((item, index) => (
+                      <div key={item.id} className="flex items-center gap-1">
+                        {index === 2 ? <span className="mx-0.5 h-6 w-px bg-border" /> : null}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCollectionTab(item.id)}
+                          className={collectionTab === item.id ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : "text-muted-foreground"}
+                        >
+                          <item.icon className={`mr-1.5 h-3.5 w-3.5 ${item.id === "favoritos" && collectionTab === item.id ? "fill-current" : ""}`} />
+                          {item.shortLabel}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-                  {(stats.data?.favorites ?? []).map((f) => (
-                    <Link key={f.id} to="/obra/$slug" params={{ slug: f.slug }} title={f.title} className="group min-w-0">
-                      <img src={coverUrl(f.cover_url)} alt={f.title} className="aspect-[2/3] w-full rounded-lg border border-border object-cover transition group-hover:border-primary/60" />
-                      <p className="mt-1.5 truncate text-xs font-semibold group-hover:text-primary">{f.title}</p>
-                    </Link>
-                  ))}
-                  {stats.data?.favorites.length === 0 ? <p className="col-span-full py-8 text-sm text-muted-foreground">Nenhuma obra na coleção.</p> : null}
+
+                <div className="grid items-start gap-6 md:grid-cols-[190px_minmax(0,1fr)]">
+                  <aside className="sticky top-24 hidden overflow-hidden rounded-lg border border-border bg-surface/70 p-2 backdrop-blur-xl md:block">
+                    <p className="px-3 pb-1.5 pt-2 text-[10px] font-black uppercase text-muted-foreground">Principal</p>
+                    {collectionTabs.slice(0, 2).map((item) => (
+                      <Button key={item.id} type="button" variant="ghost" onClick={() => setCollectionTab(item.id)} className={`mb-0.5 w-full justify-start ${collectionTab === item.id ? "bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary" : "text-muted-foreground"}`}>
+                        <item.icon className={`mr-2 h-4 w-4 ${item.id === "favoritos" && collectionTab === item.id ? "fill-current" : ""}`} /> {item.label}
+                      </Button>
+                    ))}
+                    <div className="mx-3 my-2 h-px bg-border" />
+                    <p className="px-3 pb-1.5 pt-1 text-[10px] font-black uppercase text-muted-foreground">Status</p>
+                    {collectionTabs.slice(2).map((item) => (
+                      <Button key={item.id} type="button" variant="ghost" onClick={() => setCollectionTab(item.id)} className={`mb-0.5 w-full justify-start ${collectionTab === item.id ? "bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary" : "text-muted-foreground"}`}>
+                        <item.icon className="mr-2 h-4 w-4" /> {item.label}
+                      </Button>
+                    ))}
+                  </aside>
+
+                  <div className="min-w-0">
+                    <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                      <h2 className="truncate font-display text-xl font-extrabold">{collectionTabs.find((item) => item.id === collectionTab)?.label}</h2>
+                      <span className="text-xs text-muted-foreground">{collectionItems.length} obras</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 xl:grid-cols-4">
+                      {collectionItems.map((series) => {
+                        const chapters = series.chapters ?? [];
+                        const latest = chapters.reduce((max, chapter) => Math.max(max, Number(chapter.number)), 0);
+                        return (
+                          <article key={series.id} className="group min-w-0">
+                            <Link to="/obra/$slug" params={{ slug: series.slug }} className="block">
+                              <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-border bg-surface shadow-[var(--shadow-card)] transition group-hover:border-primary/60">
+                                <img src={coverUrl(series.cover_url)} alt={series.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" loading="lazy" />
+                                <span className="cover-fade" />
+                                <div className="absolute left-2 top-2 flex items-center gap-1.5 rounded-md bg-background/85 px-2 py-1 text-[11px] font-extrabold backdrop-blur">
+                                  <span className="flex items-center gap-1"><BookOpen className="h-3 w-3 text-primary" />{chapters.length}</span>
+                                  <span className="h-3 w-px bg-border" />
+                                  <span className="flex items-center gap-1 text-gold"><Star className="h-3 w-3 fill-current" />{Number(series.rating || 0).toFixed(1).replace(".", ",")}</span>
+                                </div>
+                                <span className="absolute bottom-2 left-2 rounded-md border border-primary/50 bg-background/85 px-2 py-1 text-[10px] font-extrabold uppercase text-primary backdrop-blur">{series.kind || "Mangá"}</span>
+                              </div>
+                              <h3 className="mt-2 line-clamp-2 text-sm font-bold leading-tight transition group-hover:text-primary">{series.title}</h3>
+                              <p className="mt-1 text-xs text-muted-foreground">{latest > 0 ? `Cap. ${latest}` : `${chapters.length} capítulos`}</p>
+                            </Link>
+                          </article>
+                        );
+                      })}
+                      {collectionItems.length === 0 ? <p className="col-span-full py-10 text-center text-sm text-muted-foreground">Nenhuma obra nesta seção.</p> : null}
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : null}
