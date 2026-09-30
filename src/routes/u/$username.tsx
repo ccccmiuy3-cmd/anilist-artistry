@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   Send,
   Sparkles,
+  Tag,
   Trophy,
   Trash2,
   User2,
@@ -58,17 +59,11 @@ export const Route = createFileRoute("/u/$username")({
   component: Perfil,
 });
 
-const PLANS = [
-  { name: "Bronze", price: "R$ 4,99", period: "7 dias", desc: "Sem anúncios e acesso antecipado para experimentar a plataforma." },
-  { name: "Prata", price: "R$ 7,99", period: "30 dias", desc: "Uma experiência melhor para continuar acompanhando tudo." },
-  { name: "Ouro", price: "R$ 23,99", period: "90 dias", desc: "A escolha de quem quer a melhor experiência completa." },
-];
-
 function Perfil() {
   const { username } = Route.useParams();
   const { user } = useSession();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"planos" | "favoritos">("planos");
+  const [tab, setTab] = useState<"colecao" | "listas" | "comentarios" | "tags">("colecao");
   const [body, setBody] = useState("");
   const [editing, setEditing] = useState(false);
 
@@ -99,7 +94,7 @@ function Perfil() {
         user
           ? supabase.from("user_follows").select("follower_id").eq("follower_id", user.id).eq("following_id", p.id).maybeSingle()
           : Promise.resolve({ data: null }),
-        supabase.from("lists").select("id", { count: "exact", head: true }).eq("user_id", p.id).eq("is_public", true),
+        supabase.from("lists").select("id, title, description, created_at").eq("user_id", p.id).eq("is_public", true).order("created_at", { ascending: false }),
         supabase.from("profile_comments").select("id", { count: "exact", head: true }).eq("author_id", p.id),
         supabase.from("comments").select("id", { count: "exact", head: true }).eq("user_id", p.id),
         supabase.from("profile_badges").select("id, name, image_url").eq("user_id", p.id).order("position", { ascending: true }),
@@ -116,7 +111,7 @@ function Perfil() {
           .map((f) => f.series)
           .filter((x): x is NonNullable<typeof x> => Boolean(x)),
         iFollow: Boolean(mine.data),
-        publicLists: lists.count ?? 0,
+        publicLists: lists.data ?? [],
         comments: (profileComments.count ?? 0) + (workComments.count ?? 0),
         badges: (badges.data ?? []) as Badge[],
         isAdmin: Boolean(roles.data?.length),
@@ -255,7 +250,7 @@ function Perfil() {
               </div>
             </div>
             <div className="grid grid-cols-4 divide-x divide-border text-center">
-              <div><b className="block text-lg">{stats.data?.publicLists ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Listas</span></div>
+              <div><b className="block text-lg">{stats.data?.publicLists.length ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Listas</span></div>
               <div><b className="block text-lg">{stats.data?.favorites.length ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Favoritos</span></div>
               <div><b className="block text-lg">{stats.data?.comments ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Comentários</span></div>
               <div><b className="block text-lg">{stats.data?.badges.length ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Selos</span></div>
@@ -282,55 +277,78 @@ function Perfil() {
             ) : <div className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground"><Users className="mb-3 h-5 w-5 text-primary" />Acompanhe os favoritos, listas e comentários deste leitor.</div>}
           </aside>
 
-          <section className="pt-6">
-            <div className="flex gap-2">
-              <button
-                onClick={() => setTab("planos")}
-                className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold ${tab === "planos" ? "bg-primary/20 text-primary" : "bg-surface-2"}`}
-              >
-                <Crown className="h-4 w-4" /> Planos VIP
-              </button>
-              <button
-                onClick={() => setTab("favoritos")}
-                className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold ${tab === "favoritos" ? "bg-primary/20 text-primary" : "bg-surface-2"}`}
-              >
-                <Heart className="h-4 w-4" /> Favoritos ({stats.data?.favorites.length ?? 0})
-              </button>
+          <section className="min-w-0 pt-6">
+            <div className="sticky top-0 z-20 -mx-4 overflow-x-auto border-y border-border bg-background/80 px-4 py-2 backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:rounded-lg sm:border">
+              <div className="flex min-w-max items-center gap-1">
+                {([
+                  { id: "colecao", label: "Coleção", icon: Library },
+                  { id: "listas", label: "Listas", icon: ListOrdered },
+                  { id: "comentarios", label: "Comentários", icon: MessageSquare },
+                  { id: "tags", label: "Tags", icon: Tag },
+                ] as const).map((item) => (
+                  <Button
+                    key={item.id}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTab(item.id)}
+                    className={tab === item.id ? "bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary" : "text-muted-foreground"}
+                  >
+                    <item.icon className="mr-1.5 h-3.5 w-3.5" /> {item.label}
+                  </Button>
+                ))}
+              </div>
             </div>
 
-            {tab === "planos" ? (
-              <div className="mt-5 grid gap-4 md:grid-cols-3">
-                {PLANS.map((pl) => (
-                  <div key={pl.name} className="rounded-xl border border-border bg-surface p-5">
-                    <p className="flex items-center gap-2 font-display text-lg font-bold">
-                      <Crown className="h-5 w-5 text-gold" /> {pl.name}
-                    </p>
-                    <p className="mt-1 text-sm">
-                      <b>{pl.price}</b> <span className="text-muted-foreground">/ {pl.period}</span>
-                    </p>
-                    <p className="mt-3 min-h-10 text-xs text-muted-foreground">{pl.desc}</p>
-                    <Button className="mt-4 w-full font-bold" onClick={() => toast.info("Pagamentos em breve!")}>
-                      Assinar Agora
-                    </Button>
-                  </div>
-                ))}
+            {tab === "colecao" ? (
+              <div className="mt-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="font-display text-lg font-bold">Coleção</h2>
+                  <span className="text-xs text-muted-foreground">{stats.data?.favorites.length ?? 0} obras</span>
+                </div>
+                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+                  {(stats.data?.favorites ?? []).map((f) => (
+                    <Link key={f.id} to="/obra/$slug" params={{ slug: f.slug }} title={f.title} className="group min-w-0">
+                      <img src={coverUrl(f.cover_url)} alt={f.title} className="aspect-[2/3] w-full rounded-lg border border-border object-cover transition group-hover:border-primary/60" />
+                      <p className="mt-1.5 truncate text-xs font-semibold group-hover:text-primary">{f.title}</p>
+                    </Link>
+                  ))}
+                  {stats.data?.favorites.length === 0 ? <p className="col-span-full py-8 text-sm text-muted-foreground">Nenhuma obra na coleção.</p> : null}
+                </div>
               </div>
-            ) : (
-              <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-                {(stats.data?.favorites ?? []).map((f) => (
-                  <Link key={f.id} to="/obra/$slug" params={{ slug: f.slug }} title={f.title}>
-                    <img src={coverUrl(f.cover_url)} alt={f.title} className="aspect-[2/3] w-full rounded-lg border border-border object-cover" />
+            ) : null}
+
+            {tab === "listas" ? (
+              <div className="mt-5 space-y-3">
+                <h2 className="font-display text-lg font-bold">Listas públicas</h2>
+                {(stats.data?.publicLists ?? []).map((list) => (
+                  <Link key={list.id} to="/listas/$id" params={{ id: list.id }} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-4 transition hover:border-primary/50">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><ListOrdered className="h-5 w-5" /></span>
+                    <span className="min-w-0"><b className="block truncate text-sm">{list.title}</b><span className="line-clamp-1 text-xs text-muted-foreground">{list.description || "Lista de leitura"}</span></span>
+                    <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" />
                   </Link>
                 ))}
-                {stats.data?.favorites.length === 0 ? <p className="col-span-full text-sm text-muted-foreground">Sem favoritos ainda.</p> : null}
+                {stats.data?.publicLists.length === 0 ? <p className="py-8 text-sm text-muted-foreground">Nenhuma lista pública.</p> : null}
               </div>
-            )}
+            ) : null}
 
-            <h2 className="mt-10 flex items-center gap-2 font-display text-lg font-bold">
-              <MessageSquare className="h-5 w-5 text-primary" /> Comentários do perfil
-            </h2>
-            {user ? (
-              <div className="mt-4 rounded-xl border border-border bg-surface p-4">
+            {tab === "tags" ? (
+              <div className="mt-5">
+                <h2 className="font-display text-lg font-bold">Tags e selos</h2>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <UserBadges tier={p.subscription_tier} badges={stats.data?.badges} isAdmin={stats.data?.isAdmin} size={52} />
+                  {!p.subscription_tier || p.subscription_tier === "none" ? null : <span className="self-center text-sm text-muted-foreground">Selo de assinatura</span>}
+                  {(stats.data?.badges.length ?? 0) === 0 && !stats.data?.isAdmin && p.subscription_tier === "none" ? <p className="py-8 text-sm text-muted-foreground">Nenhuma tag conquistada.</p> : null}
+                </div>
+              </div>
+            ) : null}
+
+            {tab === "comentarios" ? <div className="mt-5">
+              <h2 className="flex items-center gap-2 font-display text-lg font-bold">
+                <MessageSquare className="h-5 w-5 text-primary" /> Comentários do perfil
+              </h2>
+              {user ? (
+                <div className="mt-4 rounded-lg border border-border bg-surface p-4">
                 <Textarea
                   value={body}
                   maxLength={2000}
@@ -345,10 +363,10 @@ function Perfil() {
                   </Button>
                 </div>
               </div>
-            ) : (
+              ) : (
               <p className="mt-4 text-sm text-muted-foreground"><Link to="/auth" className="text-primary">Entre</Link> para comentar.</p>
-            )}
-            <ul className="mt-6 space-y-5">
+              )}
+              <ul className="mt-6 space-y-5">
               {(comments.data ?? []).map((c) => (
                 <li
                   key={c.id}
@@ -375,7 +393,8 @@ function Perfil() {
                   </div>
                 </li>
               ))}
-            </ul>
+              </ul>
+            </div> : null}
           </section>
         </div>
       </main>
