@@ -29,6 +29,13 @@
       "when": 1790731677606,
       "tag": "0003_seed_demo_series",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790732472543,
+      "tag": "0004_reading_status_and_lists",
+      "breakpoints": true
     }
   ]
 }

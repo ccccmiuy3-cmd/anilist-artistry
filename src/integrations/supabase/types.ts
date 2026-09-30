@@ -120,6 +120,92 @@ export type Database = {
           },
         ]
       }
+      list_follows: {
+        Row: {
+          created_at: string
+          list_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          list_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          list_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "list_follows_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      list_items: {
+        Row: {
+          created_at: string
+          list_id: string
+          series_id: string
+        }
+        Insert: {
+          created_at?: string
+          list_id: string
+          series_id: string
+        }
+        Update: {
+          created_at?: string
+          list_id?: string
+          series_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "list_items_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lists: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -205,6 +291,35 @@ export type Database = {
           },
           {
             foreignKeyName: "reading_history_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reading_status: {
+        Row: {
+          series_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          series_id: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          series_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_status_series_id_fkey"
             columns: ["series_id"]
             isOneToOne: false
             referencedRelation: "series"
