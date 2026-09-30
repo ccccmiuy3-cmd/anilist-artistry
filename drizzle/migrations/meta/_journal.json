@@ -43,6 +43,13 @@
       "when": 1790732822044,
       "tag": "0005_profile_extras",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790733154839,
+      "tag": "0006_xp_system",
+      "breakpoints": true
     }
   ]
 }
