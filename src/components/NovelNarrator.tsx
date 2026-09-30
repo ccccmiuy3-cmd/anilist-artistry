@@ -303,7 +303,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
 
   // Chrome pauses forever after long idle; keep engine awake while playing.
   useEffect(() => {
-    if (state !== "playing" || engine === "ai") return;
+    if (state !== "playing" || engine !== "device") return;
     const t = window.setInterval(() => {
       const s = window.speechSynthesis;
       if (s.speaking && !s.paused) {
@@ -324,7 +324,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
   useEffect(() => {
     if (activeIndex == null || state === "idle") return;
     if (activeIndex !== pos.current.p) {
-      if (engine === "ai") void playAi(activeIndex);
+      if (engine !== "device") void playAi(activeIndex);
       else play(activeIndex, 0);
     }
   }, [activeIndex, state, play, playAi, engine]);
@@ -333,7 +333,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
 
   // Pause = cancel + remember position (native pause/resume is broken on Android).
   const toggle = () => {
-    if (engine === "ai") {
+    if (engine !== "device") {
       const c = getAudioContext();
       if (state === "playing") {
         void c.suspend();
@@ -359,7 +359,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
 
   const restartIfPlaying = () => {
     if (state === "idle") return;
-    if (engine === "ai") {
+    if (engine !== "device") {
       if (getAudioContext().state === "suspended") void getAudioContext().resume();
       setTimeout(() => void playAi(pos.current.p), 0);
     } else if (state === "playing") setTimeout(() => play(pos.current.p, pos.current.c), 0);
