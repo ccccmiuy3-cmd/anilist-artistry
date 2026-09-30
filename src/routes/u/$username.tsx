@@ -1,21 +1,29 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowLeft,
   ArrowUpRight,
+  Camera,
   ChevronRight,
   Crown,
+  FileText,
+  Frame,
   Heart,
   History,
+  ImageIcon,
   Library,
   ListOrdered,
+  Lock,
   MessageSquare,
+  Palette,
   Pencil,
   Send,
   Trash2,
   User2,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
