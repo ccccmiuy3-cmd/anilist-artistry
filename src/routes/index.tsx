@@ -7,6 +7,7 @@ import { SeriesCard } from "@/components/SeriesCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { ContinueReading } from "@/components/ContinueReading";
 import { FavoritesUpdated } from "@/components/FavoritesUpdated";
+import { Releases } from "@/components/Releases";
 import { HScroll, SectionRow } from "@/components/SectionRow";
 import { Button } from "@/components/ui/button";
 import { fetchFavorites, fetchHistory, fetchSeries, KINDS } from "@/lib/queries";
@@ -56,6 +57,10 @@ function Home() {
   const updated = useQuery({
     queryKey: ["series", "updated"],
     queryFn: () => fetchSeries({ order: "updated_at", limit: 12, pinnedFirst: true }),
+  });
+  const releases = useQuery({
+    queryKey: ["series", "releases"],
+    queryFn: () => fetchSeries({ order: "updated_at", limit: 14 }),
   });
   const slider = useQuery({
     queryKey: ["series", "slider"],
@@ -139,6 +144,8 @@ function Home() {
             ) : null}
           </div>
         </SectionRow>
+
+        {(releases.data?.length ?? 0) > 0 ? <Releases rows={releases.data!} /> : null}
 
         {user && (favorites.data?.length ?? 0) > 0 ? (
           <FavoritesUpdated rows={favorites.data!} />
