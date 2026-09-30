@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookText, ChevronDown, Eye, FilePlus2, Pencil, Plus, Save, Search, Send, Trash2 } from "lucide-react";
+import { BookOpenText, BookText, Eye, FilePlus2, Pencil, Plus, Save, Search, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/AdminShell";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
@@ -93,83 +93,119 @@ function AdminNovels() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao criar novel"),
   });
 
+  const novelList = novels.data ?? [];
+  const selectedNovel = novelList.find((novel) => novel.id === openId) ?? novelList[0];
+  const chapterTotal = novelList.reduce((total, novel) => total + novel.chapters.length, 0);
+  const publishedTotal = novelList.reduce(
+    (total, novel) => total + novel.chapters.filter((chapter) => chapter.published).length,
+    0,
+  );
+
   return (
     <AdminShell title="Novels" subtitle="Cadastre novels e publique capítulos em texto.">
-      <section className="rounded-2xl border border-border bg-surface p-5">
-        <h2 className="flex items-center gap-2 font-display text-lg font-extrabold">
-          <Plus className="h-5 w-5 text-primary" /> Nova novel
-        </h2>
-        <form
-          className="mt-4 grid gap-4 sm:grid-cols-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            createNovel.mutate();
-          }}
-        >
-          <Field label="Título" required value={form.title} onChange={(v) => set("title", v)} />
-          <Field label="Autor" value={form.author} onChange={(v) => set("author", v)} />
-          <Field label="URL da capa" value={form.coverUrl} onChange={(v) => set("coverUrl", v)} placeholder="https://…" />
-          <Field label="URL do banner" value={form.bannerUrl} onChange={(v) => set("bannerUrl", v)} placeholder="https://…" />
-          <Field label="Gêneros (vírgula)" value={form.genres} onChange={(v) => set("genres", v)} placeholder="Ação, Fantasia" />
-          <div className="space-y-1.5">
-            <Label>Status</Label>
-            <select
-              value={form.status}
-              onChange={(e) => set("status", e.target.value)}
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm"
-            >
-              {["Em andamento", "Completo", "Hiato", "Cancelado", "Em breve"].map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="min-w-0 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg border border-border bg-surface p-4">
+              <p className="text-[10px] font-bold uppercase text-muted-foreground">Novels</p>
+              <p className="mt-1 font-display text-2xl font-bold text-primary">{novelList.length}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-surface p-4">
+              <p className="text-[10px] font-bold uppercase text-muted-foreground">Publicados</p>
+              <p className="mt-1 font-display text-2xl font-bold text-primary">{publishedTotal}<span className="text-sm text-muted-foreground">/{chapterTotal}</span></p>
+            </div>
           </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label>Sinopse</Label>
-            <Textarea value={form.synopsis} onChange={(e) => set("synopsis", e.target.value)} className="min-h-24 bg-background" />
-          </div>
-          <Button type="submit" disabled={createNovel.isPending} className="font-semibold sm:col-span-2">
-            {createNovel.isPending ? "Criando…" : "Criar novel"}
-          </Button>
-        </form>
-      </section>
 
-      <section className="mt-6 space-y-3">
-        <h2 className="flex items-center gap-2 font-display text-lg font-extrabold">
-          <BookText className="h-5 w-5 text-primary" /> Novels cadastradas
-        </h2>
-        {(novels.data ?? []).length === 0 && !novels.isLoading ? (
-          <p className="rounded-xl border border-border bg-surface p-6 text-center text-sm text-muted-foreground">
-            Nenhuma novel cadastrada ainda.
-          </p>
-        ) : null}
-        {(novels.data ?? []).map((novel) => (
-          <article key={novel.id} className="rounded-2xl border border-border bg-surface">
-            <button
-              type="button"
-              onClick={() => setOpenId(openId === novel.id ? null : novel.id)}
-              className="flex w-full items-center gap-3 p-4 text-left"
-            >
-              <img src={coverUrl(novel.cover_url)} alt="" className="h-16 w-12 shrink-0 rounded-lg object-cover" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold">{novel.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {novel.status} · {novel.chapters.length} {novel.chapters.length === 1 ? "capítulo" : "capítulos"}
-                </p>
+          <section className="overflow-hidden rounded-lg border border-border bg-surface">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 py-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <BookText className="h-4 w-4 shrink-0 text-primary" />
+                <h2 className="truncate font-display text-sm font-bold">Novels cadastradas</h2>
               </div>
-              <Link
-                to="/obra/$slug"
-                params={{ slug: novel.slug }}
-                className="shrink-0 text-xs font-semibold text-primary hover:underline"
-                onClick={(e) => e.stopPropagation()}
-              >
-                Ver página
-              </Link>
-              <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition ${openId === novel.id ? "rotate-180" : ""}`} />
-            </button>
-            {openId === novel.id ? <ChapterForm novel={novel} /> : null}
-          </article>
-        ))}
-      </section>
+              <span className="shrink-0 text-xs text-muted-foreground">{novelList.length}</span>
+            </div>
+            <div className="max-h-72 space-y-1 overflow-y-auto p-2 xl:max-h-80">
+              {novelList.length === 0 && !novels.isLoading ? (
+                <p className="px-3 py-8 text-center text-xs text-muted-foreground">Nenhuma novel cadastrada.</p>
+              ) : null}
+              {novelList.map((novel) => {
+                const active = selectedNovel?.id === novel.id;
+                return (
+                  <div key={novel.id} className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border p-2 transition-colors ${active ? "border-primary/50 bg-primary/10" : "border-transparent hover:border-border hover:bg-surface-2/50"}`}>
+                    <Button type="button" variant="ghost" className="contents" onClick={() => setOpenId(novel.id)}>
+                      <img src={coverUrl(novel.cover_url)} alt="" className="h-14 w-10 shrink-0 rounded object-cover" />
+                      <span className="min-w-0 text-left">
+                        <span className={`block truncate text-sm font-bold ${active ? "text-primary" : "text-foreground"}`}>{novel.title}</span>
+                        <span className="block truncate text-[11px] text-muted-foreground">{novel.status} · {novel.chapters.length} cap.</span>
+                      </span>
+                    </Button>
+                    <Button asChild type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Ver página">
+                      <Link to="/obra/$slug" params={{ slug: novel.slug }}><Eye className="h-4 w-4" /></Link>
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <details className="group rounded-lg border border-border bg-surface">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 font-display text-sm font-bold">
+              <span className="flex items-center gap-2"><Plus className="h-4 w-4 text-primary" /> Nova novel</span>
+              <span className="text-lg text-muted-foreground transition-transform group-open:rotate-45">+</span>
+            </summary>
+            <form
+              className="grid gap-3 border-t border-border p-4 sm:grid-cols-2 xl:grid-cols-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                createNovel.mutate();
+              }}
+            >
+              <Field label="Título" required value={form.title} onChange={(v) => set("title", v)} />
+              <Field label="Autor" value={form.author} onChange={(v) => set("author", v)} />
+              <Field label="URL da capa" value={form.coverUrl} onChange={(v) => set("coverUrl", v)} placeholder="https://…" />
+              <Field label="URL do banner" value={form.bannerUrl} onChange={(v) => set("bannerUrl", v)} placeholder="https://…" />
+              <Field label="Gêneros (vírgula)" value={form.genres} onChange={(v) => set("genres", v)} placeholder="Ação, Fantasia" />
+              <div className="space-y-1.5">
+                <Label>Status</Label>
+                <select value={form.status} onChange={(e) => set("status", e.target.value)} className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm">
+                  {["Em andamento", "Completo", "Hiato", "Cancelado", "Em breve"].map((s) => <option key={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1.5 sm:col-span-2 xl:col-span-1">
+                <Label>Sinopse</Label>
+                <Textarea value={form.synopsis} onChange={(e) => set("synopsis", e.target.value)} className="min-h-24 bg-background" />
+              </div>
+              <Button type="submit" disabled={createNovel.isPending} className="font-semibold sm:col-span-2 xl:col-span-1">
+                {createNovel.isPending ? "Criando…" : "Criar novel"}
+              </Button>
+            </form>
+          </details>
+        </aside>
+
+        <main className="min-w-0">
+          {selectedNovel ? (
+            <section className="overflow-hidden rounded-lg border border-border bg-surface shadow-[var(--shadow-card)]">
+              <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 py-3 sm:px-5">
+                <div className="flex min-w-0 items-center gap-3">
+                  <img src={coverUrl(selectedNovel.cover_url)} alt="" className="h-12 w-9 shrink-0 rounded object-cover" />
+                  <div className="min-w-0">
+                    <p className="truncate font-display text-base font-bold">{selectedNovel.title}</p>
+                    <p className="truncate text-xs text-muted-foreground">{selectedNovel.chapters.length} capítulos · {selectedNovel.status}</p>
+                  </div>
+                </div>
+                <Button asChild variant="outline" size="sm" className="shrink-0">
+                  <Link to="/obra/$slug" params={{ slug: selectedNovel.slug }}><Eye className="h-4 w-4" /><span className="hidden sm:inline">Ver página</span></Link>
+                </Button>
+              </header>
+              <ChapterForm key={selectedNovel.id} novel={selectedNovel} />
+            </section>
+          ) : (
+            <div className="grid min-h-96 place-items-center rounded-lg border border-dashed border-border bg-surface/50 p-8 text-center">
+              <div><BookOpenText className="mx-auto h-9 w-9 text-primary" /><p className="mt-3 text-sm text-muted-foreground">Crie uma novel para começar a publicar capítulos.</p></div>
+            </div>
+          )}
+        </main>
+      </div>
     </AdminShell>
   );
 }
@@ -291,18 +327,19 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
   };
 
   return (
-    <div className="grid gap-5 border-t border-border p-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-      <aside className="min-w-0 rounded-lg border border-border bg-background/60 p-3">
+    <div className="grid min-w-0 gap-4 p-3 sm:p-4 lg:grid-cols-[230px_minmax(0,1fr)]">
+      <aside className="min-w-0 rounded-lg border border-border bg-background/60 p-3 lg:max-h-[680px]">
+        <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+          <div className="min-w-0"><h3 className="truncate font-display text-sm font-bold">Capítulos</h3><p className="text-[10px] text-muted-foreground">Selecione para editar</p></div>
+          <Button type="button" size="icon" className="h-8 w-8 shrink-0" onClick={resetEditor} aria-label="Novo capítulo" title="Novo capítulo"><FilePlus2 className="h-4 w-4" /></Button>
+        </div>
         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
           <div className="relative min-w-0">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar capítulo" className="pl-9" />
           </div>
-          <Button type="button" size="icon" onClick={resetEditor} aria-label="Novo capítulo" title="Novo capítulo">
-            <FilePlus2 className="h-4 w-4" />
-          </Button>
         </div>
-        <div className="mt-3 max-h-[560px] space-y-2 overflow-y-auto pr-1">
+        <div className="mt-3 max-h-56 space-y-2 overflow-y-auto pr-1 lg:max-h-[570px]">
           {visibleChapters.map((chapter) => (
             <div key={chapter.id} className={`rounded-md border p-3 ${editingId === chapter.id ? "border-primary bg-primary/10" : "border-border bg-surface/70"}`}>
               <div className="flex min-w-0 items-start justify-between gap-2">
@@ -331,22 +368,22 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
       </aside>
 
       <form
-        className="min-w-0 rounded-lg border border-border bg-background/60 p-4"
+        className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-background/60"
         onSubmit={(e) => {
           e.preventDefault();
           publish.mutate();
         }}
       >
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 className="font-display text-base font-bold">{editingId ? "Editar capítulo" : "Novo capítulo"}</h3>
-            <p className="text-xs text-muted-foreground">O texto é salvo automaticamente neste aparelho enquanto você escreve.</p>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 py-3 sm:px-5">
+          <div className="min-w-0">
+            <h3 className="truncate font-display text-base font-bold">{editingId ? `Editando capítulo ${formatChapter(Number(number))}` : "Novo capítulo"}</h3>
+            <p className="truncate text-[11px] text-muted-foreground">Salvamento automático ativo neste aparelho</p>
           </div>
-          <Button type="button" variant="outline" size="sm" onClick={() => setShowPreview((shown) => !shown)}>
-            <Eye className="h-4 w-4" /> {showPreview ? "Editar texto" : "Visualizar"}
+          <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={() => setShowPreview((shown) => !shown)}>
+            <Eye className="h-4 w-4" /> <span className="hidden sm:inline">{showPreview ? "Editar texto" : "Pré-visualizar"}</span>
           </Button>
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[140px_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-3 px-4 pt-4 sm:grid-cols-[120px_minmax(0,1fr)] sm:px-5">
           <div className="space-y-1.5">
             <Label>Número</Label>
             <Input value={number} onChange={(e) => setNumber(e.target.value)} inputMode="decimal" className="bg-background" />
@@ -356,10 +393,10 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
             <Input value={title} onChange={(e) => setTitle(e.target.value)} className="bg-background" />
           </div>
         </div>
-        <div className="mt-3 space-y-1.5">
-          <Label>Texto do capítulo</Label>
+        <div className="mt-3 flex flex-1 flex-col space-y-1.5 px-4 sm:px-5">
+          <Label className="sr-only">Texto do capítulo</Label>
           {showPreview ? (
-            <article className="min-h-96 rounded-md border border-border bg-surface px-5 py-7 text-[17px] leading-8 text-foreground/90 sm:px-8">
+            <article className="min-h-[420px] flex-1 rounded-md border border-border bg-surface px-5 py-8 text-[17px] leading-8 text-foreground/90 sm:px-10 lg:min-h-[520px]">
               {paragraphs.length ? paragraphs.map((paragraph, index) => <p key={index} className="mb-5 text-justify last:mb-0">{paragraph}</p>) : <p className="text-center text-sm text-muted-foreground">A prévia aparecerá aqui.</p>}
             </article>
           ) : (
@@ -367,17 +404,17 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Cole ou escreva o texto aqui. Separe os parágrafos com uma linha em branco."
-              className="min-h-96 resize-y bg-background font-sans leading-7"
+              className="min-h-[420px] flex-1 resize-y border-0 bg-transparent px-1 py-5 text-base leading-8 shadow-none focus-visible:ring-0 sm:px-4 lg:min-h-[520px]"
               maxLength={500000}
             />
           )}
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-border py-3 text-[11px] text-muted-foreground">
             <span>{content.length.toLocaleString("pt-BR")} caracteres</span>
             <span>{wordCount.toLocaleString("pt-BR")} palavras</span>
             <span>{readingMinutes} min de leitura</span>
           </div>
         </div>
-        <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+        <div className="grid gap-3 border-t border-border bg-surface-2/25 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:px-5">
           <label className="flex cursor-pointer items-center gap-3 text-sm">
             <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} className="h-4 w-4 accent-primary" />
             <span><b>{published ? "Publicar agora" : "Salvar como rascunho"}</b><small className="block text-muted-foreground">{published ? "O capítulo ficará visível aos leitores." : "Somente a equipe poderá acessá-lo."}</small></span>
