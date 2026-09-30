@@ -12,6 +12,7 @@ import { coverUrl, timeAgo } from "@/lib/media";
 import { useRoles, useSession } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/_authenticated/admin/obras")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Gerenciar obras — Better Mangá" },

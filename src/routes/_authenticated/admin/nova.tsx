@@ -16,6 +16,7 @@ import { useSession } from "@/hooks/useAuth";
 import { searchAnilist } from "@/lib/anilist.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/nova")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Nova obra — Better Mangá" },

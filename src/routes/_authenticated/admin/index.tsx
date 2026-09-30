@@ -14,6 +14,7 @@ import { useRoles, useSession } from "@/hooks/useAuth";
 import { KINDS } from "@/lib/queries";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Painel de administração — Better Mangá" },

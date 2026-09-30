@@ -11,6 +11,7 @@ import { useSession } from "@/hooks/useAuth";
 import { coverUrl, formatChapter, timeAgo } from "@/lib/media";
 
 export const Route = createFileRoute("/_authenticated/historico")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Histórico — Better Mangá" },
