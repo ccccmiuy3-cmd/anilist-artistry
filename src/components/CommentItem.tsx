@@ -56,7 +56,7 @@ export function CommentItem({
           className="w-10 shrink-0 overflow-visible rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
         >
           <FramedAvatar
-            src={author?.avatar_url}
+            src={author?.avatar_url ?? null}
             frame={author?.avatar_frame}
             size={40}
             className="transition-all hover:ring-2 hover:ring-primary/50 rounded-full"
@@ -85,8 +85,8 @@ export function CommentItem({
           </div>
           <CommentContent
             body={comment.body}
-            isSpoiler={comment.is_spoiler}
-            imageUrl={comment.image_url}
+            isSpoiler={comment.is_spoiler ?? null}
+            imageUrl={comment.image_url ?? null}
           />
           <div className="relative z-10 mt-2 flex flex-wrap items-center gap-4">
             <CommentReactions commentId={comment.id} userId={userId} />

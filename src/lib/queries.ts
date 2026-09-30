@@ -128,7 +128,12 @@ export async function fetchComments(seriesId: string) {
       .select("id, username, avatar_url, level, avatar_frame")
       .in("id", ids);
     for (const profile of profiles ?? []) {
-      authors.set(profile.id, { username: profile.username, avatar_url: profile.avatar_url });
+      authors.set(profile.id, {
+        username: profile.username,
+        avatar_url: profile.avatar_url,
+        level: profile.level,
+        avatar_frame: profile.avatar_frame,
+      });
     }
   }
   return rows.map((row) => ({ ...row, author: authors.get(row.user_id) ?? null }));
