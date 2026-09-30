@@ -103,35 +103,39 @@ export function SupportConversation({ userId, staff }: { userId: string; staff: 
   );
 }
 
-/** Botão flutuante de suporte: usa a conta do leitor no site. */
+export const OPEN_SUPPORT_EVENT = "open-support-chat";
+
+/** Abre o chat de suporte a partir de qualquer botão do site. */
+export function openSupportChat() {
+  window.dispatchEvent(new CustomEvent(OPEN_SUPPORT_EVENT));
+}
+
+/** Janela de suporte: abre somente quando o usuário clica no botão "Suporte". */
 export function SupportChat() {
   const [open, setOpen] = useState(false);
   const { user } = useSession();
+
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener(OPEN_SUPPORT_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_SUPPORT_EVENT, onOpen);
+  }, []);
+
+  if (!open) return null;
   return (
-    <>
-      {open && (
-        <div className="fixed bottom-36 right-4 z-50 flex h-[460px] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl md:bottom-20">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <div className="flex items-center gap-2 font-semibold"><Headset className="h-4 w-4 text-primary" /> Suporte</div>
-            <button onClick={() => setOpen(false)} aria-label="Fechar"><X className="h-4 w-4" /></button>
-          </div>
-          {user ? (
-            <SupportConversation userId={user.id} staff={false} />
-          ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center text-sm text-muted-foreground">
-              Entre na sua conta para falar com o suporte.
-              <Button asChild size="sm"><Link to="/auth" onClick={() => setOpen(false)}>Entrar</Link></Button>
-            </div>
-          )}
+    <div className="fixed bottom-36 right-4 z-50 flex h-[460px] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl md:bottom-20">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div className="flex items-center gap-2 font-semibold"><Headset className="h-4 w-4 text-primary" /> Suporte</div>
+        <button onClick={() => setOpen(false)} aria-label="Fechar"><X className="h-4 w-4" /></button>
+      </div>
+      {user ? (
+        <SupportConversation userId={user.id} staff={false} />
+      ) : (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center text-sm text-muted-foreground">
+          Entre na sua conta para falar com o suporte.
+          <Button asChild size="sm"><Link to="/auth" onClick={() => setOpen(false)}>Entrar</Link></Button>
         </div>
       )}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Suporte"
-        className="fixed bottom-20 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:bottom-4"
-      >
-        {open ? <X className="h-5 w-5" /> : <Headset className="h-5 w-5" />}
-      </button>
-    </>
+    </div>
   );
 }
