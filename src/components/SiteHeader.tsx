@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, BookMarked, LogOut, Search, Shield, User2 } from "lucide-react";
+import { Bell, BookMarked, Headset, LogOut, Search, Shield, User2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileNav } from "@/components/MobileNav";
+import { openSupportChat } from "@/components/SupportChat";
 import { useProfile, useRoles, useSession } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
@@ -251,9 +252,19 @@ export function SiteFooter() {
 
           <div className="space-y-3">
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-foreground">
-              Conta
+              Redes Sociais
             </h3>
-            <nav className="flex flex-col gap-2.5">
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={openSupportChat}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-colors hover:bg-emerald-500"
+              >
+                <Headset className="h-4 w-4" />
+                Suporte
+              </button>
+            </div>
+            <nav className="flex flex-col gap-2.5 pt-2">
               <Link
                 to="/auth"
                 className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
@@ -265,12 +276,6 @@ export function SiteFooter() {
                 className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
               >
                 Continuar lendo
-              </Link>
-              <Link
-                to="/historico"
-                className="w-fit text-sm text-muted-foreground transition-colors hover:text-primary"
-              >
-                Histórico
               </Link>
             </nav>
           </div>
