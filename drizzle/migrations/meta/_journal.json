@@ -64,6 +64,13 @@
       "when": 1790733388913,
       "tag": "0008_admin_account_management",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790734358174,
+      "tag": "0009_tighten_public_read_policies",
+      "breakpoints": true
     }
   ]
 }
