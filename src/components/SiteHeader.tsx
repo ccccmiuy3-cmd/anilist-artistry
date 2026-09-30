@@ -15,10 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const NAV = [
-  { to: "/", label: "Início" },
-  { to: "/biblioteca", label: "Coleção" },
+  { to: "/catalogo", label: "Catálogo" },
+  { to: "/ranking", label: "Ranking" },
+  { to: "/biblioteca", label: "Coleções" },
   { to: "/listas", label: "Listas" },
-  { to: "/ranking", label: "Obras" },
   { to: "/ranking-leitores", label: "Leitores" },
   { to: "/historico", label: "Histórico" },
 ] as const;

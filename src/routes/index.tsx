@@ -106,75 +106,15 @@ function Home() {
           </div>
         ) : null}
 
-        <SectionRow icon={<LayoutGrid className="h-5 w-5" />} title="Escolher gênero">
-          <div className="no-scrollbar mb-5 flex gap-2 overflow-x-auto">
-            {KINDS.map((item) => (
-              <button
-                key={item}
-                onClick={() => setKind(item)}
-                className={`whitespace-nowrap border-b-2 px-3 pb-2 text-sm font-semibold transition-colors ${
-                  kind === item
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-            {(byKind.data ?? []).slice(0, 5).map((item) => (
-              <SeriesCard
-                key={item.id}
-                slug={item.slug}
-                title={item.title}
-                cover={item.cover_url}
-                rating={item.rating}
-                chapters={item.chapters.length}
-                showTitle={false}
-                favorite={favoriteIds.has(item.id)}
-                seriesId={item.id}
-              />
-            ))}
-            {byKind.data?.length === 0 ? (
-              <p className="col-span-full text-sm text-muted-foreground">
-                Nada em {kind} por enquanto.
-              </p>
-            ) : null}
-          </div>
-        </SectionRow>
-
-        {(releases.data?.length ?? 0) > 0 ? <Releases rows={releases.data!} /> : null}
-
-        <EventBadges />
+        {user && (history.data?.length ?? 0) > 0 ? (
+          <ContinueReading rows={history.data!} userId={user.id} />
+        ) : null}
 
         {user && (favorites.data?.length ?? 0) > 0 ? (
           <FavoritesUpdated rows={favorites.data!} />
         ) : null}
 
-        {user && (history.data?.length ?? 0) > 0 ? (
-          <ContinueReading rows={history.data!} userId={user.id} />
-        ) : null}
-
-        {(topRated.data?.length ?? 0) > 0 ? <TopRated rows={topRated.data!} /> : null}
-
-        {(recent.data?.length ?? 0) > 0 ? (
-          <SectionRow icon={<PlusSquare className="h-5 w-5" />} title="Adicionados recentemente">
-            <HScroll>
-              {recent.data!.map((item) => (
-                <div key={item.id} className="w-[140px] shrink-0">
-                  <SeriesCard
-                    slug={item.slug}
-                    title={item.title}
-                    cover={item.cover_url}
-                    favorite={favoriteIds.has(item.id)}
-                    seriesId={item.id}
-                  />
-                </div>
-              ))}
-            </HScroll>
-          </SectionRow>
-        ) : null}
+        {(releases.data?.length ?? 0) > 0 ? <Releases rows={releases.data!} /> : null}
 
         {(updated.data?.length ?? 0) > 0 ? <RecentlyUpdated rows={updated.data!} /> : null}
 
@@ -212,6 +152,8 @@ function Home() {
             </HScroll>
           </SectionRow>
         ) : null}
+        <EventBadges />
+
       </main>
       <SiteFooter />
     </div>
