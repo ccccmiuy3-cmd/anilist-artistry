@@ -19,7 +19,10 @@ import {
   MessageSquare,
   Palette,
   Pencil,
+  ShieldCheck,
   Send,
+  Sparkles,
+  Trophy,
   Trash2,
   User2,
   UserPlus,
@@ -36,7 +39,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useAuth";
 import { coverUrl, timeAgo } from "@/lib/media";
 import { FramedAvatar } from "@/components/FramedAvatar";
-import { SubscriptionSeal } from "@/components/SubscriptionSeal";
+import { UserBadges, type Badge } from "@/components/UserBadges";
 
 export const Route = createFileRoute("/u/$username")({
   staticData: { sitemap: false },
@@ -88,14 +91,24 @@ function Perfil() {
     queryKey: ["profile-stats", p?.id, user?.id],
     enabled: Boolean(p),
     queryFn: async () => {
-      const [followers, following, favs, mine] = await Promise.all([
-        supabase.from("user_follows").select("*", { count: "exact", head: true }).eq("following_id", p!.id),
-        supabase.from("user_follows").select("*", { count: "exact", head: true }).eq("follower_id", p!.id),
-        supabase.from("favorites").select("series(id, slug, title, cover_url)").eq("user_id", p!.id).limit(24),
+      if (!p) throw new Error("Perfil não encontrado");
+      const [followers, following, favs, mine, lists, profileComments, workComments, badges, roles, totalRank, weeklyRank] = await Promise.all([
+        supabase.from("user_follows").select("*", { count: "exact", head: true }).eq("following_id", p.id),
+        supabase.from("user_follows").select("*", { count: "exact", head: true }).eq("follower_id", p.id),
+        supabase.from("favorites").select("series(id, slug, title, cover_url)").eq("user_id", p.id).limit(24),
         user
-          ? supabase.from("user_follows").select("follower_id").eq("follower_id", user.id).eq("following_id", p!.id).maybeSingle()
+          ? supabase.from("user_follows").select("follower_id").eq("follower_id", user.id).eq("following_id", p.id).maybeSingle()
           : Promise.resolve({ data: null }),
+        supabase.from("lists").select("id", { count: "exact", head: true }).eq("user_id", p.id).eq("is_public", true),
+        supabase.from("profile_comments").select("id", { count: "exact", head: true }).eq("author_id", p.id),
+        supabase.from("comments").select("id", { count: "exact", head: true }).eq("user_id", p.id),
+        supabase.from("profile_badges").select("id, name, image_url").eq("user_id", p.id).order("position", { ascending: true }),
+        supabase.from("user_roles").select("role").eq("user_id", p.id).eq("role", "admin"),
+        supabase.rpc("xp_ranking", { _period: "total" }),
+        supabase.rpc("xp_ranking", { _period: "weekly" }),
       ]);
+      const totalRows = totalRank.data ?? [];
+      const weeklyRows = weeklyRank.data ?? [];
       return {
         followers: followers.count ?? 0,
         following: following.count ?? 0,
@@ -103,6 +116,12 @@ function Perfil() {
           .map((f) => f.series)
           .filter((x): x is NonNullable<typeof x> => Boolean(x)),
         iFollow: Boolean(mine.data),
+        publicLists: lists.count ?? 0,
+        comments: (profileComments.count ?? 0) + (workComments.count ?? 0),
+        badges: (badges.data ?? []) as Badge[],
+        isAdmin: Boolean(roles.data?.length),
+        totalRank: Math.max(0, totalRows.findIndex((row) => row.id === p.id) + 1),
+        weeklyRank: Math.max(0, weeklyRows.findIndex((row) => row.id === p.id) + 1),
       };
     },
   });
@@ -172,7 +191,9 @@ function Perfil() {
     );
   }
 
-  const xpGoal = Math.max(1000, (p.level + 1) * 1000);
+  const levelFloor = Math.max(0, (p.level - 1) * 1000);
+  const xpInLevel = Math.max(0, p.xp - levelFloor);
+  const xpGoal = 1000;
   const menu = isMe
     ? [
         { to: "/biblioteca", label: "Coleção", icon: Library },
@@ -184,48 +205,69 @@ function Perfil() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <main className="mx-auto max-w-7xl px-4 pb-10">
-        <div className="relative h-48 overflow-hidden rounded-b-2xl bg-surface sm:h-64">
+      <main className="mx-auto max-w-7xl px-0 pb-10 sm:px-4">
+        <div className="relative h-52 overflow-hidden bg-surface sm:h-72 sm:rounded-b-lg">
           {p.banner_url ? (
             <img src={p.banner_url} alt="" className="h-full w-full object-cover" />
           ) : (
             <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,var(--primary),transparent_70%)] opacity-30" />
           )}
-          <span className="cover-fade" />
+          <span className="absolute inset-0 bg-gradient-to-t from-background via-background/25 to-transparent" />
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
-          <aside className="-mt-20 relative">
-            <FramedAvatar src={p.avatar_url} frame={p.avatar_frame} size={144} />
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-2xl font-extrabold" style={{ color: p.accent_color ?? "var(--primary)" }}>@{p.username}</h1>
-              <span className="rounded border border-border px-1.5 text-xs font-bold text-muted-foreground">Nv. {p.level}</span>
-              <SubscriptionSeal tier={p.subscription_tier} size={22} />
+        <section className="relative -mt-16 border-b border-border bg-background/90 px-4 pb-6 backdrop-blur-xl sm:mx-4 sm:-mt-20 sm:rounded-lg sm:border">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
+            <FramedAvatar src={p.avatar_url} frame={p.avatar_frame} size={144} className="self-start" />
+            <div className="min-w-0 flex-1 pb-1">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <h1 className="font-display text-2xl font-extrabold sm:text-3xl" style={{ color: p.accent_color ?? "var(--primary)" }}>
+                  {p.display_name || p.username}
+                </h1>
+                <UserBadges tier={p.subscription_tier} badges={stats.data?.badges} isAdmin={stats.data?.isAdmin} size={36} />
+              </div>
+              <p className="mt-0.5 text-sm font-medium text-muted-foreground">@{p.username}</p>
+              {p.bio ? <p className="mt-2 max-w-2xl text-sm text-foreground/90">{p.bio}</p> : null}
+              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+                <span><b className="text-foreground">{stats.data?.followers ?? 0}</b> seguidores</span>
+                <span><b className="text-foreground">{stats.data?.following ?? 0}</b> seguindo</span>
+                <Link to="/ranking" className="inline-flex items-center gap-1 hover:text-primary"><Trophy className="h-3.5 w-3.5" /> #{stats.data?.totalRank || "—"} global</Link>
+                <Link to="/ranking" className="inline-flex items-center gap-1 hover:text-primary"><Sparkles className="h-3.5 w-3.5" /> #{stats.data?.weeklyRank || "—"} semanal</Link>
+              </div>
             </div>
-            {p.display_name ? <p className="text-sm text-muted-foreground">{p.display_name}</p> : null}
-            {p.bio ? <p className="mt-2 text-sm">{p.bio}</p> : null}
-            <div className="mt-4 flex gap-5 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1"><Users className="h-4 w-4" /><b className="text-foreground">{stats.data?.followers ?? 0}</b> seguidores</span>
-              <span className="flex items-center gap-1"><User2 className="h-4 w-4" /><b className="text-foreground">{stats.data?.following ?? 0}</b> seguindo</span>
+            <div className="flex shrink-0 gap-2 sm:pb-1">
+              {!isMe && user ? (
+                <Button variant={stats.data?.iFollow ? "outline" : "default"} onClick={() => follow.mutate()}>
+                  <UserPlus className="mr-2 h-4 w-4" /> {stats.data?.iFollow ? "Seguindo" : "Seguir"}
+                </Button>
+              ) : null}
+              {isMe ? <Button variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-2 h-4 w-4" /> Editar perfil</Button> : null}
             </div>
-            <p className="mt-3 flex items-center gap-1 text-sm">
-              {p.xp.toLocaleString("pt-BR")}/{xpGoal.toLocaleString("pt-BR")} XP <ArrowUpRight className="h-3.5 w-3.5 text-primary" />
-            </p>
-            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2">
-              <div className="h-full bg-primary" style={{ width: `${Math.min(100, (p.xp / xpGoal) * 100)}%` }} />
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Membro desde {new Date(p.created_at).toLocaleDateString("pt-BR", { month: "short", year: "numeric" })}
-            </p>
+          </div>
 
-            {!isMe && user ? (
-              <Button className="mt-4 w-full" variant={stats.data?.iFollow ? "outline" : "default"} onClick={() => follow.mutate()}>
-                <UserPlus className="mr-2 h-4 w-4" /> {stats.data?.iFollow ? "Seguindo" : "Seguir"}
-              </Button>
-            ) : null}
+          <div className="mt-6 grid gap-5 border-t border-border pt-5 lg:grid-cols-[minmax(260px,1fr)_2fr]">
+            <div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="inline-flex items-center gap-1.5 font-bold"><ShieldCheck className="h-4 w-4 text-primary" /> Nível {p.level}</span>
+                <span className="text-xs tabular-nums text-muted-foreground">{xpInLevel.toLocaleString("pt-BR")}/{xpGoal.toLocaleString("pt-BR")} XP</span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, (xpInLevel / xpGoal) * 100)}%` }} />
+              </div>
+            </div>
+            <div className="grid grid-cols-4 divide-x divide-border text-center">
+              <div><b className="block text-lg">{stats.data?.publicLists ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Listas</span></div>
+              <div><b className="block text-lg">{stats.data?.favorites.length ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Favoritos</span></div>
+              <div><b className="block text-lg">{stats.data?.comments ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Comentários</span></div>
+              <div><b className="block text-lg">{stats.data?.badges.length ?? 0}</b><span className="text-[11px] text-muted-foreground sm:text-xs">Selos</span></div>
+            </div>
+          </div>
+          <p className="mt-4 text-xs text-muted-foreground">Membro desde {new Date(p.created_at).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</p>
+        </section>
 
+        <div className="grid gap-8 px-4 lg:grid-cols-[280px_1fr] sm:px-4">
+          <aside className="pt-6">
             {isMe ? (
-              <nav className="mt-6 overflow-hidden rounded-xl border border-border bg-surface">
+              <nav className="overflow-hidden rounded-lg border border-border bg-surface">
                 {menu.map((m) => (
                   <Link key={m.to} to={m.to} className="flex items-center gap-3 border-b border-border px-4 py-3.5 text-sm hover:bg-surface-2">
                     <m.icon className="h-4 w-4 text-primary" /> {m.label}
@@ -237,7 +279,7 @@ function Perfil() {
                   <ChevronRight className="ml-auto h-4 w-4 text-primary" />
                 </button>
               </nav>
-            ) : null}
+            ) : <div className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground"><Users className="mb-3 h-5 w-5 text-primary" />Acompanhe os favoritos, listas e comentários deste leitor.</div>}
           </aside>
 
           <section className="pt-6">
