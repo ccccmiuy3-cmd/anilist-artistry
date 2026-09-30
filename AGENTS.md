@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Public SEO metadata for database-backed pages must come from route loaders so the initial HTML is content-specific and shareable.
+- The sitemap includes only public static pages, published works, and public community lists; private and authenticated areas stay excluded.

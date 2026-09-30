@@ -6,6 +6,7 @@ import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/ranking")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Ranking de XP dos leitores — Better Mangá" },
@@ -13,8 +14,10 @@ export const Route = createFileRoute("/ranking")({
       { property: "og:title", content: "Ranking de XP — Better Mangá" },
       { property: "og:description", content: "O pódio dos leitores mais ativos do Better Mangá." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://bettermanga.net/ranking" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://bettermanga.net/ranking" }],
   }),
   component: Ranking,
 });

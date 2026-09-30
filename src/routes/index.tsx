@@ -11,6 +11,7 @@ import { coverUrl, formatChapter } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Better Mangá — mangás, manhwas e comics atualizados" },
@@ -24,7 +25,11 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "Catálogo de mangás, manhwas e comics com capítulos atualizados.",
       },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://bettermanga.net/" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://bettermanga.net/" }],
   }),
   component: Home,
 });
@@ -75,6 +80,9 @@ function Home() {
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-7xl px-4 py-8">
+        <h1 className="mb-7 font-display text-2xl font-extrabold sm:text-3xl">
+          Better Mangá — ler mangás, manhwas e comics online
+        </h1>
         {empty ? (
           <div className="rounded-2xl border border-border bg-surface p-10 text-center">
             <h1 className="font-display text-2xl font-extrabold">Nenhuma obra publicada ainda</h1>

@@ -13,17 +13,38 @@ import { CommentComposer, type CommentDraft } from "@/components/CommentComposer
 import { uploadCommentImage } from "@/lib/comments";
 
 export const Route = createFileRoute("/obra/$slug/$chapter")({
-  head: () => ({
-    meta: [
-      { title: "Leitor de capítulo — Better Mangá" },
-      {
-        name: "description",
-        content: "Leia o capítulo página por página com navegação rápida entre capítulos.",
-      },
-      { property: "og:title", content: "Leitor de capítulo — Better Mangá" },
-      { property: "og:description", content: "Leitura fluida, página por página." },
-    ],
-  }),
+  staticData: { sitemap: false },
+  loader: ({ params, context }) =>
+    context.queryClient.ensureQueryData({
+      queryKey: ["series", params.slug],
+      queryFn: () => fetchSeriesBySlug(params.slug),
+    }),
+  head: ({ params, loaderData }) => {
+    const seriesTitle = loaderData?.title ?? params.slug.replace(/-/g, " ");
+    const chapterLabel = params.chapter.replace(/-/g, " ");
+    const title = `Capítulo ${chapterLabel} — ${seriesTitle}`;
+    const description = `Leia o capítulo ${chapterLabel} de ${seriesTitle} online no Better Mangá.`;
+    const url = `https://bettermanga.net/obra/${encodeURIComponent(params.slug)}/${encodeURIComponent(params.chapter)}`;
+    const image = loaderData?.cover_url?.startsWith("https://") ? loaderData.cover_url : null;
+    return {
+      meta: [
+        { title: `${title} — Better Mangá` },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "article" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
+        ...(image
+          ? [
+              { property: "og:image", content: image },
+              { name: "twitter:image", content: image },
+            ]
+          : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: Reader,
 });
 
@@ -235,10 +256,10 @@ function Reader() {
           <Link to="/obra/$slug" params={{ slug }} className="ml-2 flex items-center gap-1.5 text-sm font-bold hover:text-primary">
             <BookOpen className="h-4 w-4" /> Obra
           </Link>
-          <div className="ml-3 flex min-w-0 items-center gap-2 text-sm">
+          <h1 className="ml-3 flex min-w-0 items-center gap-2 text-sm">
             <span className="truncate text-muted-foreground">{obra.title}</span>
             <span className="shrink-0 font-bold text-primary">Cap. {formatChapter(current.number)}</span>
-          </div>
+          </h1>
           <div className="ml-auto flex items-center gap-1">
             <button type="button" disabled={!prev} onClick={() => go("prev")} className={iconBtn} aria-label="Capítulo anterior">
               <ChevronLeft className="h-5 w-5" />

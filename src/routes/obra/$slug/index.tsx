@@ -30,17 +30,40 @@ import { CommentComposer, type CommentDraft } from "@/components/CommentComposer
 import { uploadCommentImage } from "@/lib/comments";
 
 export const Route = createFileRoute("/obra/$slug/")({
-  head: () => ({
-    meta: [
-      { title: "Obra — Better Mangá" },
-      {
-        name: "description",
-        content: "Sinopse, gêneros e lista completa de capítulos da obra no Better Mangá.",
-      },
-      { property: "og:title", content: "Obra — Better Mangá" },
-      { property: "og:description", content: "Sinopse, gêneros e capítulos disponíveis." },
-    ],
-  }),
+  staticData: { sitemap: true },
+  loader: ({ params, context }) =>
+    context.queryClient.ensureQueryData({
+      queryKey: ["series", params.slug],
+      queryFn: () => fetchSeriesBySlug(params.slug),
+    }),
+  head: ({ params, loaderData }) => {
+    const title = loaderData?.title ?? params.slug.replace(/-/g, " ");
+    const description = (loaderData?.synopsis ?? `Leia ${title} online no Better Mangá.`)
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 160);
+    const url = `https://bettermanga.net/obra/${encodeURIComponent(params.slug)}`;
+    const image = loaderData?.cover_url?.startsWith("https://") ? loaderData.cover_url : null;
+    return {
+      meta: [
+        { title: `${title} — Better Mangá` },
+        { name: "description", content: description },
+        { property: "og:title", content: `${title} — Better Mangá` },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "book" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
+        ...(image
+          ? [
+              { property: "og:image", content: image },
+              { name: "twitter:image", content: image },
+            ]
+          : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: SeriesPage,
 });
 
