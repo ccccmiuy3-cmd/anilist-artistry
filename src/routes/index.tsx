@@ -158,30 +158,7 @@ function Home() {
         ) : null}
 
         {user && (history.data?.length ?? 0) > 0 ? (
-          <SectionRow
-            icon={<BookOpen className="h-5 w-5" />}
-            title="Continue lendo"
-            subtitle="Toque na capa para continuar de onde parou."
-            action={
-              <Button asChild variant="ghost" size="sm" className="text-primary">
-                <Link to="/biblioteca">Ver todos</Link>
-              </Button>
-            }
-          >
-            <HScroll>
-              {history.data!.map((row) => (
-                <div key={row.series.id} className="w-[140px] shrink-0">
-                  <SeriesCard
-                    slug={row.series.slug}
-                    title={row.series.title}
-                    cover={row.series.cover_url}
-                    progress={row.progress}
-                    badge={row.chapters ? `Cap. ${formatChapter(row.chapters.number)}` : null}
-                  />
-                </div>
-              ))}
-            </HScroll>
-          </SectionRow>
+          <ContinueReading rows={history.data!} userId={user.id} />
         ) : null}
 
         {(topRated.data?.length ?? 0) > 0 ? (
