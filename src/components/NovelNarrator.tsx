@@ -214,11 +214,16 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
       let i = Math.max(0, chunks.findIndex((c) => c.p >= startParagraph));
       const controller = new AbortController();
       ai.current.abort = controller;
-      const context = getAudioContext();
+      let context: AudioContext;
       try {
+        context = getAudioContext();
         if (context.state === "suspended") await context.resume();
       } catch {
-        /* resumed on next gesture */
+        // Audio output unavailable on this device: use the device voice instead.
+        toast.error("Este aparelho não permitiu o áudio da voz realista. Usando a voz do aparelho.");
+        setEngine("device");
+        play(startParagraph, 0);
+        return;
       }
       setState("playing");
       const voice = aiSettings.current.voice;
@@ -227,21 +232,41 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         let pr = ai.current.cache.get(k);
         if (!pr) {
           pr = fetchSpeech(chunks[k]!.text, voice, controller.signal);
-          pr.catch(() => undefined);
+          // Never keep a rejected promise cached: a transient hiccup would
+          // otherwise fail that piece forever, even on retry.
+          pr.catch(() => {
+            if (ai.current.cache.get(k) === pr) ai.current.cache.delete(k);
+          });
           ai.current.cache.set(k, pr);
         }
         return pr;
+      };
+      // Retry a piece a couple of times before giving up on the AI voice:
+      // a single dropped stream shouldn't kick the reader to the device voice.
+      const getWithRetry = async (k: number) => {
+        let lastError: unknown;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          if (id !== session.current || controller.signal.aborted) throw new SpeechError("cancelado", 0);
+          try {
+            return await get(k)!;
+          } catch (err) {
+            lastError = err;
+            const status = (err as SpeechError).status;
+            if (status === 401 || status === 402 || controller.signal.aborted) throw err;
+            await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+          }
+        }
+        throw lastError;
       };
       try {
         while (i < chunks.length && id === session.current) {
           const chunk = chunks[i]!;
           ai.current.index = i;
           setLoading(!ai.current.cache.has(i));
-          const samples = await get(i)!;
+          const samples = await getWithRetry(i);
           if (id !== session.current) return;
           setLoading(false);
-          get(i + 1); // prefetch next pieces while this one plays (no gaps)
-          get(i + 2);
+          get(i + 1); // prefetch the next piece while this one plays (no gaps)
           if (chunk.p !== pos.current.p || i === 0 || chunks[i - 1]?.p !== chunk.p) {
             pos.current = { p: chunk.p, c: 0 };
             callbacks.current.onActiveChange(chunk.p);
@@ -271,6 +296,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         if (id !== session.current || controller.signal.aborted) return;
         setLoading(false);
         const err = e as SpeechError;
+        if (import.meta.env.DEV) console.error("[narrador] voz realista falhou", err);
         const reason =
           err.status === 401
             ? "Entre na sua conta para usar a voz realista."
@@ -278,7 +304,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
               ? "Créditos de voz realista esgotados."
               : err.status === 429
                 ? "Muitas leituras ao mesmo tempo."
-                : "A voz realista falhou.";
+                : `A voz realista falhou (${err.message || "erro desconhecido"}).`;
         toast.error(`${reason} Continuando com a voz do aparelho.`);
         const p = chunks[i]?.p ?? startParagraph;
         setEngine("device");
