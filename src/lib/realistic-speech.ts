@@ -55,13 +55,21 @@ export async function fetchSpeech(text: string, voice: string, signal: AbortSign
     },
   });
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
-  while (true) {
-    const n = await reader.read();
-    if (n.done) break;
-    parser.feed(n.value);
+  try {
+    while (true) {
+      const n = await reader.read();
+      if (n.done) break;
+      parser.feed(n.value);
+    }
+    parser.feed("\n\n"); // flush a last event that arrived without its trailing blank line
+  } catch (e) {
+    if (signal.aborted) throw e;
+    // Connection dropped mid-stream: keep whatever audio already arrived.
   }
-  if (failure) throw new SpeechError(failure, 502);
-  if (!done || total < 2) throw new SpeechError("Áudio incompleto", 502);
+  if (failure && total < 4800) throw new SpeechError(failure, 502);
+  // The "done" marker is sometimes lost at the end of the stream; usable audio is still fine.
+  if (total < 4800 && !done) throw new SpeechError("Áudio incompleto", 502);
+  if (total < 2) throw new SpeechError("Áudio vazio", 502);
   const bytes = new Uint8Array(total - (total % 2));
   let off = 0;
   for (const part of parts) {
