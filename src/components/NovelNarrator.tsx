@@ -214,11 +214,16 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
       let i = Math.max(0, chunks.findIndex((c) => c.p >= startParagraph));
       const controller = new AbortController();
       ai.current.abort = controller;
-      const context = getAudioContext();
+      let context: AudioContext;
       try {
+        context = getAudioContext();
         if (context.state === "suspended") await context.resume();
       } catch {
-        /* resumed on next gesture */
+        // Audio output unavailable on this device: use the device voice instead.
+        toast.error("Este aparelho não permitiu o áudio da voz realista. Usando a voz do aparelho.");
+        setEngine("device");
+        play(startParagraph, 0);
+        return;
       }
       setState("playing");
       const voice = aiSettings.current.voice;
