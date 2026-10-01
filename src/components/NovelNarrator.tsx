@@ -227,21 +227,41 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         let pr = ai.current.cache.get(k);
         if (!pr) {
           pr = fetchSpeech(chunks[k]!.text, voice, controller.signal);
-          pr.catch(() => undefined);
+          // Never keep a rejected promise cached: a transient hiccup would
+          // otherwise fail that piece forever, even on retry.
+          pr.catch(() => {
+            if (ai.current.cache.get(k) === pr) ai.current.cache.delete(k);
+          });
           ai.current.cache.set(k, pr);
         }
         return pr;
+      };
+      // Retry a piece a couple of times before giving up on the AI voice:
+      // a single dropped stream shouldn't kick the reader to the device voice.
+      const getWithRetry = async (k: number) => {
+        let lastError: unknown;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          if (id !== session.current || controller.signal.aborted) throw new SpeechError("cancelado", 0);
+          try {
+            return await get(k)!;
+          } catch (err) {
+            lastError = err;
+            const status = (err as SpeechError).status;
+            if (status === 401 || status === 402 || controller.signal.aborted) throw err;
+            await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+          }
+        }
+        throw lastError;
       };
       try {
         while (i < chunks.length && id === session.current) {
           const chunk = chunks[i]!;
           ai.current.index = i;
           setLoading(!ai.current.cache.has(i));
-          const samples = await get(i)!;
+          const samples = await getWithRetry(i);
           if (id !== session.current) return;
           setLoading(false);
-          get(i + 1); // prefetch next pieces while this one plays (no gaps)
-          get(i + 2);
+          get(i + 1); // prefetch the next piece while this one plays (no gaps)
           if (chunk.p !== pos.current.p || i === 0 || chunks[i - 1]?.p !== chunk.p) {
             pos.current = { p: chunk.p, c: 0 };
             callbacks.current.onActiveChange(chunk.p);
