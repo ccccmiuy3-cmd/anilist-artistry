@@ -291,6 +291,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         if (id !== session.current || controller.signal.aborted) return;
         setLoading(false);
         const err = e as SpeechError;
+        if (import.meta.env.DEV) console.error("[narrador] voz realista falhou", err);
         const reason =
           err.status === 401
             ? "Entre na sua conta para usar a voz realista."
@@ -298,7 +299,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
               ? "Créditos de voz realista esgotados."
               : err.status === 429
                 ? "Muitas leituras ao mesmo tempo."
-                : "A voz realista falhou.";
+                : `A voz realista falhou (${err.message || "erro desconhecido"}).`;
         toast.error(`${reason} Continuando com a voz do aparelho.`);
         const p = chunks[i]?.p ?? startParagraph;
         setEngine("device");
