@@ -52,7 +52,8 @@ export const Route = createFileRoute("/api/tts")({
             status: upstream.status,
             headers: {
               "Content-Type": upstream.headers.get("content-type") ?? "text/event-stream",
-              "Cache-Control": "no-cache",
+              "Cache-Control": "no-cache, no-transform",
+              "X-Accel-Buffering": "no",
             },
           });
         } catch (e) {
