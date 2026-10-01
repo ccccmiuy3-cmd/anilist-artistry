@@ -35,7 +35,7 @@ export const Route = createFileRoute("/api/tts")({
                   role: "user",
                   parts: [
                     {
-                      text: `Atue como um dublador brasileiro premiado narrando um audiolivro de fantasia sombria. PERFORMANCE OBRIGATÓRIA: fale com emoção real e variação constante de tom, ritmo e intensidade — nunca monótono. Em diálogos, mude a voz como um ator: grito em momentos de fúria, sussurro em tensão, pausa dramática antes de revelações. Acelere em cenas de ação, desacelere em momentos tristes ou reflexivos. Respire entre parágrafos, alongue vogais em exclamações, dê peso às palavras de impacto. Interprete o sentimento de cada frase e expresse-o na voz. Idioma: português do Brasil. Leia exatamente o texto a seguir, sem adicionar nem omitir nada:\n\n${text}`,
+                      text: `Narre em português do Brasil, com sotaque brasileiro natural, como um narrador experiente de audiolivro contando uma história para um amigo: voz calorosa, conversada e envolvente, em ritmo tranquilo e constante. Use entonação natural de fala real — leve emoção nos diálogos e momentos tensos, mas sem exagerar, sem gritar, sem sussurrar e sem teatralidade. Respeite as pausas da pontuação. Leia exatamente o texto a seguir, sem adicionar nem omitir nada:\n\n${text}`,
                     },
                   ],
                 },
