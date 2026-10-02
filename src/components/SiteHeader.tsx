@@ -40,12 +40,12 @@ export function SiteHeader() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-foreground/5 bg-background/95 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 gap-y-0 px-3 py-2 sm:h-16 sm:flex-nowrap sm:gap-4 sm:px-4 sm:py-0 md:px-8">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 gap-y-0 px-3 py-2 sm:h-20 sm:flex-nowrap sm:gap-4 sm:px-4 sm:py-0 md:px-8">
           <Link to="/" className="flex shrink-0 items-center" aria-label="Better Mangá — início">
             <img
               src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
               alt="Better Mangá"
-              className="h-11 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-12"
+              className="h-14 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:h-16"
             />
           </Link>
 
@@ -175,7 +175,7 @@ export function SiteFooter() {
               <img
                 src={SITE_LOGO}
                 alt="Better Mangá"
-                className="h-11 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] transition-transform duration-200 group-hover:scale-105 sm:h-12"
+                className="h-14 w-auto object-contain drop-shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] transition-transform duration-200 group-hover:scale-105 sm:h-16"
               />
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
