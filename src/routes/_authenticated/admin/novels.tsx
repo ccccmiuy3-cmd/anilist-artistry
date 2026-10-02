@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { uniqueSlug } from "@/lib/series-import";
 import { coverUrl, formatChapter } from "@/lib/media";
 import { useSession } from "@/hooks/useAuth";
+import { useServerFn } from "@tanstack/react-start";
+import { extractChapter, importNovelChapter } from "@/lib/novel-import.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/novels")({
   staticData: { sitemap: false },
@@ -220,6 +222,29 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
   const [published, setPublished] = useState(false);
   const [search, setSearch] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [importUrl, setImportUrl] = useState("");
+  const [importing, setImporting] = useState(false);
+  const importFn = useServerFn(importNovelChapter);
+  function applyImport(r: { title: string | null; number: string | null; content: string }) {
+    if (r.content.length < 10) return toast.error("Nenhum texto encontrado.");
+    setContent(r.content);
+    if (r.title) setTitle(r.title);
+    if (r.number) setNumber(r.number);
+    setShowPreview(false);
+    toast.success("Texto do capítulo importado!");
+  }
+  async function runImport() {
+    setImporting(true);
+    try {
+      const r = await importFn({ data: { url: importUrl.trim() } });
+      if (r.ok) applyImport(r);
+      else toast.error(r.error);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao importar.");
+    } finally {
+      setImporting(false);
+    }
+  }
   const draftKey = `better-manga:novel-draft:${novel.id}`;
 
   const resetEditor = () => {
@@ -394,6 +419,18 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
           </div>
         </div>
         <div className="mt-3 flex flex-1 flex-col space-y-1.5 px-4 sm:px-5">
+          <div className="flex flex-col gap-2 rounded-md border border-border bg-surface/60 p-2 sm:flex-row">
+            <Input
+              value={importUrl}
+              onChange={(e) => setImportUrl(e.target.value)}
+              placeholder="Cole o link do capítulo para importar o texto"
+              className="bg-background"
+            />
+            <Button type="button" variant="outline" disabled={importing || !importUrl.trim()} onClick={runImport} className="shrink-0">
+              {importing ? "Importando..." : "Importar do link"}
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">Também pode colar o HTML da página salva no campo de texto: ele é convertido automaticamente.</p>
           <Label className="sr-only">Texto do capítulo</Label>
           {showPreview ? (
             <article className="min-h-[420px] flex-1 rounded-md border border-border bg-surface px-5 py-8 text-[17px] leading-8 text-foreground/90 sm:px-10 lg:min-h-[520px]">
@@ -403,6 +440,13 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              onPaste={(e) => {
+                const html = e.clipboardData.getData("text/plain");
+                if (/<p[\s>]/i.test(html) && /<\/p>/i.test(html)) {
+                  e.preventDefault();
+                  applyImport(extractChapter(html));
+                }
+              }}
               placeholder="Cole ou escreva o texto aqui. Separe os parágrafos com uma linha em branco."
               className="min-h-[420px] flex-1 resize-y border-0 bg-transparent px-1 py-5 text-base leading-8 shadow-none focus-visible:ring-0 sm:px-4 lg:min-h-[520px]"
               maxLength={500000}

@@ -38,6 +38,7 @@ function ObrasAdmin() {
       const { data, error } = await supabase
         .from("series")
         .select("id, slug, title, cover_url, kind, status, published, in_slider, views, rating, updated_at, chapters(id)")
+        .neq("kind", "Novel")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data;
