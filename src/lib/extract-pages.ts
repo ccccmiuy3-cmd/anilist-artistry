@@ -38,7 +38,7 @@ async function fromPdf(file: File, onProgress?: ExtractProgress): Promise<File[]
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
   let doc;
   try {
-    doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+    doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     if (/password/i.test(msg)) throw new Error(`"${file.name}" está protegido por senha.`);
@@ -77,7 +77,7 @@ async function fromPdf(file: File, onProgress?: ExtractProgress): Promise<File[]
     onProgress?.(p, doc.numPages);
   }
   canvas.width = canvas.height = 0;
-  await doc.destroy();
+  await doc.cleanup?.();
   return out;
 }
 
