@@ -24,7 +24,7 @@ export function extractChapter(html: string) {
     const i = html.indexOf(m);
     if (i >= 0) {
       scope = html.slice(html.lastIndexOf("<", i));
-      const end = scope.search(/<section[^>]*comment|id="comments"|class="[^"]*comment/i);
+      const end = scope.search(/<\/section>|<section[^>]*comment|id="comments"|class="[^"]*comment/i);
       if (end > 0) scope = scope.slice(0, end);
       break;
     }
@@ -32,7 +32,7 @@ export function extractChapter(html: string) {
   const h1 = strip(scope.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? "");
   const h2 = strip(scope.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i)?.[1] ?? "");
   const paragraphs = [...scope.matchAll(/<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/gi)]
-    .map((m) => strip(m[1]))
+    .map((m) => strip(m[1] ?? ""))
     .filter((p) => p.length > 0 && !/^traduzido (usando|por)/i.test(p));
   const num = (h1 || strip(html.match(/<title>([\s\S]*?)<\/title>/i)?.[1] ?? "")).match(/cap[íi]tulo\s*(\d+(?:[.,]\d+)?)/i)?.[1];
   return { title: h2 || null, number: num ? num.replace(",", ".") : null, content: paragraphs.join("\n\n") };

@@ -226,7 +226,10 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
   const [importing, setImporting] = useState(false);
   const importFn = useServerFn(importNovelChapter);
   function applyImport(r: { title: string | null; number: string | null; content: string }) {
-    if (r.content.length < 10) return toast.error("Nenhum texto encontrado.");
+    if (r.content.length < 10) {
+      toast.error("Nenhum texto encontrado.");
+      return;
+    }
     setContent(r.content);
     if (r.title) setTitle(r.title);
     if (r.number) setNumber(r.number);
