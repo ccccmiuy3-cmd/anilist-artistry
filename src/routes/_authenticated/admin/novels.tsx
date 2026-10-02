@@ -248,6 +248,39 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
       setImporting(false);
     }
   }
+  const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null);
+  const [bulkPublish, setBulkPublish] = useState(false);
+  async function runBulk(files: File[]) {
+    const taken = new Set(novel.chapters.map((c) => Number(c.number)));
+    let ok = 0;
+    const skipped: string[] = [];
+    setBulk({ done: 0, total: files.length });
+    const sorted = [...files].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { numeric: true }));
+    for (let i = 0; i < sorted.length; i++) {
+      const file = sorted[i]!;
+      try {
+        const raw = await file.text();
+        const isHtml = /<\/?(p|div|html|body)[\s>]/i.test(raw);
+        const r = isHtml ? extractChapter(raw) : { title: null, number: null, content: raw.trim() };
+        const fromName = file.name.match(/(\d+(?:[.,]\d+)?)/)?.[1]?.replace(",", ".");
+        const num = Number(r.number ?? fromName);
+        if (!Number.isFinite(num) || r.content.length < 10) { skipped.push(`${file.name} (sem número ou texto)`); continue; }
+        if (taken.has(num)) { skipped.push(`${file.name} (cap. ${formatChapter(num)} já existe)`); continue; }
+        const { error } = await supabase.from("chapters").insert({ series_id: novel.id, number: num, title: r.title, content: r.content, pages: [], published: bulkPublish });
+        if (error) { skipped.push(`${file.name} (${error.message})`); continue; }
+        taken.add(num);
+        ok++;
+      } catch {
+        skipped.push(`${file.name} (erro ao ler)`);
+      } finally {
+        setBulk({ done: i + 1, total: sorted.length });
+      }
+    }
+    setBulk(null);
+    refresh();
+    if (ok) toast.success(`${ok} capítulo(s) cadastrado(s)!`);
+    if (skipped.length) toast.error(`Ignorados: ${skipped.slice(0, 5).join("; ")}${skipped.length > 5 ? "..." : ""}`);
+  }
   const draftKey = `better-manga:novel-draft:${novel.id}`;
 
   const resetEditor = () => {
@@ -433,6 +466,16 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
               {importing ? "Importando..." : "Importar do link"}
             </Button>
           </div>
+          <div className="flex flex-col gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 p-2 sm:flex-row sm:items-center">
+            <p className="min-w-0 flex-1 text-[11px] text-muted-foreground">
+              {bulk ? `Cadastrando ${bulk.done}/${bulk.total}...` : "Envie várias páginas salvas (.html ou .txt) para cadastrar vários capítulos de uma vez."}
+            </p>
+            <label className={`inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-surface ${bulk ? "pointer-events-none opacity-50" : ""}`}>
+              Enviar vários arquivos
+              <input type="file" multiple accept=".html,.htm,.txt,text/html,text/plain" className="hidden" onChange={(e) => { const f = Array.from(e.target.files ?? []); e.target.value = ""; if (f.length) runBulk(f); }} />
+            </label>
+          </div>
+          <label className="flex items-center gap-2 text-[11px] text-muted-foreground"><input type="checkbox" checked={bulkPublish} onChange={(e) => setBulkPublish(e.target.checked)} /> Publicar direto os capítulos enviados em lote</label>
           <p className="text-[11px] text-muted-foreground">Também pode colar o HTML da página salva no campo de texto: ele é convertido automaticamente.</p>
           <Label className="sr-only">Texto do capítulo</Label>
           {showPreview ? (
