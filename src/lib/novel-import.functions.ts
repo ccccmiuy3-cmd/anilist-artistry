@@ -31,7 +31,9 @@ export function extractChapter(html: string) {
   }
   const h1 = strip(scope.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? "");
   const h2 = strip(scope.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i)?.[1] ?? "");
-  const paragraphs = [...scope.matchAll(/<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/gi)]
+  const paragraphs = [...scope.matchAll(/<p(\s[^>]*)?>([\s\S]*?)<\/p>/gi)]
+    .filter((m) => !/comment|text-(xs|sm)|break-words|author|meta/i.test(m[1] ?? ""))
+    .map((m) => [m[0], m[2]] as const)
     .map((m) => strip(m[1] ?? ""))
     .filter((p) => p.length > 0 && !/^traduzido (usando|por)/i.test(p));
   const num = (h1 || strip(html.match(/<title>([\s\S]*?)<\/title>/i)?.[1] ?? "")).match(/cap[íi]tulo\s*(\d+(?:[.,]\d+)?)/i)?.[1];
