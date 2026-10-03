@@ -210,6 +210,15 @@ function AdminNovels() {
                     <p className="truncate text-xs text-muted-foreground">{selectedNovel.chapters.length} capítulos · {selectedNovel.status}</p>
                   </div>
                 </div>
+                <ConfirmDelete
+                  title={`Apagar a novel "${selectedNovel.title}"?`}
+                  description="Todos os capítulos, comentários e progresso de leitura dela serão apagados permanentemente."
+                  onConfirm={() => removeNovel.mutate(selectedNovel.id)}
+                >
+                  <Button variant="outline" size="sm" className="shrink-0 text-destructive hover:text-destructive">
+                    <Trash2 className="h-4 w-4" /><span className="hidden sm:inline">Apagar</span>
+                  </Button>
+                </ConfirmDelete>
                 <Button asChild variant="outline" size="sm" className="shrink-0">
                   <Link to="/obra/$slug" params={{ slug: selectedNovel.slug }}><Eye className="h-4 w-4" /><span className="hidden sm:inline">Ver página</span></Link>
                 </Button>
