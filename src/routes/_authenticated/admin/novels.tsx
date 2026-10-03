@@ -97,8 +97,9 @@ function AdminNovels() {
 
   const removeNovel = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("series").delete().eq("id", id).eq("kind", "Novel");
+      const { data, error } = await supabase.from("series").delete().eq("id", id).eq("kind", "Novel").select("id");
       if (error) throw error;
+      if (!data?.length) throw new Error("Sem permissão para apagar esta novel. Somente administradores podem apagar.");
     },
     onSuccess: () => {
       toast.success("Novel apagada.");
