@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { coverUrl, formatChapter, slugify, timeAgo } from "@/lib/media";
 import { KINDS } from "@/lib/queries";
 import { usePageUrls } from "@/lib/use-page-urls";
+import { validateImageFile } from "@/lib/image-validation";
 import { useRoles, useSession } from "@/hooks/useAuth";
 
 const STATUSES = ["Em andamento", "Completo", "Hiato", "Cancelado"];

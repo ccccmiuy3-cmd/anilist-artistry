@@ -71,6 +71,8 @@ function ImagesAdmin() {
       const sig = dest === "cloudinary" ? await sign() : null;
       for (const file of files) {
         try {
+          const check = validateImageFile(file);
+          if (!check.ok) throw new Error(check.errors.join(" "));
           if (sig) {
             const fd = new FormData();
             fd.append("file", file);

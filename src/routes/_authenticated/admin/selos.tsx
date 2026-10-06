@@ -35,6 +35,8 @@ function BadgesAdmin() {
   const upload = async (file: File) => {
     setBusy(true);
     try {
+      const check = validateImageFile(file);
+      if (!check.ok) throw new Error(check.errors.join(" "));
       const path = `badges/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
       const { error } = await supabase.storage
         .from("manga")
