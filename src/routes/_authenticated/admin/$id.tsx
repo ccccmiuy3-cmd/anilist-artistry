@@ -14,9 +14,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { coverUrl, formatChapter, slugify, timeAgo } from "@/lib/media";
 import { KINDS } from "@/lib/queries";
+import { usePageUrls } from "@/lib/use-page-urls";
 import { useRoles, useSession } from "@/hooks/useAuth";
 
-const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
 const STATUSES = ["Em andamento", "Completo", "Hiato", "Cancelado"];
 
 export const Route = createFileRoute("/_authenticated/admin/$id")({
@@ -43,9 +43,9 @@ async function uploadFiles(seriesId: string, chapterNumber: string, files: File[
     const path = `${seriesId}/${chapterNumber}/${Date.now()}-${String(offset + i + 1).padStart(3, "0")}.${ext}`;
     const { error } = await supabase.storage.from("manga").upload(path, file, { upsert: true, contentType: file.type });
     if (error) throw error;
-    const { data, error: e2 } = await supabase.storage.from("manga").createSignedUrl(path, TEN_YEARS);
-    if (e2) throw e2;
-    out.push(data.signedUrl);
+    // Guardamos apenas o path: a URL assinada de curta duração é gerada no
+    // momento da leitura (somente para capítulos publicados ou staff).
+    out.push(path);
   }
   return out;
 }
@@ -465,6 +465,7 @@ function ChapterDialog({ seriesId, chapter, onClose, onSaved }: { seriesId: stri
   const [title, setTitle] = useState("");
   const [pages, setPages] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
+  const { urls: pageUrls } = usePageUrls(pages);
   useEffect(() => {
     if (!chapter) return;
     setNumber(String(chapter.number));
@@ -510,7 +511,11 @@ function ChapterDialog({ seriesId, chapter, onClose, onSaved }: { seriesId: stri
           <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
             {pages.map((p, i) => (
               <div key={i} className="flex items-center gap-2">
-                <img src={p} alt="" className="h-12 w-9 shrink-0 rounded object-cover" />
+                {pageUrls[i] ? (
+                  <img src={pageUrls[i] as string} alt="" className="h-12 w-9 shrink-0 rounded object-cover" />
+                ) : (
+                  <div className="h-12 w-9 shrink-0 rounded bg-muted" aria-hidden="true" />
+                )}
                 <span className="w-6 text-xs text-muted-foreground">{i + 1}</span>
                 <Input value={p} onChange={(e) => setPages(pages.map((x, j) => (j === i ? e.target.value : x)))} className="font-mono text-xs" />
                 <Button variant="ghost" size="icon" onClick={() => setPages(pages.filter((_, j) => j !== i))}>

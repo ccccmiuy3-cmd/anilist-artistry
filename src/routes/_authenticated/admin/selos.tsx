@@ -7,6 +7,7 @@ import { AdminShell } from "@/components/AdminShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { publicStorageUrl } from "@/lib/storage-urls";
 
 export const Route = createFileRoute("/_authenticated/admin/selos")({
   staticData: { sitemap: false },
@@ -35,9 +36,7 @@ function BadgesAdmin() {
       const path = `badges/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
       const { error } = await supabase.storage.from("manga").upload(path, file, { contentType: file.type });
       if (error) throw error;
-      const { data, error: e2 } = await supabase.storage.from("manga").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (e2 || !data) throw e2;
-      setUrl(data.signedUrl);
+      setUrl(publicStorageUrl(path));
       if (!name) setName(file.name.replace(/\.\w+$/, ""));
       toast.success("Imagem enviada");
     } catch (e) { toast.error(e instanceof Error ? e.message : "Falha no upload"); } finally { setBusy(false); }

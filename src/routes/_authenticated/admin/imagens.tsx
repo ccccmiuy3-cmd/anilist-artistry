@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { getMediaSettings, saveMediaSettings, signCloudinaryUpload } from "@/lib/media.functions";
+import { publicStorageUrl } from "@/lib/storage-urls";
 
 export const Route = createFileRoute("/_authenticated/admin/imagens")({
   staticData: { sitemap: false },
@@ -64,9 +65,7 @@ function ImagesAdmin() {
             const path = `library/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
             const { error } = await supabase.storage.from("manga").upload(path, file, { contentType: file.type });
             if (error) throw error;
-            const { data, error: e2 } = await supabase.storage.from("manga").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-            if (e2 || !data) throw e2;
-            out.push(data.signedUrl);
+            out.push(publicStorageUrl(path));
           }
         } catch (e) { toast.error(`${file.name}: ${e instanceof Error ? e.message : "falhou"}`); }
         setProgress((p) => p && { ...p, done: p.done + 1 });

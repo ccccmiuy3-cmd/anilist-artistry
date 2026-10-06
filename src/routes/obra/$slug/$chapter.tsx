@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchCommentAuthors, fetchCommentParents, fetchSeriesBySlug } from "@/lib/queries";
 import { formatChapter, timeAgo } from "@/lib/media";
+import { usePageUrls } from "@/lib/use-page-urls";
 import { useSession } from "@/hooks/useAuth";
 import { CommentThreads } from "@/components/CommentThreads";
 import { CommentComposer, type CommentDraft } from "@/components/CommentComposer";
@@ -72,6 +73,7 @@ function Reader() {
     const raw = (current?.pages ?? []) as unknown;
     return Array.isArray(raw) ? (raw.filter((item) => typeof item === "string") as string[]) : [];
   }, [current]);
+  const { urls: pageUrls, isLoading: pagesLoading } = usePageUrls(pages);
 
   const isNovel = obra?.kind === "Novel";
   const paragraphs = useMemo(
