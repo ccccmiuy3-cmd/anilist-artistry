@@ -9,7 +9,7 @@ import {
   ChevronRight,
   ChevronsDown,
   Home,
-  Infinity,
+  Infinity as InfinityIcon,
   List,
   Maximize2,
   MessageCircle,
@@ -499,7 +499,7 @@ function Reader() {
                 className={`${iconBtn} hidden sm:grid`}
                 aria-label="Lista de capítulos"
               >
-                <Infinity className="h-5 w-5" />
+                <InfinityIcon className="h-5 w-5" />
               </Link>
               <Button
                 variant="ghost"
