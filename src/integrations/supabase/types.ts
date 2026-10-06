@@ -782,6 +782,16 @@ export type Database = {
           likes: number
         }[]
       }
+      consume_tts_quota: {
+        Args: {
+          p_chars: number
+          p_max_day_chars: number
+          p_max_minute_chars: number
+          p_max_minute_requests: number
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       event_badge_progress: { Args: { _event: string }; Returns: number }
       has_role: {
         Args: {
