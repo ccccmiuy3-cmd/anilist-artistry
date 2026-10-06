@@ -140,7 +140,7 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
       </p>
       <input
         type="file"
-        accept="image/*,.zip,application/zip,application/x-zip-compressed,.pdf,application/pdf"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/avif,.zip,application/zip,application/x-zip-compressed,.pdf,application/pdf"
         multiple
         className="hidden"
         disabled={busy}

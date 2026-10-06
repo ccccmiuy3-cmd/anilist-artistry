@@ -1,6 +1,5 @@
 export type ImageValidationResult =
-  | { ok: true; extension: string }
-  | { ok: false; errors: string[] };
+  { ok: true; extension: string } | { ok: false; errors: string[] };
 
 export const ALLOWED_IMAGE_MIME_TYPES = [
   "image/jpeg",
@@ -73,9 +72,7 @@ export function validateImageFile(
   }
 
   const extension = extFromMime(declaredMime);
-  return extension && errors.length === 0
-    ? { ok: true, extension }
-    : { ok: false, errors };
+  return extension && errors.length === 0 ? { ok: true, extension } : { ok: false, errors };
 }
 
 export function isAllowedMimeType(mime: string): boolean {

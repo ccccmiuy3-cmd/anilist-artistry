@@ -184,7 +184,7 @@ function ImagesAdmin() {
             ref={fileRef}
             type="file"
             multiple
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
             hidden
             onChange={(e) => {
               void uploadAll([...(e.target.files ?? [])]);

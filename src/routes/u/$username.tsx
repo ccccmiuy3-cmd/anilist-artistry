@@ -1266,7 +1266,7 @@ function EditProfile({
                 <input
                   ref={avatarInput}
                   type="file"
-                  accept="image/png,image/jpeg,image/webp"
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -1316,7 +1316,7 @@ function EditProfile({
                 <input
                   ref={bannerInput}
                   type="file"
-                  accept="image/png,image/jpeg,image/webp"
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];

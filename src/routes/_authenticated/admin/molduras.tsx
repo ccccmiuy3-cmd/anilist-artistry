@@ -132,7 +132,7 @@ function FramesAdmin() {
           <input
             ref={fileRef}
             type="file"
-            accept="image/png,image/gif,image/webp,image/apng"
+            accept="image/png,image/gif,image/webp,image/jpeg,image/apng,image/avif"
             hidden
             onChange={(e) => {
               const f = e.target.files?.[0];

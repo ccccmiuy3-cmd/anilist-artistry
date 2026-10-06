@@ -6,9 +6,30 @@ import { cn } from "@/lib/utils";
 import { validateImageFile } from "@/lib/image-validation";
 
 const EMOJIS = [
-  "😀", "😂", "🤣", "😍", "😎", "🥺", "😭", "😱",
-  "🤔", "😴", "🤯", "👏", "🔥", "💯", "❤️", "💀",
-  "👍", "👎", "🙏", "✨", "🎉", "⚔️", "🐉", "📖",
+  "😀",
+  "😂",
+  "🤣",
+  "😍",
+  "😎",
+  "🥺",
+  "😭",
+  "😱",
+  "🤔",
+  "😴",
+  "🤯",
+  "👏",
+  "🔥",
+  "💯",
+  "❤️",
+  "💀",
+  "👍",
+  "👎",
+  "🙏",
+  "✨",
+  "🎉",
+  "⚔️",
+  "🐉",
+  "📖",
 ];
 
 export interface CommentDraft {
@@ -24,7 +45,12 @@ interface CommentComposerProps {
   onCancelReply?: () => void;
 }
 
-export function CommentComposer({ pending, onSubmit, replyTo, onCancelReply }: CommentComposerProps) {
+export function CommentComposer({
+  pending,
+  onSubmit,
+  replyTo,
+  onCancelReply,
+}: CommentComposerProps) {
   const [body, setBody] = useState("");
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [image, setImage] = useState<File | null>(null);
@@ -125,7 +151,7 @@ export function CommentComposer({ pending, onSubmit, replyTo, onCancelReply }: C
       <input
         ref={fileInput}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
         className="hidden"
         onChange={(event) => pickImage(event.target.files?.[0] ?? null)}
       />

@@ -177,7 +177,7 @@ function BadgesAdmin() {
           Ou enviar arquivo
           <Input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
             disabled={busy}
             onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
           />
