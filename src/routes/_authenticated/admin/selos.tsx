@@ -76,16 +76,14 @@ function BadgesAdmin() {
   const create = useMutation({
     mutationFn: async () => {
       if (!name.trim() || !url.trim()) throw new Error("Informe nome e imagem");
-      const { error } = await supabase
-        .from("badge_events")
-        .insert({
-          name: name.trim(),
-          description: desc.trim() || null,
-          image_url: url.trim(),
-          required_chapters: Math.max(0, parseInt(chapters) || 0),
-          ends_at:
-            Number(days) > 0 ? new Date(Date.now() + Number(days) * 86400000).toISOString() : null,
-        });
+      const { error } = await supabase.from("badge_events").insert({
+        name: name.trim(),
+        description: desc.trim() || null,
+        image_url: url.trim(),
+        required_chapters: Math.max(0, parseInt(chapters) || 0),
+        ends_at:
+          Number(days) > 0 ? new Date(Date.now() + Number(days) * 86400000).toISOString() : null,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -131,15 +129,13 @@ function BadgesAdmin() {
         .ilike("username", username)
         .maybeSingle();
       if (!p) throw new Error("Usuário não encontrado");
-      const { error } = await supabase
-        .from("profile_badges")
-        .insert({
-          user_id: p.id,
-          name: ev.name,
-          image_url: ev.image_url,
-          event_id: ev.id,
-          position: 0,
-        });
+      const { error } = await supabase.from("profile_badges").insert({
+        user_id: p.id,
+        name: ev.name,
+        image_url: ev.image_url,
+        event_id: ev.id,
+        position: 0,
+      });
       if (error)
         throw new Error(error.code === "23505" ? "Usuário já tem esse selo" : error.message);
     },
