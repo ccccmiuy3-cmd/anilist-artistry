@@ -62,7 +62,7 @@ async function uploadFiles(seriesId: string, chapterNumber: string, files: File[
   for (const file of ordered) {
     const check = validateImageFile(file);
     if (!check.ok) throw new Error(`${file.name}: ${check.errors.join(" ")}`);
-    const { ext } = check;
+    const { extension: ext } = check;
     index += 1;
     const path = `${seriesId}/${chapterNumber}/${Date.now()}-${String(offset + index).padStart(3, "0")}.${ext}`;
     const { error } = await supabase.storage
