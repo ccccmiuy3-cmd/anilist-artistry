@@ -337,6 +337,33 @@ export type Database = {
         }
         Relationships: []
       }
+      media_settings: {
+        Row: {
+          api_key: string | null
+          api_secret: string | null
+          cloud_name: string | null
+          folder: string | null
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          api_key?: string | null
+          api_secret?: string | null
+          cloud_name?: string | null
+          folder?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string | null
+          api_secret?: string | null
+          cloud_name?: string | null
+          folder?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profile_badges: {
         Row: {
           created_at: string
