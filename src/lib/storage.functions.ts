@@ -78,7 +78,7 @@ export const signChapterPages = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const seriesIds = [...new Set([...seen].map((p) => p.split("/")[0]))];
+    const seriesIds = [...new Set([...seen].map((p) => p.split("/")[0] as string))];
     const [chaptersRes, seriesRes] = await Promise.all([
       supabaseAdmin.from("chapters").select("number, series_id").in("series_id", seriesIds),
       supabaseAdmin.from("series").select("id, published").in("id", seriesIds),
@@ -97,7 +97,7 @@ export const signChapterPages = createServerFn({ method: "POST" })
     const staff = await requestIsStaff();
     const allowed = [...seen].filter((path) => {
       const [seriesId, chapter] = path.split("/");
-      return staff || publishedChapters.has(`${seriesId}/${Number(chapter)}`);
+      return staff || publishedChapters.has(`${seriesId ?? ""}/${Number(chapter ?? "")}`);
     });
 
     if (!allowed.length) return result;

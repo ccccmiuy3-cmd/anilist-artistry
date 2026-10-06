@@ -20,11 +20,13 @@ const CHAPTER_SEG_RE = /^\d+(\.\d+)?$/;
 export function storagePathFromUrl(value: string): string | null {
   const match = SIGN_RE.exec(value) ?? PUBLIC_RE.exec(value);
   if (!match) return null;
-  if (match[1] !== BUCKET) return null;
+  const bucket = match[1];
+  const rawPath = match[2];
+  if (bucket !== BUCKET || !rawPath) return null;
   try {
-    return decodeURIComponent(match[2]);
+    return decodeURIComponent(rawPath);
   } catch {
-    return match[2];
+    return rawPath;
   }
 }
 
@@ -63,8 +65,9 @@ export function toStoragePath(value: string): string | null {
 export function isChapterPagePath(path: string): boolean {
   const segments = path.split("/");
   if (segments.length !== 3) return false;
-  const [seriesId, chapter] = segments;
-  return UUID_RE.test(seriesId) && CHAPTER_SEG_RE.test(chapter) && !!segments[2];
+  const [seriesId, chapter, file] = segments;
+  if (!seriesId || !chapter || !file) return false;
+  return UUID_RE.test(seriesId) && CHAPTER_SEG_RE.test(chapter);
 }
 
 /** URL pública/CDN — somente para conteúdo que realmente é público. */
