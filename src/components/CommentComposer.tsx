@@ -3,6 +3,7 @@ import { CircleDollarSign, Eye, EyeOff, ImagePlus, Send, Smile, X } from "lucide
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { validateImageFile } from "@/lib/image-validation";
 
 const EMOJIS = [
   "😀", "😂", "🤣", "😍", "😎", "🥺", "😭", "😱",
@@ -36,12 +37,9 @@ export function CommentComposer({ pending, onSubmit, replyTo, onCancelReply }: C
 
   const pickImage = (file: File | null) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Envie apenas imagens.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem muito grande (máx. 5 MB).");
+    const check = validateImageFile(file);
+    if (!check.ok) {
+      toast.error(check.errors.join(" "));
       return;
     }
     setImage(file);
