@@ -1,6 +1,13 @@
 // Client-only: extracts page images from .zip / .pdf uploads.
 const IMG = /\.(jpe?g|png|webp|gif|avif)$/i;
-const MIME: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", avif: "image/avif" };
+const MIME: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  gif: "image/gif",
+  avif: "image/avif",
+};
 
 export type ExtractProgress = (done: number, total: number) => void;
 
@@ -32,19 +39,32 @@ function isSuspiciousArchivePath(name: string): boolean {
 
 function assertArchiveSize(file: File): void {
   if (file.size > MAX_ARCHIVE_FILE_BYTES) {
-    throw new Error(`"${file.name}" é maior que o limite de ${MAX_ARCHIVE_FILE_BYTES / 1024 / 1024} MB.`);
+    throw new Error(
+      `"${file.name}" é maior que o limite de ${MAX_ARCHIVE_FILE_BYTES / 1024 / 1024} MB.`,
+    );
   }
 }
 
-async function fromZip(file: File, onProgress?: ExtractProgress, signal?: AbortSignal): Promise<File[]> {
+async function fromZip(
+  file: File,
+  onProgress?: ExtractProgress,
+  signal?: AbortSignal,
+): Promise<File[]> {
   assertArchiveSize(file);
   const JSZip = (await import("jszip")).default;
   ensureNotAborted(signal);
   const zip = await JSZip.loadAsync(file);
-  const entries = Object.values(zip.files)
-    .filter((f) => !f.dir && IMG.test(f.name) && !f.name.includes("__MACOSX") && !isSuspiciousArchivePath(f.name));
+  const entries = Object.values(zip.files).filter(
+    (f) =>
+      !f.dir &&
+      IMG.test(f.name) &&
+      !f.name.includes("__MACOSX") &&
+      !isSuspiciousArchivePath(f.name),
+  );
   if (entries.length > MAX_ZIP_ENTRIES) {
-    throw new Error(`O arquivo tem ${entries.length} imagens — máximo permitido: ${MAX_ZIP_ENTRIES}.`);
+    throw new Error(
+      `O arquivo tem ${entries.length} imagens — máximo permitido: ${MAX_ZIP_ENTRIES}.`,
+    );
   }
   entries.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   const base = file.name.replace(/\.zip$/i, "");
@@ -59,24 +79,38 @@ async function fromZip(file: File, onProgress?: ExtractProgress, signal?: AbortS
     const ext = e.name.split(".").pop()!.toLowerCase();
     const blob = await e.async("blob");
     if (blob.size > MAX_EXTRACTED_IMAGE_BYTES) {
-      throw new Error(`A página "${e.name}" tem mais de ${MAX_EXTRACTED_IMAGE_BYTES / 1024 / 1024} MB (extraída de "${file.name}").`);
+      throw new Error(
+        `A página "${e.name}" tem mais de ${MAX_EXTRACTED_IMAGE_BYTES / 1024 / 1024} MB (extraída de "${file.name}").`,
+      );
     }
     totalBytes += blob.size;
     if (totalBytes > MAX_ARCHIVE_UNCOMPRESSED_BYTES) {
       throw new Error(`Conteúdo descompactado de "${file.name}" excede o limite de 2 GB.`);
     }
-    out.push(new File([blob], `${base}-${String(i + 1).padStart(4, "0")}.${ext}`, { type: MIME[ext] ?? "image/jpeg" }));
+    out.push(
+      new File([blob], `${base}-${String(i + 1).padStart(4, "0")}.${ext}`, {
+        type: MIME[ext] ?? "image/jpeg",
+      }),
+    );
     onProgress?.(++done, entries.length);
   }
   return out;
 }
 
-async function fromPdf(file: File, onProgress?: ExtractProgress, signal?: AbortSignal): Promise<File[]> {
+async function fromPdf(
+  file: File,
+  onProgress?: ExtractProgress,
+  signal?: AbortSignal,
+): Promise<File[]> {
   assertArchiveSize(file);
   // Polyfill for pdfjs-dist on browsers without the Map upsert proposal.
   const MP = Map.prototype as unknown as Record<string, unknown>;
   if (typeof MP["getOrInsertComputed"] !== "function") {
-    MP["getOrInsertComputed"] = function (this: Map<unknown, unknown>, key: unknown, fn: (k: unknown) => unknown) {
+    MP["getOrInsertComputed"] = function (
+      this: Map<unknown, unknown>,
+      key: unknown,
+      fn: (k: unknown) => unknown,
+    ) {
       if (this.has(key)) return this.get(key);
       const v = fn(key);
       this.set(key, v);
@@ -96,7 +130,9 @@ async function fromPdf(file: File, onProgress?: ExtractProgress, signal?: AbortS
     throw new Error(`Não foi possível abrir "${file.name}": ${msg}`);
   }
   if (doc.numPages > MAX_PDF_PAGES) {
-    throw new Error(`"${file.name}" tem ${doc.numPages} páginas — máximo permitido: ${MAX_PDF_PAGES}.`);
+    throw new Error(
+      `"${file.name}" tem ${doc.numPages} páginas — máximo permitido: ${MAX_PDF_PAGES}.`,
+    );
   }
   const base = file.name.replace(/\.pdf$/i, "");
   const out: File[] = [];
@@ -114,7 +150,12 @@ async function fromPdf(file: File, onProgress?: ExtractProgress, signal?: AbortS
     try {
       const base1 = page.getViewport({ scale: 1 });
       let scale = 2;
-      scale = Math.min(scale, MAX_SIDE / base1.width, MAX_SIDE / base1.height, Math.sqrt(MAX_AREA / (base1.width * base1.height)));
+      scale = Math.min(
+        scale,
+        MAX_SIDE / base1.width,
+        MAX_SIDE / base1.height,
+        Math.sqrt(MAX_AREA / (base1.width * base1.height)),
+      );
       const vp = page.getViewport({ scale: Math.max(scale, 0.5) });
       canvas.width = Math.floor(vp.width);
       canvas.height = Math.floor(vp.height);
@@ -123,19 +164,26 @@ async function fromPdf(file: File, onProgress?: ExtractProgress, signal?: AbortS
       await page.render({ canvas, canvasContext: ctx, viewport: vp }).promise;
       let blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/webp", 0.9));
       // Safari pode não gerar WebP: cai para JPEG
-      if (!blob || blob.type !== "image/webp") blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.92));
+      if (!blob || blob.type !== "image/webp")
+        blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.92));
       if (!blob) throw new Error("falha ao gerar imagem");
       if (blob.size > MAX_EXTRACTED_IMAGE_BYTES) {
-        throw new Error(`A página ${p} de "${file.name}" gerou mais de ${MAX_EXTRACTED_IMAGE_BYTES / 1024 / 1024} MB.`);
+        throw new Error(
+          `A página ${p} de "${file.name}" gerou mais de ${MAX_EXTRACTED_IMAGE_BYTES / 1024 / 1024} MB.`,
+        );
       }
       totalBytes += blob.size;
       if (totalBytes > MAX_ARCHIVE_UNCOMPRESSED_BYTES) {
         throw new Error(`Conteúdo gerado de "${file.name}" excede o limite de 2 GB.`);
       }
       const ext = blob.type === "image/webp" ? "webp" : "jpg";
-      out.push(new File([blob], `${base}-${String(p).padStart(4, "0")}.${ext}`, { type: blob.type }));
+      out.push(
+        new File([blob], `${base}-${String(p).padStart(4, "0")}.${ext}`, { type: blob.type }),
+      );
     } catch (e) {
-      throw new Error(`Erro na página ${p} de "${file.name}": ${e instanceof Error ? e.message : e}`);
+      throw new Error(
+        `Erro na página ${p} de "${file.name}": ${e instanceof Error ? e.message : e}`,
+      );
     } finally {
       page.cleanup();
     }
@@ -155,8 +203,10 @@ export async function extractPages(
   for (const f of files) {
     ensureNotAborted(signal);
     const n = f.name.toLowerCase();
-    if (n.endsWith(".zip") || f.type.includes("zip")) result.push(...(await fromZip(f, onProgress, signal)));
-    else if (n.endsWith(".pdf") || f.type === "application/pdf") result.push(...(await fromPdf(f, onProgress, signal)));
+    if (n.endsWith(".zip") || f.type.includes("zip"))
+      result.push(...(await fromZip(f, onProgress, signal)));
+    else if (n.endsWith(".pdf") || f.type === "application/pdf")
+      result.push(...(await fromPdf(f, onProgress, signal)));
     else if (f.type.startsWith("image/")) {
       if (f.size > MAX_EXTRACTED_IMAGE_BYTES) {
         throw new Error(`"${f.name}" tem mais de ${MAX_EXTRACTED_IMAGE_BYTES / 1024 / 1024} MB.`);

@@ -89,7 +89,11 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
     setProgress(null);
     try {
       const { extractPages } = await import("@/lib/extract-pages");
-      const imgs = await extractPages(list, (done, total) => setProgress({ done, total }), controller.signal);
+      const imgs = await extractPages(
+        list,
+        (done, total) => setProgress({ done, total }),
+        controller.signal,
+      );
       if (!imgs.length) throw new Error("Nenhuma imagem encontrada no arquivo.");
       setFiles(imgs);
       toast.success(`${imgs.length} imagem(ns) extraída(s)`);
