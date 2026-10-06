@@ -492,16 +492,23 @@ function Reader() {
           <p className="p-16 text-center text-sm text-muted-foreground">
             Este capítulo ainda não tem páginas.
           </p>
+        ) : pagesLoading && pageUrls.every((url) => !url) ? (
+          <p className="p-16 text-center text-sm text-muted-foreground">Carregando páginas…</p>
         ) : (
-          pages.map((page, pageIndex) => (
-            <img
-              key={`${page}-${pageIndex}`}
-              src={page}
-              alt={`Página ${pageIndex + 1}`}
-              loading={pageIndex < 2 ? "eager" : "lazy"}
-              className="w-full"
-            />
-          ))
+          pageUrls.map((page, pageIndex) =>
+            page ? (
+              <img
+                key={`${page}-${pageIndex}`}
+                src={page}
+                alt={`Página ${pageIndex + 1}`}
+                loading={pageIndex < 2 ? "eager" : "lazy"}
+                className="w-full"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : null,
+          )
         )}
       </main>
 
