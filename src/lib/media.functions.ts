@@ -33,7 +33,7 @@ export const saveMediaSettings = createServerFn({ method: "POST" })
       folder: data.folder.trim() || "bettermanga",
       updated_at: new Date().toISOString(),
     };
-    if (data.api_secret?.trim()) row.api_secret = data.api_secret.trim();
+    if (data.api_secret?.trim()) row["api_secret"] = data.api_secret.trim();
     const { error } = await supabaseAdmin.from("media_settings").upsert(row as any);
     if (error) throw new Error(error.message);
     return { ok: true };
