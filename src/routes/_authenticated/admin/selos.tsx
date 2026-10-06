@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { publicStorageUrl } from "@/lib/storage-urls";
+import { validateImageFile } from "@/lib/image-validation";
 
 export const Route = createFileRoute("/_authenticated/admin/selos")({
   staticData: { sitemap: false },
