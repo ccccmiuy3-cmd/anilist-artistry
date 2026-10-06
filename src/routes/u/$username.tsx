@@ -741,9 +741,17 @@ function EditProfile({
       const path = `profiles/${profile.id}/${kind}-${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("manga").upload(path, file, { upsert: true });
       if (error) throw error;
-      const { data } = await supabase.storage.from("manga").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (!data?.signedUrl) throw new Error("Falha ao gerar link da imagem");
-      save.mutate({ [kind === "avatar" ? "avatar_url" : "banner_url"]: data.signedUrl });
+      // Avatar/banner são públicos: guardamos URL pública (sem token), não URL assinada.
+      const link = publicStorageUrl(path);
+      // Limpa o arquivo anterior do próprio perfil quando for seguro.
+      const previous = form[kind === "avatar" ? "avatar_url" : "banner_url"];
+      if (previous) {
+        const previousPath = toStoragePath(previous);
+        if (previousPath?.startsWith(`profiles/${profile.id}/`)) {
+          await supabase.storage.from("manga").remove([previousPath]).catch(() => {});
+        }
+      }
+      save.mutate({ [kind === "avatar" ? "avatar_url" : "banner_url"]: link });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha no upload — tente colar um link de imagem");
     } finally {
