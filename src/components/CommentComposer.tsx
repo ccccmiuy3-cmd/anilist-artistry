@@ -120,7 +120,6 @@ export function CommentComposer({
   // Preenche o campo quando o usuário clica em "Responder" em um comentário.
   useEffect(() => {
     if (replyTo) startReply(replyTo);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [replyTo]);
 
   return (
