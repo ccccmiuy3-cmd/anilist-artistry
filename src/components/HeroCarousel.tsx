@@ -30,6 +30,7 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
   useEffect(() => {
     if (paused || slides.length < 2) return;
     timer.current = setInterval(() => {
+      if (document.hidden) return; // não trabalha com a aba em segundo plano
       setIndex((current) => (current + 1) % slides.length);
     }, INTERVAL);
     return () => {
@@ -107,6 +108,8 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
                 src={coverUrl(active.cover_url)}
                 alt={`Capa de ${active.title}`}
                 className="aspect-[3/4] h-full w-full object-cover"
+                decoding="async"
+                fetchPriority="high"
                 draggable={false}
               />
               <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-foreground/10" />

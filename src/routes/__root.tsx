@@ -127,8 +127,15 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+    // Só recarrega dados quando a conta realmente muda (evita recarregar tudo
+    // a cada troca de aba / renovação de sessão, que causava travadas).
+    let lastUserId: string | null | undefined;
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      const uid = session?.user?.id ?? null;
+      if (event === "INITIAL_SESSION") { lastUserId = uid; return; }
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      if (event !== "USER_UPDATED" && uid === lastUserId) return;
+      lastUserId = uid;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
