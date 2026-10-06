@@ -257,7 +257,14 @@ function Perfil() {
       <main className="pb-10">
         <div className="relative h-48 overflow-hidden bg-surface sm:h-80">
           {p.banner_url ? (
-            <img src={p.banner_url} alt="" className="h-full w-full object-cover" />
+            <img
+              src={p.banner_url}
+              alt=""
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
           ) : (
             <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,var(--primary),transparent_70%)] opacity-30" />
           )}
@@ -802,7 +809,18 @@ function EditProfile({
               <section className="space-y-4 rounded-lg border border-border bg-card p-5">
                 <h2 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground"><ImageIcon className="h-3 w-3" /> Banner</h2>
                 <Button variant="ghost" className="group relative h-32 w-full overflow-hidden rounded-lg bg-surface-2 p-0" onClick={() => bannerInput.current?.click()}>
-                  {form.banner_url ? <img src={form.banner_url} alt="Banner atual" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> : <ImageIcon className="h-7 w-7 text-muted-foreground" />}
+                  {form.banner_url ? (
+                    <img
+                      src={form.banner_url}
+                      alt="Banner atual"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <ImageIcon className="h-7 w-7 text-muted-foreground" />
+                  )}
                   <span className="absolute inset-0 grid place-items-center bg-background/60 opacity-0 transition-opacity group-hover:opacity-100"><span className="flex items-center gap-2 text-xs font-bold"><Upload className="h-4 w-4" /> Alterar banner</span></span>
                 </Button>
                 <div className="flex justify-end"><Button variant="secondary" size="sm" onClick={() => bannerInput.current?.click()} disabled={uploading !== null}>{uploading === "banner" ? "Enviando…" : "Escolher"}</Button></div>
