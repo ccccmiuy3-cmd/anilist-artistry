@@ -85,7 +85,6 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
     if (!list.length) return;
     const controller = new AbortController();
     setAbort(controller);
-    stoppedRef.current = false;
     setBusy(true);
     setProgress(null);
     try {
@@ -138,11 +137,24 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
             : "Arraste imagens, .zip ou .pdf ou clique para escolher"}
       </p>
       {busy && (
-        <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-muted">
-          <div
-            className={`h-full rounded-full bg-primary transition-all duration-200 ${pct === null ? "animate-pulse" : ""}`}
-            style={{ width: `${pct ?? 100}%` }}
-          />
+        <div className="flex w-full max-w-xs flex-col items-center gap-2">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className={`h-full rounded-full bg-primary transition-all duration-200 ${pct === null ? "animate-pulse" : ""}`}
+              style={{ width: `${pct ?? 100}%` }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              cancel();
+            }}
+            className="rounded-lg border border-border bg-background px-3 py-1 text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary"
+          >
+            Cancelar
+          </button>
         </div>
       )}
       <p className="text-xs text-muted-foreground">
