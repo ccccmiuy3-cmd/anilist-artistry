@@ -87,7 +87,9 @@ export const signChapterPages = createServerFn({ method: "POST" })
       throw new Error("Não foi possível verificar as páginas solicitadas.");
     }
 
-    const publishedSeries = new Set((seriesRes.data ?? []).filter((s) => s.published).map((s) => s.id));
+    const publishedSeries = new Set(
+      (seriesRes.data ?? []).filter((s) => s.published).map((s) => s.id),
+    );
     const publishedChapters = new Set(
       (chaptersRes.data ?? [])
         .filter((c) => publishedSeries.has(c.series_id))

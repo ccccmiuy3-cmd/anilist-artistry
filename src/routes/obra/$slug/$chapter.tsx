@@ -1,7 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { AlignJustify, BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronsDown, Home, Infinity, List, Maximize2, MessageCircle, Minus, Moon, Palette, Plus, Settings2, SunMedium } from "lucide-react";
+import {
+  AlignJustify,
+  BookOpen,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsDown,
+  Home,
+  Infinity,
+  List,
+  Maximize2,
+  MessageCircle,
+  Minus,
+  Moon,
+  Palette,
+  Plus,
+  Settings2,
+  SunMedium,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,7 +85,8 @@ function Reader() {
   );
   const current = obra && index >= 0 ? obra.chapters[index] : undefined;
   const prev = obra && index > 0 ? obra.chapters[index - 1] : undefined;
-  const next = obra && index >= 0 && index < obra.chapters.length - 1 ? obra.chapters[index + 1] : undefined;
+  const next =
+    obra && index >= 0 && index < obra.chapters.length - 1 ? obra.chapters[index + 1] : undefined;
 
   const pages = useMemo(() => {
     const raw = (current?.pages ?? []) as unknown;
@@ -88,7 +107,9 @@ function Reader() {
   );
   const [fontSize, setFontSize] = useState(18);
   const [lineHeight, setLineHeight] = useState(1.9);
-  const [readingWidth, setReadingWidth] = useState<"narrow" | "comfortable" | "wide">("comfortable");
+  const [readingWidth, setReadingWidth] = useState<"narrow" | "comfortable" | "wide">(
+    "comfortable",
+  );
   const [novelTheme, setNovelTheme] = useState<"dark" | "soft">("dark");
   const [showNovelSettings, setShowNovelSettings] = useState(false);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
@@ -109,7 +130,10 @@ function Reader() {
       if (error) throw error;
       const rows = data ?? [];
       const ids = [...new Set(rows.map((row) => row.user_id))];
-      const [authors, parents] = await Promise.all([fetchCommentAuthors(ids), fetchCommentParents(rows)]);
+      const [authors, parents] = await Promise.all([
+        fetchCommentAuthors(ids),
+        fetchCommentParents(rows),
+      ]);
       return rows.map((row) => ({
         ...row,
         author: authors.get(row.user_id) ?? null,
@@ -263,11 +287,19 @@ function Reader() {
     "h-9 border-border/80 bg-surface/80 text-muted-foreground shadow-none hover:bg-surface-2 hover:text-foreground";
 
   return (
-    <div className={`min-h-screen ${isNovel && novelTheme === "soft" ? "bg-surface" : "bg-background"}`}>
+    <div
+      className={`min-h-screen ${isNovel && novelTheme === "soft" ? "bg-surface" : "bg-background"}`}
+    >
       {isNovel ? (
         <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur-xl">
           <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:px-6">
-            <Button asChild variant="ghost" size="icon" aria-label="Voltar para a obra" title="Voltar para a obra">
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              aria-label="Voltar para a obra"
+              title="Voltar para a obra"
+            >
               <Link to="/obra/$slug" params={{ slug }}>
                 <ChevronLeft className="h-5 w-5" />
               </Link>
@@ -280,8 +312,12 @@ function Reader() {
               <span className="hidden max-w-72 truncate sm:block">{obra.title}</span>
               <BookOpen className="h-5 w-5 sm:hidden" />
             </Link>
-            <span aria-hidden="true" className="hidden text-border sm:block">·</span>
-            <span className="truncate text-sm font-bold text-primary">Cap. {formatChapter(current.number)}</span>
+            <span aria-hidden="true" className="hidden text-border sm:block">
+              ·
+            </span>
+            <span className="truncate text-sm font-bold text-primary">
+              Cap. {formatChapter(current.number)}
+            </span>
 
             <div className="ml-auto flex items-center gap-1">
               <Button
@@ -295,7 +331,13 @@ function Reader() {
               >
                 <Settings2 className="h-5 w-5" />
               </Button>
-              <Button asChild variant="ghost" size="icon" aria-label="Lista de capítulos" title="Lista de capítulos">
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                aria-label="Lista de capítulos"
+                title="Lista de capítulos"
+              >
                 <Link to="/obra/$slug" params={{ slug }}>
                   <List className="h-5 w-5" />
                 </Link>
@@ -307,7 +349,9 @@ function Reader() {
                 aria-label="Tela cheia"
                 title="Tela cheia"
                 onClick={() =>
-                  document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()
+                  document.fullscreenElement
+                    ? document.exitFullscreen()
+                    : document.documentElement.requestFullscreen()
                 }
               >
                 <Maximize2 className="h-5 w-5" />
@@ -323,7 +367,10 @@ function Reader() {
           {showNovelSettings ? (
             <div className="border-t border-border/60 bg-background/95 px-3 py-3 shadow-lg">
               <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-2 sm:justify-end">
-                <div className="flex items-center overflow-hidden rounded-md border border-border/80" aria-label="Tamanho da fonte">
+                <div
+                  className="flex items-center overflow-hidden rounded-md border border-border/80"
+                  aria-label="Tamanho da fonte"
+                >
                   <Button
                     variant="ghost"
                     size="icon"
@@ -351,13 +398,20 @@ function Reader() {
                   variant="outline"
                   size="sm"
                   className={novelControl}
-                  onClick={() => setLineHeight((height) => (height >= 2.1 ? 1.65 : Number((height + 0.2).toFixed(2))))}
+                  onClick={() =>
+                    setLineHeight((height) =>
+                      height >= 2.1 ? 1.65 : Number((height + 0.2).toFixed(2)),
+                    )
+                  }
                   title="Alternar espaçamento entre linhas"
                 >
                   <AlignJustify className="h-4 w-4" /> {lineHeight.toFixed(2)}
                 </Button>
 
-                <div className="flex items-center overflow-hidden rounded-md border border-border/80" aria-label="Largura do texto">
+                <div
+                  className="flex items-center overflow-hidden rounded-md border border-border/80"
+                  aria-label="Largura do texto"
+                >
                   {(["narrow", "comfortable", "wide"] as const).map((width, widthIndex) => (
                     <Button
                       key={width}
@@ -379,7 +433,11 @@ function Reader() {
                   className={novelControl}
                   onClick={() => setNovelTheme((theme) => (theme === "dark" ? "soft" : "dark"))}
                 >
-                  {novelTheme === "dark" ? <Moon className="h-4 w-4" /> : <SunMedium className="h-4 w-4" />}
+                  {novelTheme === "dark" ? (
+                    <Moon className="h-4 w-4" />
+                  ) : (
+                    <SunMedium className="h-4 w-4" />
+                  )}
                   {novelTheme === "dark" ? "Escuro" : "Suave"}
                 </Button>
               </div>
@@ -387,66 +445,104 @@ function Reader() {
           ) : null}
         </header>
       ) : (
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:px-8">
-          <Button variant="ghost" size="icon" type="button" onClick={() => history.back()} className={iconBtn} aria-label="Voltar">
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <Link to="/obra/$slug" params={{ slug }} className="ml-2 flex items-center gap-1.5 text-sm font-bold hover:text-primary">
-            <BookOpen className="h-4 w-4" /> Obra
-          </Link>
-          <h1 className="ml-3 flex min-w-0 items-center gap-2 text-sm">
-            <span className="truncate text-muted-foreground">{obra.title}</span>
-            <span className="shrink-0 font-bold text-primary">Cap. {formatChapter(current.number)}</span>
-          </h1>
-          <div className="ml-auto flex items-center gap-1">
-            <Button variant="ghost" size="icon" type="button" disabled={!prev} onClick={() => go("prev")} className={iconBtn} aria-label="Capítulo anterior">
+        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur">
+          <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:px-8">
+            <Button
+              variant="ghost"
+              size="icon"
+              type="button"
+              onClick={() => history.back()}
+              className={iconBtn}
+              aria-label="Voltar"
+            >
               <ChevronLeft className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" type="button" disabled={!next} onClick={() => go("next")} className={iconBtn} aria-label="Próximo capítulo">
-              <ChevronRight className="h-5 w-5" />
-            </Button>
-            <Link to="/obra/$slug" params={{ slug }} className={`${iconBtn} hidden sm:grid`} aria-label="Lista de capítulos">
-              <Infinity className="h-5 w-5" />
+            <Link
+              to="/obra/$slug"
+              params={{ slug }}
+              className="ml-2 flex items-center gap-1.5 text-sm font-bold hover:text-primary"
+            >
+              <BookOpen className="h-4 w-4" /> Obra
             </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              type="button"
-              className={`${iconBtn} hidden sm:grid`}
-              aria-label="Tema"
-              onClick={() => document.documentElement.classList.toggle("reader-dim")}
-            >
-              <Palette className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              type="button"
-              className={iconBtn}
-              aria-label="Ir para o fim"
-              onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })}
-            >
-              <ChevronsDown className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              type="button"
-              className={`${iconBtn} hidden sm:grid`}
-              aria-label="Tela cheia"
-              onClick={() =>
-                document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()
-              }
-            >
-              <Maximize2 className="h-5 w-5" />
-            </Button>
-            <Link to="/" className={iconBtn} aria-label="Início">
-              <Home className="h-5 w-5" />
-            </Link>
+            <h1 className="ml-3 flex min-w-0 items-center gap-2 text-sm">
+              <span className="truncate text-muted-foreground">{obra.title}</span>
+              <span className="shrink-0 font-bold text-primary">
+                Cap. {formatChapter(current.number)}
+              </span>
+            </h1>
+            <div className="ml-auto flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                type="button"
+                disabled={!prev}
+                onClick={() => go("prev")}
+                className={iconBtn}
+                aria-label="Capítulo anterior"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                type="button"
+                disabled={!next}
+                onClick={() => go("next")}
+                className={iconBtn}
+                aria-label="Próximo capítulo"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+              <Link
+                to="/obra/$slug"
+                params={{ slug }}
+                className={`${iconBtn} hidden sm:grid`}
+                aria-label="Lista de capítulos"
+              >
+                <Infinity className="h-5 w-5" />
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                type="button"
+                className={`${iconBtn} hidden sm:grid`}
+                aria-label="Tema"
+                onClick={() => document.documentElement.classList.toggle("reader-dim")}
+              >
+                <Palette className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                type="button"
+                className={iconBtn}
+                aria-label="Ir para o fim"
+                onClick={() =>
+                  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })
+                }
+              >
+                <ChevronsDown className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                type="button"
+                className={`${iconBtn} hidden sm:grid`}
+                aria-label="Tela cheia"
+                onClick={() =>
+                  document.fullscreenElement
+                    ? document.exitFullscreen()
+                    : document.documentElement.requestFullscreen()
+                }
+              >
+                <Maximize2 className="h-5 w-5" />
+              </Button>
+              <Link to="/" className={iconBtn} aria-label="Início">
+                <Home className="h-5 w-5" />
+              </Link>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
       )}
 
       <main className={`mx-auto ${isNovel ? novelWidth : "max-w-3xl"}`}>
@@ -457,7 +553,9 @@ function Reader() {
               <h1 className="font-display text-2xl font-extrabold sm:text-3xl">
                 Capítulo {formatChapter(current.number)}
               </h1>
-              {current.title ? <p className="mt-3 text-sm text-muted-foreground">{current.title}</p> : null}
+              {current.title ? (
+                <p className="mt-3 text-sm text-muted-foreground">{current.title}</p>
+              ) : null}
             </header>
             {paragraphs.length === 0 ? (
               <p className="py-10 text-center text-sm text-muted-foreground">
@@ -512,8 +610,15 @@ function Reader() {
         )}
       </main>
 
-      <div className={`mx-auto flex ${isNovel ? novelWidth : "max-w-3xl"} items-center justify-between gap-3 border-t border-border/70 px-4 py-8`}>
-        <Button variant="outline" disabled={!prev} onClick={() => go("prev")} className="font-semibold">
+      <div
+        className={`mx-auto flex ${isNovel ? novelWidth : "max-w-3xl"} items-center justify-between gap-3 border-t border-border/70 px-4 py-8`}
+      >
+        <Button
+          variant="outline"
+          disabled={!prev}
+          onClick={() => go("prev")}
+          className="font-semibold"
+        >
           <ChevronLeft className="mr-1 h-4 w-4" /> Anterior
         </Button>
         <Button asChild variant="ghost" className="font-semibold">
@@ -550,10 +655,14 @@ function Reader() {
 
         <ul className="mt-6 space-y-5">
           <CommentThreads
-              comments={(comments.data ?? [])}
-              userId={user?.id}
-              onReply={user ? (c) => setReplyTo({ id: c.id, username: c.author?.username ?? "leitor" }) : undefined}
-            />
+            comments={comments.data ?? []}
+            userId={user?.id}
+            onReply={
+              user
+                ? (c) => setReplyTo({ id: c.id, username: c.author?.username ?? "leitor" })
+                : undefined
+            }
+          />
           {(comments.data ?? []).length === 0 && !comments.isLoading ? (
             <li className="py-6 text-center text-sm text-muted-foreground">
               Seja o primeiro a comentar este capítulo.

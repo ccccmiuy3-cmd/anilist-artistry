@@ -15,7 +15,10 @@ export function usePageUrls(entries: ReadonlyArray<string | null | undefined>): 
   urls: Array<string | null>;
   isLoading: boolean;
 } {
-  const normalized = useMemo(() => entries.map((entry) => (typeof entry === "string" ? entry.trim() : "")), [entries]);
+  const normalized = useMemo(
+    () => entries.map((entry) => (typeof entry === "string" ? entry.trim() : "")),
+    [entries],
+  );
 
   const paths = useMemo(() => {
     const set = new Set<string>();

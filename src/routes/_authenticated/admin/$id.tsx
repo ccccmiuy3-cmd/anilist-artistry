@@ -1,7 +1,17 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink, FileImage, Link2, Pencil, Save, Trash2, Upload, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ExternalLink,
+  FileImage,
+  Link2,
+  Pencil,
+  Save,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/AdminShell";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
@@ -32,16 +42,27 @@ export const Route = createFileRoute("/_authenticated/admin/$id")({
   component: SeriesEditor,
 });
 
-type Chapter = { id: string; number: number; title: string | null; pages: unknown; published: boolean; created_at: string };
+type Chapter = {
+  id: string;
+  number: number;
+  title: string | null;
+  pages: unknown;
+  published: boolean;
+  created_at: string;
+};
 const pagesOf = (p: unknown) => (Array.isArray(p) ? (p as string[]) : []);
 
 async function uploadFiles(seriesId: string, chapterNumber: string, files: File[], offset = 0) {
   const out: string[] = [];
-  const ordered = [...files].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const ordered = [...files].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true }),
+  );
   for (const [i, file] of ordered.entries()) {
     const ext = file.name.split(".").pop() ?? "jpg";
     const path = `${seriesId}/${chapterNumber}/${Date.now()}-${String(offset + i + 1).padStart(3, "0")}.${ext}`;
-    const { error } = await supabase.storage.from("manga").upload(path, file, { upsert: true, contentType: file.type });
+    const { error } = await supabase.storage
+      .from("manga")
+      .upload(path, file, { upsert: true, contentType: file.type });
     if (error) throw error;
     // Guardamos apenas o path: a URL assinada de curta duração é gerada no
     // momento da leitura (somente para capítulos publicados ou staff).
@@ -71,7 +92,8 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
       setProgress(null);
     }
   };
-  const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : null;
+  const pct =
+    progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : null;
   return (
     <label
       onDragOver={(e) => {
@@ -85,7 +107,9 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
         void handle(Array.from(e.dataTransfer.files));
       }}
       className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
-        over ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/60"
+        over
+          ? "border-primary bg-primary/10"
+          : "border-border bg-background hover:border-primary/60"
       }`}
     >
       <Upload className="h-7 w-7 text-primary" />
@@ -106,7 +130,9 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
           />
         </div>
       )}
-      <p className="text-xs text-muted-foreground">ZIP/PDF: as imagens são extraídas e só elas são salvas. Ordem pelo nome (01.jpg, 02.jpg…)</p>
+      <p className="text-xs text-muted-foreground">
+        ZIP/PDF: as imagens são extraídas e só elas são salvas. Ordem pelo nome (01.jpg, 02.jpg…)
+      </p>
       <input
         type="file"
         accept="image/*,.zip,application/zip,application/x-zip-compressed,.pdf,application/pdf"
@@ -144,7 +170,9 @@ function SeriesEditor() {
     },
   });
   const obra = series.data;
-  const chapters = [...((obra?.chapters ?? []) as Chapter[])].sort((a, b) => Number(b.number) - Number(a.number));
+  const chapters = [...((obra?.chapters ?? []) as Chapter[])].sort(
+    (a, b) => Number(b.number) - Number(a.number),
+  );
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["admin-series", id] });
     qc.invalidateQueries({ queryKey: ["admin-series"] });
@@ -182,8 +210,16 @@ function SeriesEditor() {
             </Button>
           ) : null}
           {isAdmin && obra ? (
-            <ConfirmDelete title={`Apagar "${obra.title}"?`} description="A obra e todos os capítulos serão apagados permanentemente." onConfirm={() => removeSeries.mutate()}>
-              <Button variant="outline" size="sm" className="border-destructive/50 text-destructive">
+            <ConfirmDelete
+              title={`Apagar "${obra.title}"?`}
+              description="A obra e todos os capítulos serão apagados permanentemente."
+              onConfirm={() => removeSeries.mutate()}
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-destructive/50 text-destructive"
+              >
                 <Trash2 className="mr-1.5 h-4 w-4" /> Apagar obra
               </Button>
             </ConfirmDelete>
@@ -194,31 +230,53 @@ function SeriesEditor() {
       {obra ? (
         <>
           <div className="relative mb-6 overflow-hidden rounded-2xl border border-border">
-            <img src={coverUrl(obra.banner_url ?? obra.cover_url)} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25 blur-sm" />
+            <img
+              src={coverUrl(obra.banner_url ?? obra.cover_url)}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover opacity-25 blur-sm"
+            />
             <div className="relative flex items-center gap-5 bg-gradient-to-r from-background via-background/80 to-transparent p-5">
-              <img src={coverUrl(obra.cover_url)} alt={obra.title} className="h-36 w-24 rounded-xl object-cover shadow-lg" />
+              <img
+                src={coverUrl(obra.cover_url)}
+                alt={obra.title}
+                className="h-36 w-24 rounded-xl object-cover shadow-lg"
+              />
               <div className="min-w-0">
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${obra.published ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${obra.published ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}
+                >
                   {obra.published ? "Publicada" : "Rascunho"}
                 </span>
                 <h2 className="mt-2 font-display text-2xl font-extrabold">{obra.title}</h2>
-                <p className="mt-1 line-clamp-2 max-w-xl text-sm text-muted-foreground">{obra.synopsis}</p>
+                <p className="mt-1 line-clamp-2 max-w-xl text-sm text-muted-foreground">
+                  {obra.synopsis}
+                </p>
               </div>
             </div>
           </div>
 
           <div className="mb-5 inline-flex rounded-xl border border-border bg-surface p-1">
-            {([
-              ["chapters", "Capítulos"],
-              ["info", "Editar obra"],
-            ] as const).map(([k, l]) => (
-              <button key={k} onClick={() => setTab(k)} className={`rounded-lg px-5 py-2 text-sm font-semibold ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            {(
+              [
+                ["chapters", "Capítulos"],
+                ["info", "Editar obra"],
+              ] as const
+            ).map(([k, l]) => (
+              <button
+                key={k}
+                onClick={() => setTab(k)}
+                className={`rounded-lg px-5 py-2 text-sm font-semibold ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
                 {l}
               </button>
             ))}
           </div>
 
-          {tab === "info" ? <InfoForm obra={obra} onSaved={refresh} /> : <ChaptersPanel seriesId={id} chapters={chapters} onChange={refresh} />}
+          {tab === "info" ? (
+            <InfoForm obra={obra} onSaved={refresh} />
+          ) : (
+            <ChaptersPanel seriesId={id} chapters={chapters} onChange={refresh} />
+          )}
         </>
       ) : null}
     </AdminShell>
@@ -226,9 +284,20 @@ function SeriesEditor() {
 }
 
 type Obra = {
-  id: string; title: string; slug: string; alt_titles: string | null; synopsis: string | null; cover_url: string | null;
-  banner_url: string | null; kind: string; status: string; author: string | null; artist: string | null; genres: string[];
-  published: boolean; pinned: boolean;
+  id: string;
+  title: string;
+  slug: string;
+  alt_titles: string | null;
+  synopsis: string | null;
+  cover_url: string | null;
+  banner_url: string | null;
+  kind: string;
+  status: string;
+  author: string | null;
+  artist: string | null;
+  genres: string[];
+  published: boolean;
+  pinned: boolean;
 };
 
 function InfoForm({ obra, onSaved }: { obra: Obra; onSaved: () => void }) {
@@ -252,7 +321,10 @@ function InfoForm({ obra, onSaved }: { obra: Obra; onSaved: () => void }) {
           status: f.status,
           author: f.author || null,
           artist: f.artist || null,
-          genres: f.genresText.split(",").map((g) => g.trim()).filter(Boolean),
+          genres: f.genresText
+            .split(",")
+            .map((g) => g.trim())
+            .filter(Boolean),
           published: f.published,
           pinned: f.pinned,
         })
@@ -269,7 +341,12 @@ function InfoForm({ obra, onSaved }: { obra: Obra; onSaved: () => void }) {
   const field = (label: string, k: keyof typeof f, ph?: string) => (
     <div className="space-y-1.5">
       <Label>{label}</Label>
-      <Input value={(f[k] as string) ?? ""} placeholder={ph} onChange={(e) => set(k, e.target.value)} className="bg-background" />
+      <Input
+        value={(f[k] as string) ?? ""}
+        placeholder={ph}
+        onChange={(e) => set(k, e.target.value)}
+        className="bg-background"
+      />
     </div>
   );
 
@@ -289,19 +366,35 @@ function InfoForm({ obra, onSaved }: { obra: Obra; onSaved: () => void }) {
         {field("Títulos alternativos", "alt_titles")}
         <div className="space-y-1.5">
           <Label>Sinopse</Label>
-          <Textarea value={f.synopsis ?? ""} onChange={(e) => set("synopsis", e.target.value)} className="min-h-32 bg-background" />
+          <Textarea
+            value={f.synopsis ?? ""}
+            onChange={(e) => set("synopsis", e.target.value)}
+            className="min-h-32 bg-background"
+          />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Tipo</Label>
-            <select value={f.kind} onChange={(e) => set("kind", e.target.value)} className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm">
-              {[...new Set([f.kind, ...KINDS])].map((k) => <option key={k}>{k}</option>)}
+            <select
+              value={f.kind}
+              onChange={(e) => set("kind", e.target.value)}
+              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm"
+            >
+              {[...new Set([f.kind, ...KINDS])].map((k) => (
+                <option key={k}>{k}</option>
+              ))}
             </select>
           </div>
           <div className="space-y-1.5">
             <Label>Status</Label>
-            <select value={f.status} onChange={(e) => set("status", e.target.value)} className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm">
-              {[...new Set([f.status, ...STATUSES])].map((s) => <option key={s}>{s}</option>)}
+            <select
+              value={f.status}
+              onChange={(e) => set("status", e.target.value)}
+              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm"
+            >
+              {[...new Set([f.status, ...STATUSES])].map((s) => (
+                <option key={s}>{s}</option>
+              ))}
             </select>
           </div>
           {field("Autor", "author")}
@@ -317,14 +410,19 @@ function InfoForm({ obra, onSaved }: { obra: Obra; onSaved: () => void }) {
       <div className="space-y-4">
         <div className="rounded-2xl border border-border bg-surface p-5">
           <p className="text-sm font-bold">Capa</p>
-          <img src={coverUrl(f.cover_url)} alt="" className="mt-3 aspect-[2/3] w-full rounded-xl object-cover" />
+          <img
+            src={coverUrl(f.cover_url)}
+            alt=""
+            className="mt-3 aspect-[2/3] w-full rounded-xl object-cover"
+          />
         </div>
         <div className="space-y-4 rounded-2xl border border-border bg-surface p-5">
           <label className="flex items-center justify-between text-sm font-semibold">
             Publicada <Switch checked={f.published} onCheckedChange={(v) => set("published", v)} />
           </label>
           <label className="flex items-center justify-between text-sm font-semibold">
-            Fixar em destaque <Switch checked={f.pinned} onCheckedChange={(v) => set("pinned", v)} />
+            Fixar em destaque{" "}
+            <Switch checked={f.pinned} onCheckedChange={(v) => set("pinned", v)} />
           </label>
           <Button type="submit" disabled={save.isPending} className="w-full font-semibold">
             <Save className="mr-2 h-4 w-4" /> {save.isPending ? "Salvando…" : "Salvar alterações"}
@@ -335,7 +433,15 @@ function InfoForm({ obra, onSaved }: { obra: Obra; onSaved: () => void }) {
   );
 }
 
-function ChaptersPanel({ seriesId, chapters, onChange }: { seriesId: string; chapters: Chapter[]; onChange: () => void }) {
+function ChaptersPanel({
+  seriesId,
+  chapters,
+  onChange,
+}: {
+  seriesId: string;
+  chapters: Chapter[];
+  onChange: () => void;
+}) {
   const [number, setNumber] = useState("");
   const [title, setTitle] = useState("");
   const [urls, setUrls] = useState("");
@@ -345,18 +451,31 @@ function ChaptersPanel({ seriesId, chapters, onChange }: { seriesId: string; cha
   const publish = useMutation({
     mutationFn: async () => {
       const n = Number(number.replace(",", "."));
-      if (!number.trim() || !Number.isFinite(n) || n < 0 || n > 100000) throw new Error("Número do capítulo inválido.");
-      if (chapters.some((c) => Number(c.number) === n)) throw new Error(`O capítulo ${formatChapter(n)} já existe.`);
+      if (!number.trim() || !Number.isFinite(n) || n < 0 || n > 100000)
+        throw new Error("Número do capítulo inválido.");
+      if (chapters.some((c) => Number(c.number) === n))
+        throw new Error(`O capítulo ${formatChapter(n)} já existe.`);
       if (title.length > 150) throw new Error("Título muito longo (máx. 150).");
-      const pasted = urls.split("\n").map((l) => l.trim()).filter(Boolean);
+      const pasted = urls
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean);
       const bad = pasted.find((u) => !/^https?:\/\/\S+$/i.test(u));
       if (bad) throw new Error(`Link inválido: ${bad.slice(0, 60)}`);
       const uploaded = files.length ? await uploadFiles(seriesId, formatChapter(n), files) : [];
       const pages = [...uploaded, ...pasted];
       if (!pages.length) throw new Error("Adicione páginas (upload ou links).");
-      const { error } = await supabase.from("chapters").insert({ series_id: seriesId, number: n, title: title.trim() || null, pages });
+      const { error } = await supabase
+        .from("chapters")
+        .insert({ series_id: seriesId, number: n, title: title.trim() || null, pages });
       if (error) throw error;
-      { const { error: dbErr } = await supabase.from("series").update({ updated_at: new Date().toISOString() }).eq("id", seriesId); if (dbErr) throw dbErr; }
+      {
+        const { error: dbErr } = await supabase
+          .from("series")
+          .update({ updated_at: new Date().toISOString() })
+          .eq("id", seriesId);
+        if (dbErr) throw dbErr;
+      }
     },
     onSuccess: () => {
       toast.success("Capítulo publicado!");
@@ -383,7 +502,10 @@ function ChaptersPanel({ seriesId, chapters, onChange }: { seriesId: string; cha
 
   const togglePub = useMutation({
     mutationFn: async (c: Chapter) => {
-      const { error } = await supabase.from("chapters").update({ published: !c.published }).eq("id", c.id);
+      const { error } = await supabase
+        .from("chapters")
+        .update({ published: !c.published })
+        .eq("id", c.id);
       if (error) throw error;
     },
     onSuccess: onChange,
@@ -404,19 +526,41 @@ function ChaptersPanel({ seriesId, chapters, onChange }: { seriesId: string; cha
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1.5">
             <Label>Número</Label>
-            <Input required value={number} onChange={(e) => setNumber(e.target.value)} placeholder={String((chapters[0]?.number ?? 0) + 1)} inputMode="decimal" className="bg-background" />
+            <Input
+              required
+              value={number}
+              onChange={(e) => setNumber(e.target.value)}
+              placeholder={String((chapters[0]?.number ?? 0) + 1)}
+              inputMode="decimal"
+              className="bg-background"
+            />
           </div>
           <div className="col-span-2 space-y-1.5">
             <Label>Título (opcional)</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="bg-background" />
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="bg-background"
+            />
           </div>
         </div>
         <DropZone files={files} setFiles={setFiles} />
         <div className="space-y-1.5">
-          <Label className="flex items-center gap-1.5"><Link2 className="h-3.5 w-3.5" /> Ou links das páginas (um por linha)</Label>
-          <Textarea value={urls} onChange={(e) => setUrls(e.target.value)} className="min-h-24 bg-background font-mono text-xs" placeholder={"https://…/01.jpg\nhttps://…/02.jpg"} />
+          <Label className="flex items-center gap-1.5">
+            <Link2 className="h-3.5 w-3.5" /> Ou links das páginas (um por linha)
+          </Label>
+          <Textarea
+            value={urls}
+            onChange={(e) => setUrls(e.target.value)}
+            className="min-h-24 bg-background font-mono text-xs"
+            placeholder={"https://…/01.jpg\nhttps://…/02.jpg"}
+          />
         </div>
-        <Button type="submit" disabled={publish.isPending || !number.trim()} className="w-full font-semibold">
+        <Button
+          type="submit"
+          disabled={publish.isPending || !number.trim()}
+          className="w-full font-semibold"
+        >
           {publish.isPending ? "Enviando…" : "Publicar capítulo"}
         </Button>
       </form>
@@ -428,39 +572,76 @@ function ChaptersPanel({ seriesId, chapters, onChange }: { seriesId: string; cha
         </div>
         <div className="max-h-[640px] overflow-y-auto">
           {chapters.map((c) => (
-            <div key={c.id} className="flex items-center gap-4 border-b border-border px-5 py-3.5 last:border-0 hover:bg-surface-2/50">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-surface-2 text-sm font-bold">{formatChapter(c.number)}</span>
+            <div
+              key={c.id}
+              className="flex items-center gap-4 border-b border-border px-5 py-3.5 last:border-0 hover:bg-surface-2/50"
+            >
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-surface-2 text-sm font-bold">
+                {formatChapter(c.number)}
+              </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">
                   Capítulo {formatChapter(c.number)}
-                  {c.title ? <span className="ml-2 font-normal text-muted-foreground">{c.title}</span> : null}
+                  {c.title ? (
+                    <span className="ml-2 font-normal text-muted-foreground">{c.title}</span>
+                  ) : null}
                 </p>
                 <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <FileImage className="h-3 w-3" /> {pagesOf(c.pages).length} páginas · {timeAgo(c.created_at)}
-                  {!c.published ? <span className="rounded bg-muted px-1.5 font-bold">Oculto</span> : null}
+                  <FileImage className="h-3 w-3" /> {pagesOf(c.pages).length} páginas ·{" "}
+                  {timeAgo(c.created_at)}
+                  {!c.published ? (
+                    <span className="rounded bg-muted px-1.5 font-bold">Oculto</span>
+                  ) : null}
                 </p>
               </div>
-              <Switch checked={c.published} onCheckedChange={() => togglePub.mutate(c)} title="Visível no site" />
+              <Switch
+                checked={c.published}
+                onCheckedChange={() => togglePub.mutate(c)}
+                title="Visível no site"
+              />
               <Button variant="ghost" size="icon" title="Editar" onClick={() => setEditing(c)}>
                 <Pencil className="h-4 w-4" />
               </Button>
-              <ConfirmDelete title={`Apagar capítulo ${formatChapter(c.number)}?`} description="Essa ação não pode ser desfeita." onConfirm={() => remove.mutate(c.id)}>
+              <ConfirmDelete
+                title={`Apagar capítulo ${formatChapter(c.number)}?`}
+                description="Essa ação não pode ser desfeita."
+                onConfirm={() => remove.mutate(c.id)}
+              >
                 <Button variant="ghost" size="icon" title="Apagar">
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </ConfirmDelete>
             </div>
           ))}
-          {chapters.length === 0 ? <p className="p-10 text-center text-sm text-muted-foreground">Nenhum capítulo publicado ainda.</p> : null}
+          {chapters.length === 0 ? (
+            <p className="p-10 text-center text-sm text-muted-foreground">
+              Nenhum capítulo publicado ainda.
+            </p>
+          ) : null}
         </div>
       </div>
 
-      <ChapterDialog seriesId={seriesId} chapter={editing} onClose={() => setEditing(null)} onSaved={onChange} />
+      <ChapterDialog
+        seriesId={seriesId}
+        chapter={editing}
+        onClose={() => setEditing(null)}
+        onSaved={onChange}
+      />
     </div>
   );
 }
 
-function ChapterDialog({ seriesId, chapter, onClose, onSaved }: { seriesId: string; chapter: Chapter | null; onClose: () => void; onSaved: () => void }) {
+function ChapterDialog({
+  seriesId,
+  chapter,
+  onClose,
+  onSaved,
+}: {
+  seriesId: string;
+  chapter: Chapter | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
   const [number, setNumber] = useState("");
   const [title, setTitle] = useState("");
   const [pages, setPages] = useState<string[]>([]);
@@ -477,9 +658,14 @@ function ChapterDialog({ seriesId, chapter, onClose, onSaved }: { seriesId: stri
   const save = useMutation({
     mutationFn: async () => {
       if (!chapter) return;
-      const extra = files.length ? await uploadFiles(seriesId, formatChapter(number), files, pages.length) : [];
+      const extra = files.length
+        ? await uploadFiles(seriesId, formatChapter(number), files, pages.length)
+        : [];
       const all = [...pages.map((p) => p.trim()).filter(Boolean), ...extra];
-      const { error } = await supabase.from("chapters").update({ number: Number(number), title: title.trim() || null, pages: all }).eq("id", chapter.id);
+      const { error } = await supabase
+        .from("chapters")
+        .update({ number: Number(number), title: title.trim() || null, pages: all })
+        .eq("id", chapter.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -512,13 +698,25 @@ function ChapterDialog({ seriesId, chapter, onClose, onSaved }: { seriesId: stri
             {pages.map((p, i) => (
               <div key={i} className="flex items-center gap-2">
                 {pageUrls[i] ? (
-                  <img src={pageUrls[i] as string} alt="" className="h-12 w-9 shrink-0 rounded object-cover" />
+                  <img
+                    src={pageUrls[i] as string}
+                    alt=""
+                    className="h-12 w-9 shrink-0 rounded object-cover"
+                  />
                 ) : (
                   <div className="h-12 w-9 shrink-0 rounded bg-muted" aria-hidden="true" />
                 )}
                 <span className="w-6 text-xs text-muted-foreground">{i + 1}</span>
-                <Input value={p} onChange={(e) => setPages(pages.map((x, j) => (j === i ? e.target.value : x)))} className="font-mono text-xs" />
-                <Button variant="ghost" size="icon" onClick={() => setPages(pages.filter((_, j) => j !== i))}>
+                <Input
+                  value={p}
+                  onChange={(e) => setPages(pages.map((x, j) => (j === i ? e.target.value : x)))}
+                  className="font-mono text-xs"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setPages(pages.filter((_, j) => j !== i))}
+                >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -529,7 +727,11 @@ function ChapterDialog({ seriesId, chapter, onClose, onSaved }: { seriesId: stri
           </Button>
         </div>
         <DropZone files={files} setFiles={setFiles} />
-        <Button disabled={save.isPending} onClick={() => save.mutate()} className="w-full font-semibold">
+        <Button
+          disabled={save.isPending}
+          onClick={() => save.mutate()}
+          className="w-full font-semibold"
+        >
           <Save className="mr-2 h-4 w-4" /> {save.isPending ? "Salvando…" : "Salvar capítulo"}
         </Button>
       </DialogContent>
