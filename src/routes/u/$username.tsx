@@ -51,6 +51,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useAuth";
 import { coverUrl, timeAgo } from "@/lib/media";
+import { publicStorageUrl, toStoragePath } from "@/lib/storage-urls";
 import { FramedAvatar } from "@/components/FramedAvatar";
 import { UserBadges, type Badge } from "@/components/UserBadges";
 
