@@ -52,6 +52,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useAuth";
 import { coverUrl, timeAgo } from "@/lib/media";
 import { publicStorageUrl, toStoragePath } from "@/lib/storage-urls";
+import {
+  MAX_IMAGE_DIMENSION,
+  MIN_IMAGE_DIMENSION,
+  readImageDimensions,
+  validateImageFile,
+} from "@/lib/image-validation";
 import { FramedAvatar } from "@/components/FramedAvatar";
 import { UserBadges, type Badge } from "@/components/UserBadges";
 
@@ -1148,13 +1154,23 @@ function EditProfile({
   });
 
   async function upload(kind: "avatar" | "banner", file: File) {
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("A imagem deve ter no máximo 5 MB");
+    const check = validateImageFile(file);
+    if (!check.ok) {
+      toast.error(check.errors.join(" "));
+      return;
+    }
+    const size = await readImageDimensions(file);
+    if (size && (size.width > MAX_IMAGE_DIMENSION || size.height > MAX_IMAGE_DIMENSION)) {
+      toast.error("Imagem muito grande — máximo de 4096px por lado.");
+      return;
+    }
+    if (size && (size.width < MIN_IMAGE_DIMENSION || size.height < MIN_IMAGE_DIMENSION)) {
+      toast.error("Imagem muito pequena — mínimo de 32px por lado.");
       return;
     }
     setUploading(kind);
     try {
-      const ext = file.name.split(".").pop() ?? "png";
+      const ext = check.extension;
       const path = `profiles/${profile.id}/${kind}-${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("manga").upload(path, file, { upsert: true });
       if (error) throw error;

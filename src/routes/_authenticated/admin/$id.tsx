@@ -57,9 +57,13 @@ async function uploadFiles(seriesId: string, chapterNumber: string, files: File[
   const ordered = [...files].sort((a, b) =>
     a.name.localeCompare(b.name, undefined, { numeric: true }),
   );
-  for (const [i, file] of ordered.entries()) {
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const path = `${seriesId}/${chapterNumber}/${Date.now()}-${String(offset + i + 1).padStart(3, "0")}.${ext}`;
+  let index = 0;
+  for (const file of ordered) {
+    const check = validateImageFile(file);
+    if (!check.ok) throw new Error(`${file.name}: ${check.errors.join(" ")}`);
+    const { ext } = check;
+    index += 1;
+    const path = `${seriesId}/${chapterNumber}/${Date.now()}-${String(offset + index).padStart(3, "0")}.${ext}`;
     const { error } = await supabase.storage
       .from("manga")
       .upload(path, file, { upsert: true, contentType: file.type });

@@ -1,10 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BUCKET, isExternalUrl, publicStorageUrl, toStoragePath } from "@/lib/storage-urls";
+import { validateImageFile } from "@/lib/image-validation";
 
 const PREFIX = "comments";
 
 export async function uploadCommentImage(userId: string, file: File): Promise<string> {
-  const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+  const check = validateImageFile(file);
+  if (!check.ok) throw new Error(check.errors.join(" "));
+  const ext = check.extension;
   const path = `${PREFIX}/${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
     cacheControl: "31536000",

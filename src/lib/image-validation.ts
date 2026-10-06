@@ -52,29 +52,34 @@ export function sanitizeImageFileName(name: string): string {
   return cleaned;
 }
 
-export function validateImageFile(file: Pick<File, "name" | "type" | "size">): ImageValidationResult {
+export function validateImageFile(
+  file: Pick<File, "name" | "type" | "size">,
+): ImageValidationResult {
   const errors: string[] = [];
   const rawExt = file.name.split(".").pop() ?? "";
-  const normalizedName = sanitizeImageFileName(file.name);
+  const normalized = sanitizeImageFileName(file.name);
+  const declaredMime = file.type || mimeFromExtension(rawExt) || "";
 
   if (file.size > MAX_IMAGE_FILE_BYTES) {
     errors.push("A imagem deve ter no máximo 5 MB.");
   }
-  if (!ALLOWED_IMAGE_MIME_TYPES.some((m) => m === file.type)) {
+  if (!isAllowedMimeType(declaredMime)) {
     errors.push("Formato não permitido — use JPG, PNG, WEBP, GIF ou AVIF.");
+  } else if (rawExt && mimeFromExtension(rawExt) !== declaredMime) {
+    errors.push("A extensão do arquivo não confere com o tipo da imagem.");
   }
-  const expectedExt = extFromMime(file.type);
-  if (expectedExt && rawExt && !SAFE_NAME_RE.test(rawExt)) {
-    errors.push("Nome de arquivo inválido.");
-  } else if (expectedExt && "jpg jpeg png webp gif avif".split(" ").includes(rawExt.toLowerCase()) && extFromMime=="")
-  if (!SAFE_NAME_RE.test(normalizedName) || normalizedName.includes("..")) {
-    errors.push("Nome de arquivo inválido.");
-  }
-  if (file.type && !SAFE_NAME_RE.test(rawExt)) {
+  if (!SAFE_NAME_RE.test(normalized) || normalized.includes("..")) {
     errors.push("Nome de arquivo inválido.");
   }
 
-  return errors.length ? { ok: false, errors } : { ok: true, extension: MIME_TO_EXTENSION[file.type] };
+  const extension = extFromMime(declaredMime);
+  return extension && errors.length === 0
+    ? { ok: true, extension }
+    : { ok: false, errors };
+}
+
+export function isAllowedMimeType(mime: string): boolean {
+  return ALLOWED_IMAGE_MIME_TYPES.some((m) => m === mime);
 }
 
 export async function readImageDimensions(
