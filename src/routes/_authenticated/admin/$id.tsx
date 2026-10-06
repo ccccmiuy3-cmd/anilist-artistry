@@ -80,23 +80,33 @@ function DropZone({ files, setFiles }: { files: File[]; setFiles: (f: File[]) =>
   const [over, setOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [abort, setAbort] = useState<AbortController | null>(null);
   const handle = async (list: File[]) => {
     if (!list.length) return;
+    const controller = new AbortController();
+    setAbort(controller);
+    stoppedRef.current = false;
     setBusy(true);
     setProgress(null);
     try {
       const { extractPages } = await import("@/lib/extract-pages");
-      const imgs = await extractPages(list, (done, total) => setProgress({ done, total }));
+      const imgs = await extractPages(list, (done, total) => setProgress({ done, total }), controller.signal);
       if (!imgs.length) throw new Error("Nenhuma imagem encontrada no arquivo.");
       setFiles(imgs);
       toast.success(`${imgs.length} imagem(ns) extraída(s)`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao extrair arquivo");
+      if (e instanceof DOMException && e.name === "AbortError") {
+        toast.success("Extração cancelada.");
+      } else {
+        toast.error(e instanceof Error ? e.message : "Falha ao extrair arquivo");
+      }
     } finally {
       setBusy(false);
       setProgress(null);
+      setAbort(null);
     }
   };
+  const cancel = () => abort?.abort();
   const pct =
     progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : null;
   return (
