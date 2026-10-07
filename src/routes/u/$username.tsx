@@ -166,22 +166,26 @@ function Perfil() {
           .eq("user_id", p.id)
           .order("created_at", { ascending: false })
           .limit(48),
-        supabase
-          .from("reading_status")
-          .select(
-            "status, updated_at, series(id, slug, title, cover_url, kind, rating, chapters(number))",
-          )
-          .eq("user_id", p.id)
-          .order("updated_at", { ascending: false })
-          .limit(48),
-        supabase
-          .from("reading_history")
-          .select(
-            "updated_at, series_id, chapters(number), series(id, slug, title, cover_url, kind, rating, chapters(number))",
-          )
-          .eq("user_id", p.id)
-          .order("updated_at", { ascending: false })
-          .limit(48),
+        isSelf
+          ? supabase
+              .from("reading_status")
+              .select(
+                "status, updated_at, series(id, slug, title, cover_url, kind, rating, chapters(number))",
+              )
+              .eq("user_id", p.id)
+              .order("updated_at", { ascending: false })
+              .limit(48)
+          : Promise.resolve({ data: [] }),
+        isSelf
+          ? supabase
+              .from("reading_history")
+              .select(
+                "updated_at, series_id, chapters(number), series(id, slug, title, cover_url, kind, rating, chapters(number))",
+              )
+              .eq("user_id", p.id)
+              .order("updated_at", { ascending: false })
+              .limit(48)
+          : Promise.resolve({ data: [] }),
         user
           ? supabase
               .from("user_follows")
