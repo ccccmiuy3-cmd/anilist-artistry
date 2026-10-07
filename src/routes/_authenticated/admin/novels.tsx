@@ -427,16 +427,14 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
           skipped.push(`${file.name} (cap. ${formatChapter(num)} já existe)`);
           continue;
         }
-        const { error } = await supabase
-          .from("chapters")
-          .insert({
-            series_id: novel.id,
-            number: num,
-            title: r.title,
-            content: r.content,
-            pages: [],
-            published: bulkPublish,
-          });
+        const { error } = await supabase.from("chapters").insert({
+          series_id: novel.id,
+          number: num,
+          title: r.title,
+          content: r.content,
+          pages: [],
+          published: bulkPublish,
+        });
         if (error) {
           skipped.push(`${file.name} (${error.message})`);
           continue;
