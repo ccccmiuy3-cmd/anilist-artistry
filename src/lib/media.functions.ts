@@ -1,7 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
-async function assertAdmin(supabase: any, userId: string) {
+type RpcClient = {
+  rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: boolean | null }>;
+};
+
+async function assertAdmin(supabase: RpcClient, userId: string) {
   const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
   if (!data) throw new Error("Apenas administradores.");
 }
@@ -41,7 +46,9 @@ export const saveMediaSettings = createServerFn({ method: "POST" })
       updated_at: new Date().toISOString(),
     };
     if (data.api_secret?.trim()) row["api_secret"] = data.api_secret.trim();
-    const { error } = await supabaseAdmin.from("media_settings").upsert(row as any);
+    const { error } = await supabaseAdmin
+      .from("media_settings")
+      .upsert(row as Database["public"]["Tables"]["media_settings"]["Insert"]);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
