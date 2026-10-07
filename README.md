@@ -28,15 +28,15 @@ npm run dev
 
 ### Scripts
 
-| Script | O que faz |
-| --- | --- |
-| `npm run dev` | dev server |
-| `npm run build` | build de produção (Vite + Nitro) |
-| `npm run typecheck` | checagem de tipos (`tsc --noEmit`) |
-| `npm run lint` | ESLint + Prettier |
-| `npm run test` | testes unitários (vitest) |
-| `npm run format:check` | confere formatação |
-| `npm run preview` | serve o build local |
+| Script                 | O que faz                          |
+| ---------------------- | ---------------------------------- |
+| `npm run dev`          | dev server                         |
+| `npm run build`        | build de produção (Vite + Nitro)   |
+| `npm run typecheck`    | checagem de tipos (`tsc --noEmit`) |
+| `npm run lint`         | ESLint + Prettier                  |
+| `npm run test`         | testes unitários (vitest)          |
+| `npm run format:check` | confere formatação                 |
+| `npm run preview`      | serve o build local                |
 
 ### Documentação
 
