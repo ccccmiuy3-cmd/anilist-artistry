@@ -40,14 +40,12 @@ export function StatusButton({ userId, seriesId }: { userId: string; seriesId: s
           if (dbErr) throw dbErr;
         }
       } else {
-        const { error } = await supabase
-          .from("reading_status")
-          .upsert({
-            user_id: userId,
-            series_id: seriesId,
-            status: value,
-            updated_at: new Date().toISOString(),
-          });
+        const { error } = await supabase.from("reading_status").upsert({
+          user_id: userId,
+          series_id: seriesId,
+          status: value,
+          updated_at: new Date().toISOString(),
+        });
         if (error) throw error;
       }
     },
