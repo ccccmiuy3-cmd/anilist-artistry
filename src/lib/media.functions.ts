@@ -27,7 +27,9 @@ export const getMediaSettings = createServerFn({ method: "GET" })
 
 export const saveMediaSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { cloud_name: string; api_key: string; api_secret?: string; folder: string }) => d)
+  .inputValidator(
+    (d: { cloud_name: string; api_key: string; api_secret?: string; folder: string }) => d,
+  )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -61,9 +63,18 @@ export const signCloudinaryUpload = createServerFn({ method: "POST" })
       .select("cloud_name, api_key, api_secret, folder")
       .eq("id", 1)
       .maybeSingle();
-    if (!settings?.cloud_name || !settings.api_key || !settings.api_secret) throw new Error("Configure as chaves do Cloudinary primeiro.");
+    if (!settings?.cloud_name || !settings.api_key || !settings.api_secret)
+      throw new Error("Configure as chaves do Cloudinary primeiro.");
     const timestamp = Math.floor(Date.now() / 1000);
     const folder = settings.folder || "bettermanga";
-    const signature = await sha1Hex(`folder=${folder}&timestamp=${timestamp}${settings.api_secret}`);
-    return { cloud_name: settings.cloud_name, api_key: settings.api_key, folder, timestamp, signature };
+    const signature = await sha1Hex(
+      `folder=${folder}&timestamp=${timestamp}${settings.api_secret}`,
+    );
+    return {
+      cloud_name: settings.cloud_name,
+      api_key: settings.api_key,
+      folder,
+      timestamp,
+      signature,
+    };
   });

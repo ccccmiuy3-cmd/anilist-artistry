@@ -63,7 +63,9 @@ export async function fetchSeries(options: {
   if (options.inSlider) query = query.eq("in_slider", true);
   if (options.pinnedFirst) query = query.order("pinned", { ascending: false });
 
-  query = query.order(options.order ?? "updated_at", { ascending: false }).limit(options.limit ?? 24);
+  query = query
+    .order(options.order ?? "updated_at", { ascending: false })
+    .limit(options.limit ?? 24);
 
   const { data, error } = await query;
   if (error) throw error;
@@ -114,7 +116,13 @@ export async function fetchHistory(userId: string) {
     updated_at: string;
     chapter_id: string | null;
     chapters: { id: string; number: number } | null;
-    series: { id: string; slug: string; title: string; cover_url: string | null; chapters: Array<{ id: string }> };
+    series: {
+      id: string;
+      slug: string;
+      title: string;
+      cover_url: string | null;
+      chapters: Array<{ id: string }>;
+    };
   }>;
 }
 
@@ -170,15 +178,24 @@ export type CommentParent = { id: string; username: string; excerpt?: string };
 
 export async function fetchCommentParents(rows: Array<{ parent_id: string | null }>) {
   const parents = new Map<string, CommentParent>();
-  const parentIds = [...new Set(rows.map((row) => row.parent_id).filter((id): id is string => Boolean(id)))];
+  const parentIds = [
+    ...new Set(rows.map((row) => row.parent_id).filter((id): id is string => Boolean(id))),
+  ];
   if (parentIds.length === 0) return parents;
   const { data } = await supabase.from("comments").select("id, user_id, body").in("id", parentIds);
   const parentRows = data ?? [];
   const userIds = [...new Set(parentRows.map((row) => row.user_id))];
-  const { data: profiles } = await supabase.from("profiles").select("id, username").in("id", userIds);
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, username")
+    .in("id", userIds);
   const names = new Map((profiles ?? []).map((p) => [p.id, p.username]));
   for (const row of parentRows) {
-    parents.set(row.id, { id: row.id, username: names.get(row.user_id) ?? "leitor", excerpt: (row.body ?? "").slice(0, 60) });
+    parents.set(row.id, {
+      id: row.id,
+      username: names.get(row.user_id) ?? "leitor",
+      excerpt: (row.body ?? "").slice(0, 60),
+    });
   }
   return parents;
 }
@@ -193,7 +210,10 @@ export async function fetchComments(seriesId: string) {
   if (error) throw error;
   const rows = data ?? [];
   const ids = [...new Set(rows.map((row) => row.user_id))];
-  const [authors, parents] = await Promise.all([fetchCommentAuthors(ids), fetchCommentParents(rows)]);
+  const [authors, parents] = await Promise.all([
+    fetchCommentAuthors(ids),
+    fetchCommentParents(rows),
+  ]);
   return rows.map((row) => ({
     ...row,
     author: authors.get(row.user_id) ?? null,
