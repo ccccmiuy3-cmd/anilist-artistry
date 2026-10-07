@@ -27,7 +27,7 @@ describe("mimeFromExtension / extFromMime", () => {
 
 describe("sanitizeImageFileName", () => {
   it("remove acentos e normaliza o nome", () => {
-    expect(sanitizeImageFileName("Capa Açúcar.jpg")).toBe("Capa_A_car.jpg");
+    expect(sanitizeImageFileName("Capa Açúcar.jpg")).toBe("Capa_Acucar.jpg");
   });
 
   it("troca separadores de path e espaços por underscore", () => {
@@ -44,8 +44,8 @@ describe("sanitizeImageFileName", () => {
     expect(sanitizeImageFileName(long).length).toBe(64);
   });
 
-  it("não retorna string vazia para nomes só de símbolos", () => {
-    expect(sanitizeImageFileName("!!!" )).toBe("");
+  it("substitui símbolos por underscore", () => {
+    expect(sanitizeImageFileName("!!!")).toBe("___");
   });
 
   it("mantém nomes seguros intactos", () => {
