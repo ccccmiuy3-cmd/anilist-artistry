@@ -160,12 +160,16 @@ function Perfil() {
           .from("user_follows")
           .select("*", { count: "exact", head: true })
           .eq("follower_id", p.id),
-        supabase
-          .from("favorites")
-          .select("created_at, series(id, slug, title, cover_url, kind, rating, chapters(number))")
-          .eq("user_id", p.id)
-          .order("created_at", { ascending: false })
-          .limit(48),
+        // Favoritos são privados por RLS (só o dono vê): não buscamos os de
+        // outrem — a seção "Favoritos" do perfil público fica restrita ao dono.
+        isSelf
+          ? supabase
+              .from("favorites")
+              .select("created_at, series(id, slug, title, cover_url, kind, rating, chapters(number))")
+              .eq("user_id", p.id)
+              .order("created_at", { ascending: false })
+              .limit(48)
+          : Promise.resolve({ data: [] }),
         isSelf
           ? supabase
               .from("reading_status")
