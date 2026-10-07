@@ -769,6 +769,7 @@ export type Database = {
         Returns: undefined;
       };
       claim_event_badge: { Args: { _event: string }; Returns: undefined };
+      claim_first_admin: { Args: { p_user_id: string }; Returns: boolean };
       comment_vote_counts: {
         Args: { _comment_id: string };
         Returns: {
