@@ -479,9 +479,7 @@ function ChaptersPanel({
   const [files, setFiles] = useState<File[]>([]);
   const [editing, setEditing] = useState<Chapter | null>(null);
 
-  const autoNumber = chapters.length
-    ? Math.max(...chapters.map((c) => Number(c.number))) + 1
-    : 0;
+  const autoNumber = chapters.length ? Math.max(...chapters.map((c) => Number(c.number))) + 1 : 0;
   const numberValue = number.trim() || String(autoNumber);
 
   const publish = useMutation({
