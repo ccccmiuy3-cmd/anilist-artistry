@@ -479,10 +479,15 @@ function ChaptersPanel({
   const [files, setFiles] = useState<File[]>([]);
   const [editing, setEditing] = useState<Chapter | null>(null);
 
+  const autoNumber = chapters.length
+    ? Math.max(...chapters.map((c) => Number(c.number))) + 1
+    : 0;
+  const numberValue = number.trim() || String(autoNumber);
+
   const publish = useMutation({
     mutationFn: async () => {
-      const n = Number(number.replace(",", "."));
-      if (!number.trim() || !Number.isFinite(n) || n < 0 || n > 100000)
+      const n = Number(numberValue.replace(",", "."));
+      if (!numberValue.trim() || !Number.isFinite(n) || n < 0 || n > 100000)
         throw new Error("Número do capítulo inválido.");
       if (chapters.some((c) => Number(c.number) === n))
         throw new Error(`O capítulo ${formatChapter(n)} já existe.`);
@@ -559,9 +564,8 @@ function ChaptersPanel({
             <Label>Número</Label>
             <Input
               required
-              value={number}
+              value={numberValue}
               onChange={(e) => setNumber(e.target.value)}
-              placeholder={String((chapters[0]?.number ?? 0) + 1)}
               inputMode="decimal"
               className="bg-background"
             />
@@ -589,7 +593,7 @@ function ChaptersPanel({
         </div>
         <Button
           type="submit"
-          disabled={publish.isPending || !number.trim()}
+          disabled={publish.isPending || !numberValue.trim()}
           className="w-full font-semibold"
         >
           {publish.isPending ? "Enviando…" : "Publicar capítulo"}
