@@ -132,6 +132,11 @@ function Perfil() {
     enabled: Boolean(p),
     queryFn: async () => {
       if (!p) throw new Error("Perfil não encontrado");
+      // Status de leitura e histórico pertencem ao dono do perfil: só a pessoa
+      // vê os próprios. Para perfis públicos não buscamos esses dados — a
+      // consulta pública fica limitada ao que é realmente público (favs, listas,
+      // badges, seguidores, ranking).
+      const isSelf = user?.id === p.id;
       const [
         followers,
         following,
