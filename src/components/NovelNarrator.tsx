@@ -137,7 +137,8 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
   const stop = useCallback(() => {
     stopAi();
     session.current++;
-    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    if (typeof window !== "undefined" && "speechSynthesis" in window)
+      window.speechSynthesis.cancel();
     setState("idle");
     callbacks.current.onActiveChange(null);
   }, [stopAi]);
@@ -163,7 +164,9 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
       pos.current = { p: pi, c: ci };
       if (ci === 0) {
         callbacks.current.onActiveChange(pi);
-        document.getElementById(`novel-p-${pi}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        document
+          .getElementById(`novel-p-${pi}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
       }
       const u = new SpeechSynthesisUtterance(chunks[ci] ?? "");
       u.lang = settings.current.voice?.lang ?? "pt-BR";
@@ -177,7 +180,10 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         speak(pi, ci + 1);
       };
       // Watchdog: some browsers never fire onend; move on after a generous timeout.
-      const watchdog = window.setTimeout(next, 4000 + ((chunks[ci]?.length ?? 0) * 160) / settings.current.rate);
+      const watchdog = window.setTimeout(
+        next,
+        4000 + ((chunks[ci]?.length ?? 0) * 160) / settings.current.rate,
+      );
       u.onend = next;
       u.onerror = (e) => {
         if (e.error === "interrupted" || e.error === "canceled") {
@@ -197,7 +203,10 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         next();
       };
       // Small delay after cancel() avoids Chrome dropping the first utterance.
-      window.setTimeout(() => id === session.current && synth.speak(u), ci === 0 && pi === p ? 60 : 0);
+      window.setTimeout(
+        () => id === session.current && synth.speak(u),
+        ci === 0 && pi === p ? 60 : 0,
+      );
     };
     speak(p, c);
   }, []);
@@ -211,7 +220,10 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
       window.speechSynthesis?.cancel();
       const id = ++session.current;
       const chunks = aiChunks(paragraphsRef.current);
-      let i = Math.max(0, chunks.findIndex((c) => c.p >= startParagraph));
+      let i = Math.max(
+        0,
+        chunks.findIndex((c) => c.p >= startParagraph),
+      );
       const controller = new AbortController();
       ai.current.abort = controller;
       let context: AudioContext;
@@ -220,7 +232,9 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         if (context.state === "suspended") await context.resume();
       } catch {
         // Audio output unavailable on this device: use the device voice instead.
-        toast.error("Este aparelho não permitiu o áudio da voz realista. Usando a voz do aparelho.");
+        toast.error(
+          "Este aparelho não permitiu o áudio da voz realista. Usando a voz do aparelho.",
+        );
         setEngine("device");
         play(startParagraph, 0);
         return;
@@ -246,14 +260,16 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
       const getWithRetry = async (k: number) => {
         let lastError: unknown;
         for (let attempt = 0; attempt < 3; attempt++) {
-          if (id !== session.current || controller.signal.aborted) throw new SpeechError("cancelado", 0);
+          if (id !== session.current || controller.signal.aborted)
+            throw new SpeechError("cancelado", 0);
           try {
             return await get(k)!;
           } catch (err) {
             lastError = err;
             const status = (err as SpeechError).status;
             // 429 (limite) não muda esperando: o servidor pede ~60s.
-            if (status === 401 || status === 402 || status === 429 || controller.signal.aborted) throw err;
+            if (status === 401 || status === 402 || status === 429 || controller.signal.aborted)
+              throw err;
             await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
           }
         }
@@ -271,7 +287,9 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
           if (chunk.p !== pos.current.p || i === 0 || chunks[i - 1]?.p !== chunk.p) {
             pos.current = { p: chunk.p, c: 0 };
             callbacks.current.onActiveChange(chunk.p);
-            document.getElementById(`novel-p-${chunk.p}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+            document
+              .getElementById(`novel-p-${chunk.p}`)
+              ?.scrollIntoView({ behavior: "smooth", block: "center" });
           }
           const buffer = context.createBuffer(1, samples.length, 24000);
           buffer.copyToChannel(samples as Float32Array<ArrayBuffer>, 0);
@@ -384,9 +402,16 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
       <Volume2 className="h-5 w-5 text-primary" />
       <span className="mr-auto text-sm font-bold">
         Narração automática
-        {loading ? <span className="ml-2 text-xs font-normal text-muted-foreground">preparando voz…</span> : null}
+        {loading ? (
+          <span className="ml-2 text-xs font-normal text-muted-foreground">preparando voz…</span>
+        ) : null}
       </span>
-      <Button size="sm" onClick={toggle} disabled={loading && state === "playing" && !ai.current.source} aria-label={state === "playing" ? "Pausar" : "Ouvir"}>
+      <Button
+        size="sm"
+        onClick={toggle}
+        disabled={loading && state === "playing" && !ai.current.source}
+        aria-label={state === "playing" ? "Pausar" : "Ouvir"}
+      >
         {state === "playing" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         {state === "playing" ? "Pausar" : state === "paused" ? "Continuar" : "Ouvir"}
       </Button>
@@ -420,7 +445,9 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
         aria-label="Velocidade"
       >
         {[0.75, 1, 1.25, 1.5, 1.75, 2].map((r) => (
-          <option key={r} value={r}>{r}x</option>
+          <option key={r} value={r}>
+            {r}x
+          </option>
         ))}
       </select>
       {engine === "ai" ? (
@@ -434,7 +461,9 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
           aria-label="Voz"
         >
           {AI_VOICES.map((v) => (
-            <option key={v.id} value={v.id}>{v.label}</option>
+            <option key={v.id} value={v.id}>
+              {v.label}
+            </option>
           ))}
         </select>
       ) : voices.length > 1 ? (
@@ -448,7 +477,9 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
           aria-label="Voz"
         >
           {voices.map((v) => (
-            <option key={v.voiceURI} value={v.voiceURI}>{v.name}</option>
+            <option key={v.voiceURI} value={v.voiceURI}>
+              {v.name}
+            </option>
           ))}
         </select>
       ) : null}

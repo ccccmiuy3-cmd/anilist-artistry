@@ -34,19 +34,25 @@ export const Route = createFileRoute("/api/tts")({
         const apiKey = process.env["LOVABLE_API_KEY"];
         const url = process.env["SUPABASE_URL"];
         const pub = process.env["SUPABASE_PUBLISHABLE_KEY"];
-        if (!apiKey || !url || !pub) return new Response("Servidor sem configuração", { status: 500 });
+        if (!apiKey || !url || !pub)
+          return new Response("Servidor sem configuração", { status: 500 });
 
         // Only signed-in users may generate speech (it costs credits).
         const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
         if (!token) return new Response("Faça login para usar a voz realista", { status: 401 });
-        const who = await fetch(`${url}/auth/v1/user`, { headers: { apikey: pub, Authorization: `Bearer ${token}` } });
+        const who = await fetch(`${url}/auth/v1/user`, {
+          headers: { apikey: pub, Authorization: `Bearer ${token}` },
+        });
         if (!who.ok) return new Response("Sessão inválida", { status: 401 });
 
         const me = (await who.json().catch(() => null)) as { id?: string } | null;
         if (!me?.id) return new Response("Sessão inválida", { status: 401 });
 
         const limits = readLimits();
-        const body = (await request.json().catch(() => null)) as { text?: string; voice?: string } | null;
+        const body = (await request.json().catch(() => null)) as {
+          text?: string;
+          voice?: string;
+        } | null;
         const text = body?.text?.trim().slice(0, limits.maxChars);
         if (!text) return new Response("Texto vazio", { status: 400 });
         const voice = body?.voice && VOICES.has(body.voice) ? body.voice : "Kore";
@@ -66,10 +72,13 @@ export const Route = createFileRoute("/api/tts")({
           return new Response("Servidor temporariamente indisponível", { status: 503 });
         }
         if (allowed === false) {
-          return new Response("Limite de narração atingido — aguarde um instante e tente de novo.", {
-            status: 429,
-            headers: { "Retry-After": "60", "Cache-Control": "no-store" },
-          });
+          return new Response(
+            "Limite de narração atingido — aguarde um instante e tente de novo.",
+            {
+              status: 429,
+              headers: { "Retry-After": "60", "Cache-Control": "no-store" },
+            },
+          );
         }
 
         try {
