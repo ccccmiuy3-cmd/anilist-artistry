@@ -367,7 +367,7 @@ function AdminNovels() {
 
 function ChapterForm({ novel }: { novel: NovelRow }) {
   const queryClient = useQueryClient();
-  const nextNumber = Math.max(0, ...novel.chapters.map((c) => Number(c.number))) + 1;
+  const nextNumber = Math.max(-1, ...novel.chapters.map((c) => Number(c.number))) + 1;
   const [editingId, setEditingId] = useState<string | null>(null);
   const [number, setNumber] = useState(String(nextNumber));
   const [title, setTitle] = useState("");
@@ -457,7 +457,7 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
 
   const resetEditor = () => {
     setEditingId(null);
-    setNumber(String(Math.max(nextNumber, 1)));
+    setNumber("");
     setTitle("");
     setContent("");
     setPublished(false);
@@ -526,7 +526,7 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
 
   const publish = useMutation({
     mutationFn: async () => {
-      const num = Number(number);
+      const num = Number(number.trim() || String(nextNumber));
       if (!Number.isFinite(num) || num < 0) throw new Error("Número de capítulo inválido.");
       if (content.trim().length < 10) throw new Error("Escreva o texto do capítulo.");
       if (
@@ -713,7 +713,7 @@ function ChapterForm({ novel }: { novel: NovelRow }) {
           <div className="space-y-1.5">
             <Label>Número</Label>
             <Input
-              value={number}
+              value={number.trim() || String(nextNumber)}
               onChange={(e) => setNumber(e.target.value)}
               inputMode="decimal"
               className="bg-background"
