@@ -62,7 +62,7 @@ para conhecer o estado do banco.
 | 0031 | storage: leitura pública de folders públicos + cleanup de URLs assinadas |
 | 0032 | TTS: cota persistente `tts_rate_limit` + `consume_tts_quota` |
 
-## Revisão de RLS (28/10/2026)
+## Revisão de RLS (06/10/2026)
 
 Resultado da auditoria sobre policies públicas × privadas:
 
