@@ -252,7 +252,8 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
           } catch (err) {
             lastError = err;
             const status = (err as SpeechError).status;
-            if (status === 401 || status === 402 || controller.signal.aborted) throw err;
+            // 429 (limite) não muda esperando: o servidor pede ~60s.
+            if (status === 401 || status === 402 || status === 429 || controller.signal.aborted) throw err;
             await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
           }
         }
