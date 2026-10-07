@@ -38,7 +38,7 @@ Para outro provider (Node/Fly/etc), veja a documentação do Nitro
 ## CI
 
 `.github/workflows/ci.yml` roda **typecheck + lint + testes + build** em cada
-push/PR em `main` (Node 20 e 22). Sem `package-lock` no repo, roda `npm install`.
+push/PR em `main` (Node 20 e 22) com `npm ci` (há `package-lock.json`).
 
 ## Verificação pré-deploy
 

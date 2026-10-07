@@ -16,11 +16,33 @@ Continue developing this project in the [Lovable editor](https://lovable.dev/pro
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Prefer working locally? You need Node.js (>= 20.19) and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
 git clone <this-repository-url>
 cd <repository-name>
 npm i
+cp .env.example .env   # preencha SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY
 npm run dev
 ```
+
+### Scripts
+
+| Script | O que faz |
+| --- | --- |
+| `npm run dev` | dev server |
+| `npm run build` | build de produção (Vite + Nitro) |
+| `npm run typecheck` | checagem de tipos (`tsc --noEmit`) |
+| `npm run lint` | ESLint + Prettier |
+| `npm run test` | testes unitários (vitest) |
+| `npm run format:check` | confere formatação |
+| `npm run preview` | serve o build local |
+
+### Documentação
+
+- `docs/MIGRATIONS.md` — migrations SQL (fonte oficial), arquitetura e revisão de RLS
+- `docs/AUDIT.md` — status da auditoria de segurança/qualidade (itens 1–15)
+- `docs/DEPLOY.md` — deploy Lovable/Cloudflare e verificação pré-deploy
+- `docs/TEST_RUNTIME.md` — roteiros manuais de teste em staging
+
+> **Segurança:** nunca commitar o `.env` real — veja `.env.example`.
