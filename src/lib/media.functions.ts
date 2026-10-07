@@ -11,7 +11,12 @@ export const getMediaSettings = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin.from("media_settings").select("*").eq("id", 1).maybeSingle();
+    // Só as colunas necessárias: nunca puxamos "*".
+    const { data } = await supabaseAdmin
+      .from("media_settings")
+      .select("cloud_name, api_key, api_secret, folder")
+      .eq("id", 1)
+      .maybeSingle();
     return {
       cloud_name: data?.cloud_name ?? "",
       api_key: data?.api_key ?? "",
@@ -50,8 +55,7 @@ export const signCloudinaryUpload = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin.from("media_settings").select("*").eq("id", 1).maybeSingle();
-    if (!data?.cloud_name || !data.api_key || !data.api_secret) throw new Error("Configure as chaves do Cloudinary primeiro.");
+    // Só as colunas necessárias (evita arrastar "*" — colunas secretas futuras).
     const { data: settings } = await supabaseAdmin
       .from("media_settings")
       .select("cloud_name, api_key, api_secret, folder")
