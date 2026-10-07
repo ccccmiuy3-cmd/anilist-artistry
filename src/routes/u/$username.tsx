@@ -165,7 +165,9 @@ function Perfil() {
         isSelf
           ? supabase
               .from("favorites")
-              .select("created_at, series(id, slug, title, cover_url, kind, rating, chapters(number))")
+              .select(
+                "created_at, series(id, slug, title, cover_url, kind, rating, chapters(number))",
+              )
               .eq("user_id", p.id)
               .order("created_at", { ascending: false })
               .limit(48)

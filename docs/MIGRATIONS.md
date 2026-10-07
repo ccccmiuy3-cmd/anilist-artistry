@@ -26,41 +26,41 @@ para conhecer o estado do banco.
 
 ## Índice
 
-| Migração | Propósito |
-| --- | --- |
-| 0000 | base (roles, profiles, series, chapters, ratings, comments, storage) |
-| 0001 | policies storage (leitura pública inicial) |
-| 0002 | `increment_series_views` |
-| 0003 | seed demo |
-| 0004 | reading_status, lists, list_items, list_follows |
-| 0005 | profile extras, profile_comments, user_follows |
-| 0006 | xp system + proteção por `SECURITY DEFINER` e RLS |
-| 0007 | `protect_profile_xp` trigger |
-| 0008 | admin account management (roles, ban, policies) |
-| 0009 | apertura de policies públicas (profiles/comments/ratings/storage) |
-| 0010 | profile customization |
-| 0011 | avatar_frames |
-| 0012 | input validation (banned, comentários) |
-| 0013 | leitura de scroll position |
-| 0014 | comment_likes |
-| 0015 | chapter_reads |
-| 0016 | comment_likes_value |
-| 0017 | subscription_tiers |
-| 0018 | fix trigger subscription tier |
-| 0019 | apertura comment_likes + leitura storage |
-| 0020 | series in_slider |
-| 0021 | obra_ranking (7d) |
-| 0022 | event_badges |
-| 0023 | event_badges_rules |
-| 0024 | índices de performance |
-| 0025 | support_messages |
-| 0026 | apertura comment_likes + profile_badges RLS |
-| 0027 | comentários com respostas (parent_id) |
-| 0028 | chapters.content (novels) |
-| 0029 | media_settings (Cloudinary) — sem policies ⇒ só service_role |
-| 0030 | primeiro admin atômico (`claim_first_admin`, advisory lock) |
-| 0031 | storage: leitura pública de folders públicos + cleanup de URLs assinadas |
-| 0032 | TTS: cota persistente `tts_rate_limit` + `consume_tts_quota` |
+| Migração | Propósito                                                                |
+| -------- | ------------------------------------------------------------------------ |
+| 0000     | base (roles, profiles, series, chapters, ratings, comments, storage)     |
+| 0001     | policies storage (leitura pública inicial)                               |
+| 0002     | `increment_series_views`                                                 |
+| 0003     | seed demo                                                                |
+| 0004     | reading_status, lists, list_items, list_follows                          |
+| 0005     | profile extras, profile_comments, user_follows                           |
+| 0006     | xp system + proteção por `SECURITY DEFINER` e RLS                        |
+| 0007     | `protect_profile_xp` trigger                                             |
+| 0008     | admin account management (roles, ban, policies)                          |
+| 0009     | apertura de policies públicas (profiles/comments/ratings/storage)        |
+| 0010     | profile customization                                                    |
+| 0011     | avatar_frames                                                            |
+| 0012     | input validation (banned, comentários)                                   |
+| 0013     | leitura de scroll position                                               |
+| 0014     | comment_likes                                                            |
+| 0015     | chapter_reads                                                            |
+| 0016     | comment_likes_value                                                      |
+| 0017     | subscription_tiers                                                       |
+| 0018     | fix trigger subscription tier                                            |
+| 0019     | apertura comment_likes + leitura storage                                 |
+| 0020     | series in_slider                                                         |
+| 0021     | obra_ranking (7d)                                                        |
+| 0022     | event_badges                                                             |
+| 0023     | event_badges_rules                                                       |
+| 0024     | índices de performance                                                   |
+| 0025     | support_messages                                                         |
+| 0026     | apertura comment_likes + profile_badges RLS                              |
+| 0027     | comentários com respostas (parent_id)                                    |
+| 0028     | chapters.content (novels)                                                |
+| 0029     | media_settings (Cloudinary) — sem policies ⇒ só service_role             |
+| 0030     | primeiro admin atômico (`claim_first_admin`, advisory lock)              |
+| 0031     | storage: leitura pública de folders públicos + cleanup de URLs assinadas |
+| 0032     | TTS: cota persistente `tts_rate_limit` + `consume_tts_quota`             |
 
 ## Revisão de RLS (06/10/2026)
 
