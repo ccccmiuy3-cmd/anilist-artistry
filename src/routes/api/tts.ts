@@ -30,7 +30,7 @@ export const Route = createFileRoute("/api/tts")({
   staticData: { sitemap: false },
   server: {
     handlers: {
-      POST: async ({ request }: { request: NitroRequest }) => {
+      POST: async ({ request }) => {
         const apiKey = process.env["LOVABLE_API_KEY"];
         const url = process.env["SUPABASE_URL"];
         const pub = process.env["SUPABASE_PUBLISHABLE_KEY"];
