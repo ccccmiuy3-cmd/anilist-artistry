@@ -303,7 +303,7 @@ export function NovelNarrator({ paragraphs, activeIndex, onActiveChange, onFinis
             : err.status === 402
               ? "Créditos de voz realista esgotados."
               : err.status === 429
-                ? "Muitas leituras ao mesmo tempo."
+                ? "Limite de narração por minuto atingido — aguarde um instante."
                 : `A voz realista falhou (${err.message || "erro desconhecido"}).`;
         toast.error(`${reason} Continuando com a voz do aparelho.`);
         const p = chunks[i]?.p ?? startParagraph;
