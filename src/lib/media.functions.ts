@@ -1,12 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-type RpcClient = {
-  rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: boolean | null }>;
-};
-
-async function assertAdmin(supabase: RpcClient, userId: string) {
+async function assertAdmin(supabase: SupabaseClient<Database>, userId: string) {
   const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
   if (!data) throw new Error("Apenas administradores.");
 }
