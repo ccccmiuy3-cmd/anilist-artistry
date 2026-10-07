@@ -52,8 +52,14 @@ export const signCloudinaryUpload = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin.from("media_settings").select("*").eq("id", 1).maybeSingle();
     if (!data?.cloud_name || !data.api_key || !data.api_secret) throw new Error("Configure as chaves do Cloudinary primeiro.");
+    const { data: settings } = await supabaseAdmin
+      .from("media_settings")
+      .select("cloud_name, api_key, api_secret, folder")
+      .eq("id", 1)
+      .maybeSingle();
+    if (!settings?.cloud_name || !settings.api_key || !settings.api_secret) throw new Error("Configure as chaves do Cloudinary primeiro.");
     const timestamp = Math.floor(Date.now() / 1000);
-    const folder = data.folder || "bettermanga";
-    const signature = await sha1Hex(`folder=${folder}&timestamp=${timestamp}${data.api_secret}`);
-    return { cloud_name: data.cloud_name, api_key: data.api_key, folder, timestamp, signature };
+    const folder = settings.folder || "bettermanga";
+    const signature = await sha1Hex(`folder=${folder}&timestamp=${timestamp}${settings.api_secret}`);
+    return { cloud_name: settings.cloud_name, api_key: settings.api_key, folder, timestamp, signature };
   });
