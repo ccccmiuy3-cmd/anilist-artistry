@@ -119,7 +119,12 @@ export function CollectionCard({
     <div className="group relative overflow-hidden rounded-xl border border-border bg-surface">
       <Link to="/obra/$slug" params={{ slug }} className="block">
         <div className="relative aspect-[2/3]">
-          <img src={coverUrl(cover)} alt={title} className="h-full w-full object-cover" loading="lazy" />
+          <img
+            src={coverUrl(cover)}
+            alt={title}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
           <span className="cover-fade" />
           <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
             <span className="flex items-center gap-2 rounded-md bg-background/85 px-1.5 py-0.5 text-[11px] font-bold backdrop-blur">

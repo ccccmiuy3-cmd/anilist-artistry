@@ -59,13 +59,17 @@ export function SiteHeader() {
                 activeOptions={{ exact: false }}
                 className="group relative flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 transition-all"
                 activeProps={{ className: "text-foreground" }}
-                inactiveProps={{ className: "text-muted-foreground hover:bg-foreground/5 hover:text-foreground" }}
+                inactiveProps={{
+                  className: "text-muted-foreground hover:bg-foreground/5 hover:text-foreground",
+                }}
               >
                 {({ isActive }) => (
                   <>
                     <span
                       className={`h-1.5 w-1.5 shrink-0 rounded-full transition-colors ${
-                        isActive ? "bg-primary shadow-[var(--shadow-glow)]" : "bg-transparent group-hover:bg-foreground/25"
+                        isActive
+                          ? "bg-primary shadow-[var(--shadow-glow)]"
+                          : "bg-transparent group-hover:bg-foreground/25"
                       }`}
                     />
                     {item.label}
@@ -86,12 +90,15 @@ export function SiteHeader() {
               <Search className="h-3.5 w-3.5 shrink-0" />
               <span className="flex-1 text-left text-[13px]">Buscar...</span>
               <span className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100">
-                <kbd className="rounded border border-foreground/10 bg-background/60 px-1.5 py-0.5 font-mono text-[9px] leading-none text-muted-foreground">Ctrl</kbd>
-                <kbd className="rounded border border-foreground/10 bg-background/60 px-1.5 py-0.5 font-mono text-[9px] leading-none text-muted-foreground">K</kbd>
+                <kbd className="rounded border border-foreground/10 bg-background/60 px-1.5 py-0.5 font-mono text-[9px] leading-none text-muted-foreground">
+                  Ctrl
+                </kbd>
+                <kbd className="rounded border border-foreground/10 bg-background/60 px-1.5 py-0.5 font-mono text-[9px] leading-none text-muted-foreground">
+                  K
+                </kbd>
               </span>
             </Link>
           </Button>
-
 
           <Button
             type="button"
@@ -111,7 +118,11 @@ export function SiteHeader() {
                   <span className="relative shrink-0 pb-2">
                     <span className="relative z-10 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-foreground/10 bg-surface-2">
                       {profile?.avatar_url ? (
-                        <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                        <img
+                          src={profile.avatar_url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
                         <User2 className="h-4 w-4 text-muted-foreground" />
                       )}
@@ -127,7 +138,11 @@ export function SiteHeader() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem asChild>
-                  <Link to="/u/$username" params={{ username: profile?.username ?? "" }} className="flex items-center gap-2">
+                  <Link
+                    to="/u/$username"
+                    params={{ username: profile?.username ?? "" }}
+                    className="flex items-center gap-2"
+                  >
                     <User2 className="h-4 w-4" /> Meu perfil
                   </Link>
                 </DropdownMenuItem>
@@ -179,8 +194,8 @@ export function SiteFooter() {
               />
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
-              Organize sua coleção e acompanhe o que você curte — leia mangás,
-              manhwas e comics num só lugar.
+              Organize sua coleção e acompanhe o que você curte — leia mangás, manhwas e comics num
+              só lugar.
             </p>
           </div>
 
@@ -294,35 +309,19 @@ export function SiteFooter() {
               >
                 Catálogo
               </Link>
-              <Link
-                to="/ranking"
-                className="transition-colors hover:text-primary"
-              >
+              <Link to="/ranking" className="transition-colors hover:text-primary">
                 Obras
               </Link>
-              <Link
-                to="/ranking-leitores"
-                className="transition-colors hover:text-primary"
-              >
+              <Link to="/ranking-leitores" className="transition-colors hover:text-primary">
                 Leitores
               </Link>
-              <Link
-                to="/listas"
-                className="transition-colors hover:text-primary"
-              >
+              <Link to="/listas" className="transition-colors hover:text-primary">
                 Listas
               </Link>
             </div>
           </div>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute bottom-0 right-0 opacity-10"
-          >
-            <img
-              src={SITE_LOGO}
-              alt=""
-              className="h-[200px] w-[200px] object-contain"
-            />
+          <div aria-hidden className="pointer-events-none absolute bottom-0 right-0 opacity-10">
+            <img src={SITE_LOGO} alt="" className="h-[200px] w-[200px] object-contain" />
           </div>
         </div>
       </div>

@@ -103,10 +103,7 @@ export function RecentlyUpdated({ rows }: { rows: SeriesRow[] }) {
                   title={`${item.chapters?.length ?? 0} capítulos · média ${Number(item.rating).toFixed(1).replace(".", ",")}/10`}
                 >
                   <span className="inline-flex shrink-0 items-center gap-1">
-                    <BookOpen
-                      className="h-[11px] w-[11px] shrink-0 text-white"
-                      strokeWidth={2.5}
-                    />
+                    <BookOpen className="h-[11px] w-[11px] shrink-0 text-white" strokeWidth={2.5} />
                     <span className="text-[10px] font-extrabold leading-none tabular-nums text-white">
                       {item.chapters?.length ?? 0}
                     </span>
@@ -123,7 +120,11 @@ export function RecentlyUpdated({ rows }: { rows: SeriesRow[] }) {
 
               <div className="flex min-h-0 flex-1 flex-col px-2 pt-1 sm:pt-2">
                 <div className="min-h-[2.75rem] shrink-0">
-                  <Link to="/obra/$slug" params={{ slug: item.slug }} className="block no-underline">
+                  <Link
+                    to="/obra/$slug"
+                    params={{ slug: item.slug }}
+                    className="block no-underline"
+                  >
                     <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug transition-colors group-hover:text-foreground/80 sm:text-[17px]">
                       {item.title}
                     </h3>

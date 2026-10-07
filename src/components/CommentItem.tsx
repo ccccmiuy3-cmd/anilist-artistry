@@ -97,13 +97,20 @@ export function CommentItem({
             <div className="mb-1.5 flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
               <MessageSquare className="h-3 w-3 shrink-0 text-primary/70" />
               <span className="shrink-0">respondendo a</span>
-              <Link to="/u/$username" params={{ username: comment.parent.username }} className="shrink-0 font-semibold text-primary hover:underline">
+              <Link
+                to="/u/$username"
+                params={{ username: comment.parent.username }}
+                className="shrink-0 font-semibold text-primary hover:underline"
+              >
                 @{comment.parent.username}
               </Link>
               {comment.parent.excerpt ? (
                 <>
                   <span className="shrink-0 opacity-50">—</span>
-                  <span className="truncate italic opacity-70">{comment.parent.excerpt}{comment.parent.excerpt.length >= 60 ? "…" : ""}</span>
+                  <span className="truncate italic opacity-70">
+                    {comment.parent.excerpt}
+                    {comment.parent.excerpt.length >= 60 ? "…" : ""}
+                  </span>
                 </>
               ) : null}
             </div>

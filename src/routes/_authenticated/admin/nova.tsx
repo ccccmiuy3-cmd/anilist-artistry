@@ -20,7 +20,10 @@ export const Route = createFileRoute("/_authenticated/admin/nova")({
   head: () => ({
     meta: [
       { title: "Nova obra — Better Mangá" },
-      { name: "description", content: "Cadastre manualmente uma obra no catálogo do Better Mangá." },
+      {
+        name: "description",
+        content: "Cadastre manualmente uma obra no catálogo do Better Mangá.",
+      },
       { property: "og:title", content: "Nova obra — Better Mangá" },
       { property: "og:description", content: "Cadastro manual de obras." },
     ],
@@ -45,7 +48,10 @@ function NovaObra() {
     artist: "",
     genres: "",
   });
-  const [meta, setMeta] = useState<{ anilistId: number | null; rating: number }>({ anilistId: null, rating: 0 });
+  const [meta, setMeta] = useState<{ anilistId: number | null; rating: number }>({
+    anilistId: null,
+    rating: 0,
+  });
 
   function set(key: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -149,7 +155,8 @@ function NovaObra() {
             </Button>
           </form>
           <p className="mt-2 text-xs text-muted-foreground">
-            Cole o link da obra no AniList (mangá, manhwa ou anime) e os campos abaixo preenchem sozinhos. Também aceita link de busca do AniList.
+            Cole o link da obra no AniList (mangá, manhwa ou anime) e os campos abaixo preenchem
+            sozinhos. Também aceita link de busca do AniList.
           </p>
         </section>
 

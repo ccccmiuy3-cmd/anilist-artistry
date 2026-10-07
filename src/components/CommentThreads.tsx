@@ -60,7 +60,11 @@ export function CommentThreads({ comments, userId, onReply }: Props) {
                       onClick={() => toggle(root.id)}
                       className="flex items-center gap-1 text-xs font-medium text-primary/80 transition-colors hover:text-primary"
                     >
-                      {isHidden ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+                      {isHidden ? (
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      ) : (
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      )}
                       {isHidden
                         ? `Ver ${replies.length} resposta${replies.length > 1 ? "s" : ""}`
                         : "Ocultar respostas"}

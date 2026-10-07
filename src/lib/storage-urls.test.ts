@@ -13,8 +13,7 @@ import {
 
 const SIGNED =
   "https://xyz.supabase.co/storage/v1/object/sign/manga/series-1/uuid/1/3.png?token=abc&ts=1";
-const PUBLIC =
-  "https://xyz.supabase.co/storage/v1/object/public/manga/avatars/user-1.png";
+const PUBLIC = "https://xyz.supabase.co/storage/v1/object/public/manga/avatars/user-1.png";
 
 describe("storagePathFromUrl", () => {
   it("extrai o path de URL assinada", () => {
@@ -26,7 +25,9 @@ describe("storagePathFromUrl", () => {
   });
 
   it("rejeita bucket diferente e URLs não-storage", () => {
-    expect(storagePathFromUrl("https://x.supabase.co/storage/v1/object/public/other/a.png")).toBeNull();
+    expect(
+      storagePathFromUrl("https://x.supabase.co/storage/v1/object/public/other/a.png"),
+    ).toBeNull();
     expect(storagePathFromUrl("https://example.com/img.png")).toBeNull();
   });
 });

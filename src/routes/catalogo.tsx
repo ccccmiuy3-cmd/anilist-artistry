@@ -25,7 +25,10 @@ export const Route = createFileRoute("/catalogo")({
   head: () => ({
     meta: [
       { title: "Pesquisar — Better Mangá" },
-      { name: "description", content: "Descubra obras por nome, gênero e filtros, ou encontre leitores pelo @nick." },
+      {
+        name: "description",
+        content: "Descubra obras por nome, gênero e filtros, ou encontre leitores pelo @nick.",
+      },
       { property: "og:title", content: "Pesquisar — Better Mangá" },
       { property: "og:description", content: "Busque mangás, manhwas e comics com filtros." },
       { property: "og:type", content: "website" },
@@ -154,15 +157,23 @@ function Pesquisar() {
                 className="flex items-center gap-3 rounded-xl border border-border bg-surface p-4 hover:border-primary/60"
               >
                 <span className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-surface-2">
-                  {u.avatar_url ? <img src={u.avatar_url} alt="" className="h-full w-full object-cover" /> : <User2 className="h-5 w-5" />}
+                  {u.avatar_url ? (
+                    <img src={u.avatar_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <User2 className="h-5 w-5" />
+                  )}
                 </span>
                 <span>
                   <span className="block font-bold">@{u.username}</span>
-                  <span className="text-xs text-muted-foreground">{u.display_name ?? ""} · Nv. {u.level}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {u.display_name ?? ""} · Nv. {u.level}
+                  </span>
                 </span>
               </Link>
             ))}
-            {users.data?.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum utilizador encontrado.</p> : null}
+            {users.data?.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum utilizador encontrado.</p>
+            ) : null}
           </div>
         ) : (
           <div className="mt-8 grid gap-6 lg:grid-cols-[280px_1fr]">
@@ -175,7 +186,9 @@ function Pesquisar() {
                     key={o.key}
                     onClick={() => set({ sort: o.key })}
                     className={`block w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold ${
-                      s.sort === o.key ? "bg-primary text-primary-foreground" : "bg-surface-2 hover:bg-surface-2/70"
+                      s.sort === o.key
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-surface-2 hover:bg-surface-2/70"
                     }`}
                   >
                     {o.label}
@@ -219,13 +232,20 @@ function Pesquisar() {
               </div>
               <div className="mt-4 flex justify-between text-sm text-muted-foreground">
                 <span>{total} resultados</span>
-                <span className="text-xs">Ordenado por {SORTS.find((o) => o.key === s.sort)?.label.toLowerCase()}</span>
+                <span className="text-xs">
+                  Ordenado por {SORTS.find((o) => o.key === s.sort)?.label.toLowerCase()}
+                </span>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
                 {(results.data?.rows ?? []).map((r) => (
                   <Link key={r.id} to="/obra/$slug" params={{ slug: r.slug }} className="group">
                     <div className="relative overflow-hidden rounded-xl border border-border">
-                      <img src={coverUrl(r.cover_url)} alt={r.title} className="aspect-[2/3] w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+                      <img
+                        src={coverUrl(r.cover_url)}
+                        alt={r.title}
+                        className="aspect-[2/3] w-full object-cover transition-transform group-hover:scale-105"
+                        loading="lazy"
+                      />
                       <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
                         <span className="flex items-center gap-1 rounded-md bg-background/85 px-2 py-0.5 text-[11px] font-bold">
                           <BookOpen className="h-3 w-3" /> {r.chapters.length} Capítulos
@@ -235,18 +255,27 @@ function Pesquisar() {
                         </span>
                       </div>
                       <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-background/85 px-1.5 py-0.5 text-[11px] font-bold text-gold">
-                        <Star className="h-3 w-3 fill-gold" /> {Number(r.rating).toFixed(1).replace(".", ",")}
+                        <Star className="h-3 w-3 fill-gold" />{" "}
+                        {Number(r.rating).toFixed(1).replace(".", ",")}
                       </span>
                     </div>
-                    <p className="mt-2 line-clamp-2 font-bold group-hover:text-primary">{r.title}</p>
+                    <p className="mt-2 line-clamp-2 font-bold group-hover:text-primary">
+                      {r.title}
+                    </p>
                   </Link>
                 ))}
               </div>
-              {results.isLoading ? <p className="mt-6 text-sm text-muted-foreground">Carregando…</p> : null}
+              {results.isLoading ? (
+                <p className="mt-6 text-sm text-muted-foreground">Carregando…</p>
+              ) : null}
               {!results.isLoading && total === 0 ? (
                 <p className="mt-6 text-sm text-muted-foreground">Nenhuma obra encontrada.</p>
               ) : null}
-              <Pager page={s.page} pages={pages} onChange={(p) => navigate({ to: ".", search: (prev) => ({ ...prev, page: p }) })} />
+              <Pager
+                page={s.page}
+                pages={pages}
+                onChange={(p) => navigate({ to: ".", search: (prev) => ({ ...prev, page: p }) })}
+              />
             </section>
           </div>
         )}
@@ -255,4 +284,3 @@ function Pesquisar() {
     </div>
   );
 }
-

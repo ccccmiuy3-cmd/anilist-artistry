@@ -1,6 +1,14 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export function Pager({ page, pages, onChange }: { page: number; pages: number; onChange: (p: number) => void }) {
+export function Pager({
+  page,
+  pages,
+  onChange,
+}: {
+  page: number;
+  pages: number;
+  onChange: (p: number) => void;
+}) {
   if (pages <= 1) return null;
   return (
     <div className="mt-10 flex items-center justify-center gap-3">

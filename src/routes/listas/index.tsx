@@ -24,7 +24,10 @@ export const Route = createFileRoute("/listas/")({
   head: () => ({
     meta: [
       { title: "Listas — Better Mangá" },
-      { name: "description", content: "Organize obras em listas e descubra listas criadas pela comunidade." },
+      {
+        name: "description",
+        content: "Organize obras em listas e descubra listas criadas pela comunidade.",
+      },
       { property: "og:title", content: "Listas — Better Mangá" },
       { property: "og:description", content: "Organize obras e descubra listas da comunidade." },
       { property: "og:type", content: "website" },
@@ -78,7 +81,11 @@ function ListasPage() {
         if (error) throw error;
         return withAuthors(((data ?? []) as unknown as { lists: ListRow }[]).map((r) => r.lists));
       }
-      let q = supabase.from("lists").select(LIST_SELECT).order("created_at", { ascending: false }).limit(60);
+      let q = supabase
+        .from("lists")
+        .select(LIST_SELECT)
+        .order("created_at", { ascending: false })
+        .limit(60);
       q = tab === "minhas" ? q.eq("user_id", user!.id) : q.eq("is_public", true);
       const { data, error } = await q;
       if (error) throw error;
@@ -107,7 +114,9 @@ function ListasPage() {
   const shown = (lists.data ?? [])
     .filter((l) => !nick || l.author.toLowerCase().includes(nick.replace("@", "").toLowerCase()))
     .sort((a, b) =>
-      sort === "size" ? b.list_items.length - a.list_items.length : b.created_at.localeCompare(a.created_at),
+      sort === "size"
+        ? b.list_items.length - a.list_items.length
+        : b.created_at.localeCompare(a.created_at),
     );
 
   const needsLogin = tab !== "publicas" && !user;
@@ -132,9 +141,20 @@ function ListasPage() {
                   <DialogHeader>
                     <DialogTitle>Nova lista</DialogTitle>
                   </DialogHeader>
-                  <Input placeholder="Nome da lista" value={title} onChange={(e) => setTitle(e.target.value)} />
-                  <Textarea placeholder="Descrição (opcional)" value={desc} onChange={(e) => setDesc(e.target.value)} />
-                  <Button disabled={!title.trim() || create.isPending} onClick={() => create.mutate()}>
+                  <Input
+                    placeholder="Nome da lista"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                  <Textarea
+                    placeholder="Descrição (opcional)"
+                    value={desc}
+                    onChange={(e) => setDesc(e.target.value)}
+                  />
+                  <Button
+                    disabled={!title.trim() || create.isPending}
+                    onClick={() => create.mutate()}
+                  >
                     Criar lista
                   </Button>
                 </DialogContent>
@@ -144,9 +164,24 @@ function ListasPage() {
         />
 
         <div className="flex flex-wrap gap-2">
-          <TabButton active={tab === "publicas"} onClick={() => setTab("publicas")} icon={<Globe className="h-4 w-4" />} label="Públicas" />
-          <TabButton active={tab === "minhas"} onClick={() => setTab("minhas")} icon={<ListOrdered className="h-4 w-4" />} label="Minhas" />
-          <TabButton active={tab === "seguidas"} onClick={() => setTab("seguidas")} icon={<Bookmark className="h-4 w-4" />} label="Seguidas" />
+          <TabButton
+            active={tab === "publicas"}
+            onClick={() => setTab("publicas")}
+            icon={<Globe className="h-4 w-4" />}
+            label="Públicas"
+          />
+          <TabButton
+            active={tab === "minhas"}
+            onClick={() => setTab("minhas")}
+            icon={<ListOrdered className="h-4 w-4" />}
+            label="Minhas"
+          />
+          <TabButton
+            active={tab === "seguidas"}
+            onClick={() => setTab("seguidas")}
+            icon={<Bookmark className="h-4 w-4" />}
+            label="Seguidas"
+          />
         </div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -172,12 +207,19 @@ function ListasPage() {
           </label>
         </div>
         <p className="mt-4 text-sm text-muted-foreground">
-          {tab === "publicas" ? "Explora listas públicas da comunidade." : tab === "minhas" ? "Suas listas." : "Listas que você segue."}
+          {tab === "publicas"
+            ? "Explora listas públicas da comunidade."
+            : tab === "minhas"
+              ? "Suas listas."
+              : "Listas que você segue."}
         </p>
 
         {needsLogin ? (
           <p className="mt-10 text-center text-sm text-muted-foreground">
-            <Link to="/auth" className="text-primary">Entre</Link> para ver suas listas.
+            <Link to="/auth" className="text-primary">
+              Entre
+            </Link>{" "}
+            para ver suas listas.
           </p>
         ) : (
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -195,7 +237,12 @@ function ListasPage() {
                     {[0, 1, 2, 3].map((i) => (
                       <div key={i} className="relative bg-surface-2">
                         {covers[i] ? (
-                          <img src={coverUrl(covers[i])} alt="" className="h-full w-full object-cover" loading="lazy" />
+                          <img
+                            src={coverUrl(covers[i])}
+                            alt=""
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
                         ) : null}
                         {i === 3 && extra > 0 ? (
                           <span className="absolute inset-0 grid place-items-center bg-background/60 text-lg font-bold">
@@ -217,7 +264,9 @@ function ListasPage() {
           </div>
         )}
         {!needsLogin && shown.length === 0 && !lists.isLoading ? (
-          <p className="mt-10 text-center text-sm text-muted-foreground">Nenhuma lista encontrada.</p>
+          <p className="mt-10 text-center text-sm text-muted-foreground">
+            Nenhuma lista encontrada.
+          </p>
         ) : null}
       </main>
       <SiteFooter />

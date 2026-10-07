@@ -2,7 +2,10 @@ import { createParser } from "eventsource-parser";
 import { supabase } from "@/integrations/supabase/client";
 
 export class SpeechError extends Error {
-  constructor(message: string, public status = 0) {
+  constructor(
+    message: string,
+    public status = 0,
+  ) {
     super(message);
   }
 }
@@ -14,7 +17,11 @@ export function getAudioContext() {
 }
 
 /** Fetches the full PCM audio for a text chunk (buffered so the next one can be prefetched). */
-export async function fetchSpeech(text: string, voice: string, signal: AbortSignal): Promise<Float32Array> {
+export async function fetchSpeech(
+  text: string,
+  voice: string,
+  signal: AbortSignal,
+): Promise<Float32Array> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) throw new SpeechError("Faça login para usar a voz realista", 401);
@@ -41,7 +48,11 @@ export async function fetchSpeech(text: string, voice: string, signal: AbortSign
   const parser = createParser({
     onEvent(ev) {
       try {
-        const p = JSON.parse(ev.data) as { type: string; audio?: string; error?: { message?: string } };
+        const p = JSON.parse(ev.data) as {
+          type: string;
+          audio?: string;
+          error?: { message?: string };
+        };
         if (p.type === "error" || p.error) failure = p.error?.message ?? "Falha na voz";
         else if (p.type === "speech.audio.done") done = true;
         else if (p.type === "speech.audio.delta" && p.audio) {

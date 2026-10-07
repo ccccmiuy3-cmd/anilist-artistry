@@ -17,7 +17,9 @@ export const Route = createFileRoute("/listas/$id")({
       queryFn: async () => {
         const { data, error } = await supabase
           .from("lists")
-          .select("id, title, description, user_id, is_public, list_items(series(id, slug, title, cover_url, rating))")
+          .select(
+            "id, title, description, user_id, is_public, list_items(series(id, slug, title, cover_url, rating))",
+          )
           .eq("id", params.id)
           .eq("is_public", true)
           .maybeSingle();
@@ -28,15 +30,27 @@ export const Route = createFileRoute("/listas/$id")({
           description: string | null;
           user_id: string;
           is_public: boolean;
-          list_items: { series: { id: string; slug: string; title: string; cover_url: string | null; rating: number } | null }[];
+          list_items: {
+            series: {
+              id: string;
+              slug: string;
+              title: string;
+              cover_url: string | null;
+              rating: number;
+            } | null;
+          }[];
         } | null;
       },
     }),
   head: ({ params, loaderData }) => {
     const name = loaderData?.title ?? "Lista da comunidade";
-    const description = (loaderData?.description ?? `Descubra as obras reunidas em ${name} no Better Mangá.`).slice(0, 160);
+    const description = (
+      loaderData?.description ?? `Descubra as obras reunidas em ${name} no Better Mangá.`
+    ).slice(0, 160);
     const url = `https://bettermanga.net/listas/${encodeURIComponent(params.id)}`;
-    const cover = loaderData?.list_items.find((item) => item.series?.cover_url?.startsWith("https://"))?.series?.cover_url ?? null;
+    const cover =
+      loaderData?.list_items.find((item) => item.series?.cover_url?.startsWith("https://"))?.series
+        ?.cover_url ?? null;
     return {
       meta: [
         { title: `${name} — Better Mangá` },
@@ -70,7 +84,9 @@ function ListaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lists")
-        .select("id, title, description, user_id, is_public, list_items(series(id, slug, title, cover_url, rating))")
+        .select(
+          "id, title, description, user_id, is_public, list_items(series(id, slug, title, cover_url, rating))",
+        )
         .eq("id", id)
         .eq("is_public", true)
         .maybeSingle();
@@ -80,8 +96,16 @@ function ListaPage() {
         title: string;
         description: string | null;
         user_id: string;
-         is_public: boolean;
-        list_items: { series: { id: string; slug: string; title: string; cover_url: string | null; rating: number } | null }[];
+        is_public: boolean;
+        list_items: {
+          series: {
+            id: string;
+            slug: string;
+            title: string;
+            cover_url: string | null;
+            rating: number;
+          } | null;
+        }[];
       } | null;
     },
   });
@@ -90,22 +114,45 @@ function ListaPage() {
     queryKey: ["follow", id, user?.id],
     enabled: Boolean(user),
     queryFn: async () => {
-      const { data } = await supabase.from("list_follows").select("list_id").eq("user_id", user!.id).eq("list_id", id).maybeSingle();
+      const { data } = await supabase
+        .from("list_follows")
+        .select("list_id")
+        .eq("user_id", user!.id)
+        .eq("list_id", id)
+        .maybeSingle();
       return Boolean(data);
     },
   });
 
   const toggleFollow = useMutation({
     mutationFn: async () => {
-      if (following.data) { const { error: dbErr } = await supabase.from("list_follows").delete().eq("user_id", user!.id).eq("list_id", id); if (dbErr) throw dbErr; }
-      else { const { error: dbErr } = await supabase.from("list_follows").insert({ user_id: user!.id, list_id: id }); if (dbErr) throw dbErr; }
+      if (following.data) {
+        const { error: dbErr } = await supabase
+          .from("list_follows")
+          .delete()
+          .eq("user_id", user!.id)
+          .eq("list_id", id);
+        if (dbErr) throw dbErr;
+      } else {
+        const { error: dbErr } = await supabase
+          .from("list_follows")
+          .insert({ user_id: user!.id, list_id: id });
+        if (dbErr) throw dbErr;
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["follow", id] }),
   });
 
   const removeItem = useMutation({
     mutationFn: async (seriesId: string) => {
-      { const { error: dbErr } = await supabase.from("list_items").delete().eq("list_id", id).eq("series_id", seriesId); if (dbErr) throw dbErr; }
+      {
+        const { error: dbErr } = await supabase
+          .from("list_items")
+          .delete()
+          .eq("list_id", id)
+          .eq("series_id", seriesId);
+        if (dbErr) throw dbErr;
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["list", id] }),
   });
@@ -129,7 +176,9 @@ function ListaPage() {
       <SiteHeader />
       <main className="mx-auto max-w-7xl px-4 py-10">
         {!data ? (
-          <p className="text-muted-foreground">{list.isLoading ? "Carregando…" : "Lista não encontrada."}</p>
+          <p className="text-muted-foreground">
+            {list.isLoading ? "Carregando…" : "Lista não encontrada."}
+          </p>
         ) : (
           <>
             <PageTitle
@@ -142,12 +191,17 @@ function ListaPage() {
                     <Trash2 className="mr-2 h-4 w-4" /> Excluir lista
                   </Button>
                 ) : user ? (
-                  <Button variant={following.data ? "default" : "outline"} onClick={() => toggleFollow.mutate()}>
+                  <Button
+                    variant={following.data ? "default" : "outline"}
+                    onClick={() => toggleFollow.mutate()}
+                  >
                     <Bookmark className={`mr-2 h-4 w-4 ${following.data ? "fill-current" : ""}`} />
                     {following.data ? "Seguindo" : "Seguir lista"}
                   </Button>
                 ) : (
-                  <Button asChild variant="outline"><Link to="/auth">Entre para seguir</Link></Button>
+                  <Button asChild variant="outline">
+                    <Link to="/auth">Entre para seguir</Link>
+                  </Button>
                 )
               }
             />
@@ -155,7 +209,13 @@ function ListaPage() {
               {data.list_items.map((i) =>
                 i.series ? (
                   <div key={i.series.id} className="relative">
-                    <SeriesCard slug={i.series.slug} title={i.series.title} cover={i.series.cover_url} rating={i.series.rating} seriesId={i.series.id} />
+                    <SeriesCard
+                      slug={i.series.slug}
+                      title={i.series.title}
+                      cover={i.series.cover_url}
+                      rating={i.series.rating}
+                      seriesId={i.series.id}
+                    />
                     {isOwner ? (
                       <button
                         onClick={() => removeItem.mutate(i.series!.id)}
@@ -170,7 +230,9 @@ function ListaPage() {
               )}
             </div>
             {data.list_items.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Lista vazia. Adicione obras pela página da obra.</p>
+              <p className="text-sm text-muted-foreground">
+                Lista vazia. Adicione obras pela página da obra.
+              </p>
             ) : null}
           </>
         )}

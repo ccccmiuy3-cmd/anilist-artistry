@@ -21,9 +21,7 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Esta página não existe ou foi movida.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">Esta página não existe ou foi movida.</p>
         <div className="mt-6">
           <Link
             to="/"
@@ -87,7 +85,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Leia mangás, manhwas, manhuas e comics em português com capítulos atualizados.",
       },
       { property: "og:title", content: "Better Mangá" },
-      { property: "og:description", content: "Mangás, manhwas e comics com capítulos atualizados." },
+      {
+        property: "og:description",
+        content: "Mangás, manhwas e comics com capítulos atualizados.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -132,7 +133,10 @@ function RootComponent() {
     let lastUserId: string | null | undefined;
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       const uid = session?.user?.id ?? null;
-      if (event === "INITIAL_SESSION") { lastUserId = uid; return; }
+      if (event === "INITIAL_SESSION") {
+        lastUserId = uid;
+        return;
+      }
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       if (event !== "USER_UPDATED" && uid === lastUserId) return;
       lastUserId = uid;

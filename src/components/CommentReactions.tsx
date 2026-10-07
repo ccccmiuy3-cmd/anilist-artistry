@@ -56,8 +56,7 @@ export function CommentReactions({
         if (error) throw error;
       }
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["comment-likes", commentId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["comment-likes", commentId] }),
     onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
   });
 

@@ -37,7 +37,9 @@ function ObrasAdmin() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("series")
-        .select("id, slug, title, cover_url, kind, status, published, in_slider, views, rating, updated_at, chapters(id)")
+        .select(
+          "id, slug, title, cover_url, kind, status, published, in_slider, views, rating, updated_at, chapters(id)",
+        )
         .neq("kind", "Novel")
         .order("updated_at", { ascending: false });
       if (error) throw error;
@@ -50,14 +52,18 @@ function ObrasAdmin() {
       (series.data ?? []).filter(
         (r) =>
           r.title.toLowerCase().includes(q.toLowerCase()) &&
-          (filter === "all" || (filter === "slide" ? r.in_slider : filter === "pub" ? r.published : !r.published)),
+          (filter === "all" ||
+            (filter === "slide" ? r.in_slider : filter === "pub" ? r.published : !r.published)),
       ),
     [series.data, q, filter],
   );
 
   const toggle = useMutation({
     mutationFn: async (r: { id: string; published: boolean }) => {
-      const { error } = await supabase.from("series").update({ published: !r.published }).eq("id", r.id);
+      const { error } = await supabase
+        .from("series")
+        .update({ published: !r.published })
+        .eq("id", r.id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-series"] }),
@@ -66,7 +72,10 @@ function ObrasAdmin() {
 
   const slide = useMutation({
     mutationFn: async (r: { id: string; in_slider: boolean }) => {
-      const { error } = await supabase.from("series").update({ in_slider: !r.in_slider }).eq("id", r.id);
+      const { error } = await supabase
+        .from("series")
+        .update({ in_slider: !r.in_slider })
+        .eq("id", r.id);
       if (error) throw error;
       return !r.in_slider;
     },
@@ -105,15 +114,22 @@ function ObrasAdmin() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative min-w-56 flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar obra…" className="h-11 bg-surface pl-9" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar obra…"
+            className="h-11 bg-surface pl-9"
+          />
         </div>
         <div className="flex rounded-xl border border-border bg-surface p-1">
-          {([
-            ["all", "Todas"],
-            ["pub", "Publicadas"],
-            ["draft", "Rascunhos"],
-            ["slide", "No slide"],
-          ] as const).map(([k, l]) => (
+          {(
+            [
+              ["all", "Todas"],
+              ["pub", "Publicadas"],
+              ["draft", "Rascunhos"],
+              ["slide", "No slide"],
+            ] as const
+          ).map(([k, l]) => (
             <button
               key={k}
               onClick={() => setFilter(k)}
@@ -127,8 +143,15 @@ function ObrasAdmin() {
 
       <div className="mt-5 overflow-hidden rounded-2xl border border-border bg-surface">
         {rows.map((r) => (
-          <div key={r.id} className="flex items-center gap-4 border-b border-border p-3 last:border-0 hover:bg-surface-2/50">
-            <img src={coverUrl(r.cover_url)} alt={r.title} className="h-20 w-14 shrink-0 rounded-lg object-cover" />
+          <div
+            key={r.id}
+            className="flex items-center gap-4 border-b border-border p-3 last:border-0 hover:bg-surface-2/50"
+          >
+            <img
+              src={coverUrl(r.cover_url)}
+              alt={r.title}
+              className="h-20 w-14 shrink-0 rounded-lg object-cover"
+            />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="truncate font-bold">{r.title}</p>
@@ -140,11 +163,14 @@ function ObrasAdmin() {
                   {r.published ? "Publicada" : "Rascunho"}
                 </span>
                 {r.in_slider ? (
-                  <span className="shrink-0 rounded-full bg-accent px-2 py-px text-[10px] font-bold text-accent-foreground">No slide</span>
+                  <span className="shrink-0 rounded-full bg-accent px-2 py-px text-[10px] font-bold text-accent-foreground">
+                    No slide
+                  </span>
                 ) : null}
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {r.kind} · {r.status} · {r.chapters?.length ?? 0} capítulos · {r.views} views · {timeAgo(r.updated_at)}
+                {r.kind} · {r.status} · {r.chapters?.length ?? 0} capítulos · {r.views} views ·{" "}
+                {timeAgo(r.updated_at)}
               </p>
             </div>
             <Button
@@ -156,10 +182,21 @@ function ObrasAdmin() {
               onClick={() => slide.mutate(r)}
             >
               <GalleryHorizontal className="h-3.5 w-3.5 sm:mr-1.5" />
-              <span className="hidden sm:inline">{r.in_slider ? "Tirar do slide" : "Pôr no slide"}</span>
+              <span className="hidden sm:inline">
+                {r.in_slider ? "Tirar do slide" : "Pôr no slide"}
+              </span>
             </Button>
-            <Button variant="ghost" size="icon" title={r.published ? "Despublicar" : "Publicar"} onClick={() => toggle.mutate(r)}>
-              {r.published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+            <Button
+              variant="ghost"
+              size="icon"
+              title={r.published ? "Despublicar" : "Publicar"}
+              onClick={() => toggle.mutate(r)}
+            >
+              {r.published ? (
+                <Eye className="h-4 w-4" />
+              ) : (
+                <EyeOff className="h-4 w-4 text-muted-foreground" />
+              )}
             </Button>
             <Button asChild variant="outline" size="sm" className="font-semibold">
               <Link to="/admin/$id" params={{ id: r.id }}>
@@ -179,7 +216,9 @@ function ObrasAdmin() {
             ) : null}
           </div>
         ))}
-        {rows.length === 0 ? <p className="p-10 text-center text-sm text-muted-foreground">Nenhuma obra encontrada.</p> : null}
+        {rows.length === 0 ? (
+          <p className="p-10 text-center text-sm text-muted-foreground">Nenhuma obra encontrada.</p>
+        ) : null}
       </div>
     </AdminShell>
   );

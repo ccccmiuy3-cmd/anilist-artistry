@@ -15,6 +15,7 @@ npx supabase db push          # aplica 0030, 0031, 0032 em ordem do journal
 ```
 
 Confira depois de aplicar:
+
 - `\df claim_first_admin`, `\df consume_tts_quota` existem.
 - Tabelas `tts_rate_limit`, `media_settings`, `storage.objects` com as policies
   da auditoria (ver `docs/MIGRATIONS.md`).

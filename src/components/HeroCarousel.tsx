@@ -11,7 +11,10 @@ const CATEGORY_LABELS = [...KINDS];
 
 export function HeroCarousel({ items }: { items: SeriesRow[] }) {
   const allSlides = items.slice(0, 10);
-  const kinds = useMemo(() => new Set(allSlides.map((item) => item.kind).filter(Boolean)), [allSlides]);
+  const kinds = useMemo(
+    () => new Set(allSlides.map((item) => item.kind).filter(Boolean)),
+    [allSlides],
+  );
   const [kind, setKind] = useState(() => allSlides[0]?.kind ?? "");
   const slides = useMemo(
     () => (kind ? allSlides.filter((item) => item.kind === kind) : allSlides),
@@ -70,15 +73,23 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
 
   if (!active) {
     return (
-      <section aria-label="Destaques" className="w-full overflow-hidden bg-background pb-6 pt-4 md:pb-8 md:pt-5">
+      <section
+        aria-label="Destaques"
+        className="w-full overflow-hidden bg-background pb-6 pt-4 md:pb-8 md:pt-5"
+      >
         {categoryBar}
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <div className="flex min-h-[16rem] flex-col items-center justify-center gap-4 rounded-2xl border border-foreground/10 bg-card/60 py-10 text-center backdrop-blur-sm">
             <BookOpen className="h-8 w-8 text-muted-foreground" />
             <p className="max-w-sm text-sm text-muted-foreground">
-              Nenhuma obra de <span className="font-bold text-foreground">{kind}</span> no slide ainda.
+              Nenhuma obra de <span className="font-bold text-foreground">{kind}</span> no slide
+              ainda.
             </p>
-            <Button asChild size="sm" className="rounded-full px-5 text-xs font-black uppercase shadow-[var(--shadow-glow)]">
+            <Button
+              asChild
+              size="sm"
+              className="rounded-full px-5 text-xs font-black uppercase shadow-[var(--shadow-glow)]"
+            >
               <Link to="/catalogo" search={{ kind }}>
                 Explorar {kind} no catálogo
               </Link>
@@ -102,7 +113,10 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
         <div className="relative overflow-hidden md:min-h-[25rem]">
           <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(70%_80%_at_30%_50%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_75%)] md:block" />
 
-          <div key={active.id} className="relative z-10 flex flex-col items-center gap-4 py-2 md:min-h-[25rem] md:flex-row md:gap-8 md:py-8 lg:gap-10">
+          <div
+            key={active.id}
+            className="relative z-10 flex flex-col items-center gap-4 py-2 md:min-h-[25rem] md:flex-row md:gap-8 md:py-8 lg:gap-10"
+          >
             <div className="relative w-[11.25rem] shrink-0 overflow-hidden rounded-xl shadow-[var(--shadow-hero)] ring-1 ring-primary/30 md:w-[14.5rem] lg:w-[17rem]">
               <img
                 src={coverUrl(active.cover_url)}
@@ -117,14 +131,16 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
 
             <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-3 text-center md:items-start md:gap-4 md:text-left lg:max-w-none">
               <div className="flex flex-wrap justify-center gap-1.5 md:justify-start">
-                {[active.kind, ...(active.genres ?? []).slice(0, 3)].filter(Boolean).map((label, genreIndex) => (
-                  <span
-                    key={`${label}-${genreIndex}`}
-                    className="rounded-full border border-foreground/15 bg-foreground/5 px-3 py-1 text-[0.65rem] font-semibold text-foreground/70"
-                  >
-                    {label}
-                  </span>
-                ))}
+                {[active.kind, ...(active.genres ?? []).slice(0, 3)]
+                  .filter(Boolean)
+                  .map((label, genreIndex) => (
+                    <span
+                      key={`${label}-${genreIndex}`}
+                      className="rounded-full border border-foreground/15 bg-foreground/5 px-3 py-1 text-[0.65rem] font-semibold text-foreground/70"
+                    >
+                      {label}
+                    </span>
+                  ))}
               </div>
 
               <h2 className="line-clamp-2 font-display text-lg font-black leading-tight md:text-3xl lg:text-4xl">
@@ -140,13 +156,18 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground md:text-sm">
                 <BookOpen className="h-4 w-4 text-primary" />
                 <span>
-                  {active.chapters.length} {active.chapters.length === 1 ? "capítulo disponível" : "capítulos disponíveis"}
+                  {active.chapters.length}{" "}
+                  {active.chapters.length === 1 ? "capítulo disponível" : "capítulos disponíveis"}
                 </span>
               </div>
 
               <div className="mt-1 flex flex-wrap justify-center gap-2 md:justify-start">
                 {latest ? (
-                  <Button asChild size="sm" className="rounded-full px-4 text-xs font-black uppercase shadow-[var(--shadow-glow)]">
+                  <Button
+                    asChild
+                    size="sm"
+                    className="rounded-full px-4 text-xs font-black uppercase shadow-[var(--shadow-glow)]"
+                  >
                     <Link
                       to="/obra/$slug/$chapter"
                       params={{ slug: active.slug, chapter: formatChapter(latest.number) }}
@@ -172,24 +193,38 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
 
             <div className="hidden w-56 shrink-0 flex-col gap-2.5 xl:flex">
               <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
-                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">Nota</span>
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">
+                  Nota
+                </span>
                 <span className="flex items-center gap-1 font-display text-base font-black text-primary">
                   <Star className="h-4 w-4 fill-current" />
                   {active.rating.toFixed(1)}
                 </span>
               </div>
               <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
-                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">Status</span>
-                <span className="text-xs font-bold capitalize text-foreground/90">{active.status}</span>
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">
+                  Status
+                </span>
+                <span className="text-xs font-bold capitalize text-foreground/90">
+                  {active.status}
+                </span>
               </div>
               <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
-                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">Capítulos</span>
-                <span className="text-xs font-bold text-foreground/90">{active.chapters.length}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
-                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">Views</span>
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">
+                  Capítulos
+                </span>
                 <span className="text-xs font-bold text-foreground/90">
-                  {new Intl.NumberFormat("pt-BR", { notation: "compact" }).format(active.views ?? 0)}
+                  {active.chapters.length}
+                </span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-foreground/10 bg-card/60 px-4 py-2.5 backdrop-blur-sm">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">
+                  Views
+                </span>
+                <span className="text-xs font-bold text-foreground/90">
+                  {new Intl.NumberFormat("pt-BR", { notation: "compact" }).format(
+                    active.views ?? 0,
+                  )}
                 </span>
               </div>
             </div>
@@ -215,7 +250,9 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
                       aria-label={`Ir para destaque ${dotIndex + 1}`}
                       onClick={() => setIndex(dotIndex)}
                       className={`min-h-0 min-w-0 rounded-full p-0 transition-all ${
-                        dotIndex === index ? "h-5 w-1.5 bg-primary" : "h-1.5 w-1.5 bg-foreground/25 hover:bg-foreground/55"
+                        dotIndex === index
+                          ? "h-5 w-1.5 bg-primary"
+                          : "h-1.5 w-1.5 bg-foreground/25 hover:bg-foreground/55"
                       }`}
                     />
                   ))}
@@ -244,7 +281,9 @@ export function HeroCarousel({ items }: { items: SeriesRow[] }) {
                   aria-label={`Ir para destaque ${dotIndex + 1}`}
                   onClick={() => setIndex(dotIndex)}
                   className={`h-1.5 min-w-0 rounded-full p-0 transition-all ${
-                    dotIndex === index ? "w-6 bg-primary" : "w-1.5 bg-foreground/25 hover:bg-foreground/55"
+                    dotIndex === index
+                      ? "w-6 bg-primary"
+                      : "w-1.5 bg-foreground/25 hover:bg-foreground/55"
                   }`}
                 />
               ))}

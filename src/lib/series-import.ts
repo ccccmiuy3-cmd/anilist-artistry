@@ -15,6 +15,10 @@ export async function uniqueSlug(title: string, fallback: string) {
 /** Retorna a obra já importada com esse ID do AniList, se existir. */
 export async function findByAnilistId(anilistId?: number | null) {
   if (!anilistId) return null;
-  const { data } = await supabase.from("series").select("id, title").eq("anilist_id", anilistId).maybeSingle();
+  const { data } = await supabase
+    .from("series")
+    .select("id, title")
+    .eq("anilist_id", anilistId)
+    .maybeSingle();
   return data;
 }

@@ -44,11 +44,16 @@ const STATUS_PT: Record<string, string> = {
 };
 
 export const searchAnilist = createServerFn({ method: "POST" })
-  .inputValidator((input: { search: string }) => z.object({ search: z.string().min(1) }).parse(input))
+  .inputValidator((input: { search: string }) =>
+    z.object({ search: z.string().min(1) }).parse(input),
+  )
   .handler(async ({ data }): Promise<AnilistResult[]> => runAnilistSearch(data));
 
 /** Busca no AniList; roda no servidor e, se o AniList bloquear o servidor (403), direto no navegador. */
-export async function searchAnilistSmart(search: string, server: (a: { data: { search: string } }) => Promise<AnilistResult[]>) {
+export async function searchAnilistSmart(
+  search: string,
+  server: (a: { data: { search: string } }) => Promise<AnilistResult[]>,
+) {
   try {
     return await server({ data: { search } });
   } catch (e) {
@@ -67,7 +72,9 @@ async function runAnilistSearch(data: { search: string }): Promise<AnilistResult
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          ...(typeof window === "undefined" ? { "User-Agent": "BetterManga/1.0 (+https://bettermanga.net)" } : {}),
+          ...(typeof window === "undefined"
+            ? { "User-Agent": "BetterManga/1.0 (+https://bettermanga.net)" }
+            : {}),
         },
         body: JSON.stringify({ query, variables }),
       });
@@ -84,8 +91,14 @@ async function runAnilistSearch(data: { search: string }): Promise<AnilistResult
           { id: Number(id) },
         );
         if (!r.ok) throw new Error(`Não foi possível ler o anime no AniList (${r.status}).`);
-        const j = (await r.json()) as { data?: { Media?: { relations?: { edges?: Array<{ node?: { id: number; type: string } }> } } } };
-        const ids = (j.data?.Media?.relations?.edges ?? []).filter((e) => e.node?.type === "MANGA").map((e) => e.node!.id);
+        const j = (await r.json()) as {
+          data?: {
+            Media?: { relations?: { edges?: Array<{ node?: { id: number; type: string } }> } };
+          };
+        };
+        const ids = (j.data?.Media?.relations?.edges ?? [])
+          .filter((e) => e.node?.type === "MANGA")
+          .map((e) => e.node!.id);
         if (!ids.length) throw new Error("Esse anime não tem mangá de origem no AniList.");
         variables = { ids };
       } else {
@@ -105,7 +118,8 @@ async function runAnilistSearch(data: { search: string }): Promise<AnilistResult
       await new Promise((r) => setTimeout(r, 1500));
       response = await gql(QUERY, variables);
     }
-    if (response.status === 429) throw new Error("AniList está limitando as buscas. Aguarde um minuto e tente de novo.");
+    if (response.status === 429)
+      throw new Error("AniList está limitando as buscas. Aguarde um minuto e tente de novo.");
 
     if (!response.ok) {
       throw new Error(`Não foi possível buscar no AniList (${response.status}).`);
@@ -134,13 +148,20 @@ async function runAnilistSearch(data: { search: string }): Promise<AnilistResult
     return media.map((item) => {
       const edges = item.staff?.edges ?? [];
       const findRole = (needle: string) =>
-        edges.find((edge) => (edge.role ?? "").toLowerCase().includes(needle))?.node?.name?.full ?? "";
-      const titles = [...new Set([item.title.english, item.title.romaji, item.title.native])].filter(Boolean) as string[];
+        edges.find((edge) => (edge.role ?? "").toLowerCase().includes(needle))?.node?.name?.full ??
+        "";
+      const titles = [
+        ...new Set([item.title.english, item.title.romaji, item.title.native]),
+      ].filter(Boolean) as string[];
       return {
         anilistId: item.id,
         title: titles[0] ?? "Sem título",
         altTitles: titles.slice(1).join(", "),
-        synopsis: decode((item.description ?? "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")).replace(/\n{3,}/g, "\n\n").trim(),
+        synopsis: decode(
+          (item.description ?? "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, ""),
+        )
+          .replace(/\n{3,}/g, "\n\n")
+          .trim(),
         coverUrl: item.coverImage?.extraLarge ?? item.coverImage?.large ?? "",
         bannerUrl: item.bannerImage || item.coverImage?.extraLarge || item.coverImage?.large || "",
         genres: item.genres ?? [],
@@ -169,6 +190,11 @@ async function runAnilistSearch(data: { search: string }): Promise<AnilistResult
 
 function decode(text: string) {
   return text
-    .replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-    .replace(/&nbsp;/g, " ").replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n))).replace(/&amp;/g, "&");
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&amp;/g, "&");
 }

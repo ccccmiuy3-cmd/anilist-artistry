@@ -10,14 +10,16 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/suporte")({
   staticData: { sitemap: false },
-  head: () => ({ meta: [
-    { title: "Suporte — Better Mangá" },
-    { name: "description", content: "Atenda as conversas de suporte dos leitores." },
-    { property: "og:title", content: "Suporte — Better Mangá" },
-    { property: "og:description", content: "Central de atendimento dos leitores." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Suporte — Better Mangá" },
+      { name: "description", content: "Atenda as conversas de suporte dos leitores." },
+      { property: "og:title", content: "Suporte — Better Mangá" },
+      { property: "og:description", content: "Central de atendimento dos leitores." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: SupportAdmin,
 });
 
@@ -33,8 +35,18 @@ function SupportAdmin() {
         .order("created_at", { ascending: false })
         .limit(2000);
       if (error) throw error;
-      const map = new Map<string, { user_id: string; last: string; at: string; waiting: boolean }>();
-      for (const m of data) if (!map.has(m.user_id)) map.set(m.user_id, { user_id: m.user_id, last: m.body, at: m.created_at, waiting: !m.from_staff });
+      const map = new Map<
+        string,
+        { user_id: string; last: string; at: string; waiting: boolean }
+      >();
+      for (const m of data)
+        if (!map.has(m.user_id))
+          map.set(m.user_id, {
+            user_id: m.user_id,
+            last: m.body,
+            at: m.created_at,
+            waiting: !m.from_staff,
+          });
       const ids = [...map.keys()];
       const { data: profiles } = ids.length
         ? await supabase.from("profiles").select("id, username, avatar_url").in("id", ids)
@@ -51,15 +63,24 @@ function SupportAdmin() {
         qc.invalidateQueries({ queryKey: ["support-inbox"] }),
       )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, [qc]);
 
   const current = threads.find((t) => t.user_id === selected);
 
   const closeChat = async () => {
-    if (!selected || !confirm("Encerrar o chat? Todas as mensagens desta conversa serão apagadas permanentemente.")) return;
+    if (
+      !selected ||
+      !confirm("Encerrar o chat? Todas as mensagens desta conversa serão apagadas permanentemente.")
+    )
+      return;
     const { error } = await supabase.from("support_messages").delete().eq("user_id", selected);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Chat encerrado e apagado");
     setSelected(null);
     qc.invalidateQueries({ queryKey: ["support-inbox"] });
@@ -70,18 +91,29 @@ function SupportAdmin() {
     <AdminShell title="Suporte" subtitle="Conversas individuais de cada conta" adminOnly>
       <div className="grid gap-4 md:grid-cols-[280px_1fr]">
         <div className="max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-card">
-          {threads.length === 0 && <p className="p-4 text-sm text-muted-foreground">Nenhuma conversa aberta.</p>}
+          {threads.length === 0 && (
+            <p className="p-4 text-sm text-muted-foreground">Nenhuma conversa aberta.</p>
+          )}
           {threads.map((t) => (
             <button
               key={t.user_id}
               onClick={() => setSelected(t.user_id)}
               className={`flex w-full items-center gap-3 border-b border-border p-3 text-left hover:bg-muted ${selected === t.user_id ? "bg-muted" : ""}`}
             >
-              <img src={t.profile?.avatar_url || "/placeholder.svg"} alt="" className="h-9 w-9 rounded-full bg-muted object-cover" />
+              <img
+                src={t.profile?.avatar_url || "/placeholder.svg"}
+                alt=""
+                className="h-9 w-9 rounded-full bg-muted object-cover"
+              />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 text-sm font-semibold">
                   <span className="truncate">{t.profile?.username ?? "Usuário"}</span>
-                  {t.waiting && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" title="Aguardando resposta" />}
+                  {t.waiting && (
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full bg-primary"
+                      title="Aguardando resposta"
+                    />
+                  )}
                 </div>
                 <div className="truncate text-xs text-muted-foreground">{t.last}</div>
               </div>
@@ -93,12 +125,16 @@ function SupportAdmin() {
             <>
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <span className="font-semibold">{current?.profile?.username ?? "Conversa"}</span>
-                <Button variant="destructive" size="sm" onClick={closeChat}><Trash2 className="mr-1 h-4 w-4" /> Encerrar chat</Button>
+                <Button variant="destructive" size="sm" onClick={closeChat}>
+                  <Trash2 className="mr-1 h-4 w-4" /> Encerrar chat
+                </Button>
               </div>
               <SupportConversation userId={selected} staff />
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">Selecione uma conversa</div>
+            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+              Selecione uma conversa
+            </div>
           )}
         </div>
       </div>

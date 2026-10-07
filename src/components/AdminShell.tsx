@@ -2,7 +2,19 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Award, BookOpen, BookText, LayoutDashboard, PlusCircle, Shield, Users, ExternalLink, Frame, Headset, Image as ImageIcon } from "lucide-react";
+import {
+  Award,
+  BookOpen,
+  BookText,
+  LayoutDashboard,
+  PlusCircle,
+  Shield,
+  Users,
+  ExternalLink,
+  Frame,
+  Headset,
+  Image as ImageIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -60,10 +72,16 @@ export function AdminShell({
         </div>
         <h1 className="mt-5 font-display text-2xl font-extrabold">Acesso restrito</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {adminOnly && isStaff ? "Somente administradores podem gerenciar contas." : "Só a equipe pode acessar o painel."}
+          {adminOnly && isStaff
+            ? "Somente administradores podem gerenciar contas."
+            : "Só a equipe pode acessar o painel."}
         </p>
         {!isStaff ? (
-          <Button className="mt-6 font-semibold" disabled={claimAdmin.isPending} onClick={() => claimAdmin.mutate()}>
+          <Button
+            className="mt-6 font-semibold"
+            disabled={claimAdmin.isPending}
+            onClick={() => claimAdmin.mutate()}
+          >
             Assumir como administrador
           </Button>
         ) : null}
@@ -82,7 +100,9 @@ export function AdminShell({
             </div>
             <div>
               <p className="text-sm font-extrabold">Painel</p>
-              <p className="text-[11px] text-muted-foreground">{isAdmin ? "Administrador" : "Uploader"}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {isAdmin ? "Administrador" : "Uploader"}
+              </p>
             </div>
           </div>
           <nav className="space-y-1">
@@ -99,7 +119,10 @@ export function AdminShell({
             ))}
           </nav>
           <div className="my-3 h-px bg-border" />
-          <Link to="/" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground">
+          <Link
+            to="/"
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
             <ExternalLink className="h-4 w-4" /> Ver site
           </Link>
         </aside>
@@ -132,13 +155,25 @@ export function AdminShell({
   );
 }
 
-export function StatCard({ label, value, icon }: { label: string; value: ReactNode; icon: ReactNode }) {
+export function StatCard({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: ReactNode;
+  icon: ReactNode;
+}) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-surface p-5">
       <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-xl" />
-      <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">{icon}</div>
+      <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">
+        {icon}
+      </div>
       <p className="mt-4 font-display text-3xl font-extrabold">{value}</p>
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
     </div>
   );
 }

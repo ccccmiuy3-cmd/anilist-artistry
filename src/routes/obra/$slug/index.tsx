@@ -139,9 +139,7 @@ function SeriesPage() {
         .select("score")
         .eq("series_id", series.data!.id);
       const rows = data ?? [];
-      const avg = rows.length
-        ? rows.reduce((sum, row) => sum + row.score, 0) / rows.length
-        : 0;
+      const avg = rows.length ? rows.reduce((sum, row) => sum + row.score, 0) / rows.length : 0;
       return { count: rows.length, avg };
     },
   });
@@ -194,8 +192,7 @@ function SeriesPage() {
         .not("chapter_id", "is", null);
       const counts = new Map<string, number>();
       for (const row of data ?? []) {
-        if (row.chapter_id)
-          counts.set(row.chapter_id, (counts.get(row.chapter_id) ?? 0) + 1);
+        if (row.chapter_id) counts.set(row.chapter_id, (counts.get(row.chapter_id) ?? 0) + 1);
       }
       return counts;
     },
@@ -306,20 +303,16 @@ function SeriesPage() {
           .in("chapter_id", chapterIds);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("chapter_reads")
-          .upsert(
-            chapterIds.map((chapter_id) => ({ user_id: user.id, chapter_id })),
-            { onConflict: "user_id,chapter_id" },
-          );
+        const { error } = await supabase.from("chapter_reads").upsert(
+          chapterIds.map((chapter_id) => ({ user_id: user.id, chapter_id })),
+          { onConflict: "user_id,chapter_id" },
+        );
         if (error) throw error;
       }
     },
     onSuccess: (_data, mode) => {
       queryClient.invalidateQueries({ queryKey: ["chapter-reads", slug, user?.id] });
-      toast.success(
-        mode === "read" ? "Todos marcados como lidos!" : "Leitura desmarcada!",
-      );
+      toast.success(mode === "read" ? "Todos marcados como lidos!" : "Leitura desmarcada!");
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Erro"),
   });
@@ -350,13 +343,22 @@ function SeriesPage() {
     obra.chapters.find((c) => !readIds.has(c.id)) ??
     obra.chapters[0];
 
-  const firstChapter = obra.chapters.reduce<(typeof obra.chapters)[number] | undefined>((a, b) => (!a || Number(b.number) < Number(a.number) ? b : a), undefined);
-  const lastChapter = obra.chapters.reduce<(typeof obra.chapters)[number] | undefined>((a, b) => (!a || Number(b.number) > Number(a.number) ? b : a), undefined);
+  const firstChapter = obra.chapters.reduce<(typeof obra.chapters)[number] | undefined>(
+    (a, b) => (!a || Number(b.number) < Number(a.number) ? b : a),
+    undefined,
+  );
+  const lastChapter = obra.chapters.reduce<(typeof obra.chapters)[number] | undefined>(
+    (a, b) => (!a || Number(b.number) > Number(a.number) ? b : a),
+    undefined,
+  );
   const q = chapterSearch.trim().toLowerCase();
   const visibleChapters = q
-    ? chapters.filter((c) => formatChapter(c.number).includes(q) || (c.title ?? "").toLowerCase().includes(q))
+    ? chapters.filter(
+        (c) => formatChapter(c.number).includes(q) || (c.title ?? "").toLowerCase().includes(q),
+      )
     : chapters;
-  const sortedComments = commentSort === "new" ? (comments.data ?? []) : [...(comments.data ?? [])].reverse();
+  const sortedComments =
+    commentSort === "new" ? (comments.data ?? []) : [...(comments.data ?? [])].reverse();
   const synopsisLong = (obra.synopsis ?? "").length > 320;
   const stats = ratingStats.data ?? { count: 0, avg: 0 };
   const average = stats.count > 0 ? stats.avg : Number(obra.rating) || 0;
@@ -387,8 +389,12 @@ function SeriesPage() {
             {/* Cover */}
             <div className="flex flex-col items-center md:w-[260px] md:shrink-0">
               <div className="mb-2 flex flex-wrap justify-center gap-2 md:hidden">
-                <span className="rounded-full border border-border bg-surface-2 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{obra.kind}</span>
-                <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-300">{obra.status}</span>
+                <span className="rounded-full border border-border bg-surface-2 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {obra.kind}
+                </span>
+                <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
+                  {obra.status}
+                </span>
               </div>
               <img
                 src={coverUrl(obra.cover_url)}
@@ -400,23 +406,40 @@ function SeriesPage() {
             {/* Info */}
             <div className="w-full flex-1 text-center md:text-left">
               <div className="mb-3 hidden flex-wrap items-center gap-3 md:flex">
-                <span className="rounded border border-border px-2 py-0.5 text-[10px] font-bold uppercase text-muted-foreground">{obra.kind}</span>
-                <span className="rounded border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-400">{obra.status}</span>
+                <span className="rounded border border-border px-2 py-0.5 text-[10px] font-bold uppercase text-muted-foreground">
+                  {obra.kind}
+                </span>
+                <span className="rounded border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-400">
+                  {obra.status}
+                </span>
               </div>
-              <h1 className="font-display text-2xl font-black leading-tight md:text-3xl">{obra.title}</h1>
+              <h1 className="font-display text-2xl font-black leading-tight md:text-3xl">
+                {obra.title}
+              </h1>
               {obra.alt_titles ? (
                 <p className="mt-1 text-xs text-muted-foreground">{obra.alt_titles}</p>
               ) : null}
 
               <div className="mt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground md:justify-start">
-                <span className="inline-flex items-center gap-1.5"><BookOpen className="h-4 w-4" /> {obra.chapters.length} capítulos</span>
-                <span className="inline-flex items-center gap-1.5 font-bold text-gold"><Star className="h-4 w-4 fill-gold" /> {average.toFixed(1).replace(".", ",")}</span>
-                <span className="inline-flex items-center gap-1.5"><MessageCircle className="h-4 w-4" /> {comments.data?.length ?? 0}</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <BookOpen className="h-4 w-4" /> {obra.chapters.length} capítulos
+                </span>
+                <span className="inline-flex items-center gap-1.5 font-bold text-gold">
+                  <Star className="h-4 w-4 fill-gold" /> {average.toFixed(1).replace(".", ",")}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <MessageCircle className="h-4 w-4" /> {comments.data?.length ?? 0}
+                </span>
               </div>
 
               <div className="mt-4 flex flex-wrap justify-center gap-1.5 md:justify-start md:gap-2">
                 {obra.genres.map((genre) => (
-                  <span key={genre} className="rounded-lg border border-border bg-surface-2/60 px-2.5 py-1 text-xs text-muted-foreground">{genre}</span>
+                  <span
+                    key={genre}
+                    className="rounded-lg border border-border bg-surface-2/60 px-2.5 py-1 text-xs text-muted-foreground"
+                  >
+                    {genre}
+                  </span>
                 ))}
               </div>
 
@@ -430,12 +453,19 @@ function SeriesPage() {
 
               {obra.synopsis ? (
                 <div className="mt-4 text-left">
-                  <p className={`whitespace-pre-line text-sm leading-relaxed text-foreground/80 ${expanded ? "" : "line-clamp-4"}`}>
+                  <p
+                    className={`whitespace-pre-line text-sm leading-relaxed text-foreground/80 ${expanded ? "" : "line-clamp-4"}`}
+                  >
                     {obra.synopsis}
                   </p>
                   {synopsisLong ? (
-                    <button onClick={() => setExpanded(!expanded)} className="mt-2 flex items-center gap-1 text-sm font-semibold text-primary">
-                      <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
+                    <button
+                      onClick={() => setExpanded(!expanded)}
+                      className="mt-2 flex items-center gap-1 text-sm font-semibold text-primary"
+                    >
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
+                      />
                       {expanded ? "Ver menos" : "Ver mais"}
                     </button>
                   ) : null}
@@ -447,11 +477,19 @@ function SeriesPage() {
                 {obra.chapters.length > 0 ? (
                   <Link
                     to="/obra/$slug/$chapter"
-                    params={{ slug: obra.slug, chapter: formatChapter((readIds.size > 0 && continueChapter ? continueChapter : firstChapter!).number) }}
+                    params={{
+                      slug: obra.slug,
+                      chapter: formatChapter(
+                        (readIds.size > 0 && continueChapter ? continueChapter : firstChapter!)
+                          .number,
+                      ),
+                    }}
                     className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.97]"
                   >
                     <Play className="h-3.5 w-3.5 fill-current" />
-                    {readIds.size > 0 && continueChapter ? `Continuar cap. ${formatChapter(continueChapter.number)}` : "Ler primeiro"}
+                    {readIds.size > 0 && continueChapter
+                      ? `Continuar cap. ${formatChapter(continueChapter.number)}`
+                      : "Ler primeiro"}
                   </Link>
                 ) : null}
                 {lastChapter ? (
@@ -486,7 +524,10 @@ function SeriesPage() {
                     <StatusButton userId={user.id} seriesId={obra.id} />
                   </>
                 ) : (
-                  <Link to="/auth" className="flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-4 py-2 text-[11px] font-black uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                  <Link
+                    to="/auth"
+                    className="flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-4 py-2 text-[11px] font-black uppercase tracking-wider text-muted-foreground hover:text-foreground"
+                  >
                     <Heart className="h-3.5 w-3.5" /> Entrar para favoritar
                   </Link>
                 )}
@@ -505,13 +546,27 @@ function SeriesPage() {
                   <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
                     {user ? (
                       <>
-                        <ToolbarButton disabled={markAll.isPending || chapters.length === 0} onClick={() => markAll.mutate("read")} icon={<CheckCheck className="h-3.5 w-3.5" />} label="Marcar todos" />
-                        <ToolbarButton disabled={markAll.isPending || readIds.size === 0} onClick={() => markAll.mutate("unread")} icon={<RotateCcw className="h-3.5 w-3.5" />} label="Desmarcar todos" />
+                        <ToolbarButton
+                          disabled={markAll.isPending || chapters.length === 0}
+                          onClick={() => markAll.mutate("read")}
+                          icon={<CheckCheck className="h-3.5 w-3.5" />}
+                          label="Marcar todos"
+                        />
+                        <ToolbarButton
+                          disabled={markAll.isPending || readIds.size === 0}
+                          onClick={() => markAll.mutate("unread")}
+                          icon={<RotateCcw className="h-3.5 w-3.5" />}
+                          label="Desmarcar todos"
+                        />
                       </>
                     ) : null}
                     <ToolbarButton
                       onClick={() => setOrder(order === "asc" ? "desc" : "asc")}
-                      icon={<ArrowDownWideNarrow className={`h-3.5 w-3.5 text-primary ${order === "asc" ? "rotate-180" : ""}`} />}
+                      icon={
+                        <ArrowDownWideNarrow
+                          className={`h-3.5 w-3.5 text-primary ${order === "asc" ? "rotate-180" : ""}`}
+                        />
+                      }
                       label={order === "desc" ? "Recentes" : "Antigos"}
                     />
                   </div>
@@ -531,30 +586,52 @@ function SeriesPage() {
                   const isRead = readIds.has(chapter.id);
                   const commentCount = chapterCommentCounts.data?.get(chapter.id) ?? 0;
                   return (
-                    <li key={chapter.id} className={`flex items-center gap-4 px-4 py-3.5 transition hover:bg-foreground/[0.02] ${isRead ? "opacity-60 hover:opacity-90" : ""}`}>
+                    <li
+                      key={chapter.id}
+                      className={`flex items-center gap-4 px-4 py-3.5 transition hover:bg-foreground/[0.02] ${isRead ? "opacity-60 hover:opacity-90" : ""}`}
+                    >
                       <Link
                         to="/obra/$slug/$chapter"
                         params={{ slug: obra.slug, chapter: formatChapter(chapter.number) }}
                         className="flex min-w-0 flex-1 items-center gap-4 text-left"
                       >
-                        <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border text-sm font-bold ${isRead ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-border bg-foreground/[0.04] text-muted-foreground"}`}>
-                          {isRead ? <Check className="h-[18px] w-[18px]" strokeWidth={2.5} /> : formatChapter(chapter.number)}
+                        <span
+                          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border text-sm font-bold ${isRead ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-border bg-foreground/[0.04] text-muted-foreground"}`}
+                        >
+                          {isRead ? (
+                            <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                          ) : (
+                            formatChapter(chapter.number)
+                          )}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className={`block truncate font-medium ${isRead ? "text-emerald-500/90" : ""}`}>
+                          <span
+                            className={`block truncate font-medium ${isRead ? "text-emerald-500/90" : ""}`}
+                          >
                             Capítulo {formatChapter(chapter.number)}
-                            {chapter.title ? <span className="ml-2 font-normal text-muted-foreground">{chapter.title}</span> : null}
+                            {chapter.title ? (
+                              <span className="ml-2 font-normal text-muted-foreground">
+                                {chapter.title}
+                              </span>
+                            ) : null}
                           </span>
                           <span className="mt-1 flex flex-wrap items-center gap-1.5">
-                            <span className="text-xs font-medium text-muted-foreground/70">{timeAgo(chapter.created_at)}</span>
+                            <span className="text-xs font-medium text-muted-foreground/70">
+                              {timeAgo(chapter.created_at)}
+                            </span>
                             {isRead ? (
-                              <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">Lido</span>
+                              <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+                                Lido
+                              </span>
                             ) : null}
                           </span>
                         </span>
                       </Link>
                       {commentCount > 0 ? (
-                        <span className="inline-flex items-center gap-1 text-xs tabular-nums text-muted-foreground/60" title="Comentários">
+                        <span
+                          className="inline-flex items-center gap-1 text-xs tabular-nums text-muted-foreground/60"
+                          title="Comentários"
+                        >
                           <MessageSquare className="h-3.5 w-3.5" /> {commentCount}
                         </span>
                       ) : null}
@@ -575,7 +652,9 @@ function SeriesPage() {
                 })}
                 {visibleChapters.length === 0 ? (
                   <li className="px-5 py-8 text-center text-sm text-muted-foreground">
-                    {chapterSearch ? "Nenhum capítulo encontrado." : "Nenhum capítulo publicado ainda."}
+                    {chapterSearch
+                      ? "Nenhum capítulo encontrado."
+                      : "Nenhum capítulo publicado ainda."}
                   </li>
                 ) : null}
               </ul>
@@ -591,7 +670,8 @@ function SeriesPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-black text-gold">
-                      {average.toFixed(1).replace(".", ",")} <span className="text-[11px] font-medium text-muted-foreground">/ 10</span>
+                      {average.toFixed(1).replace(".", ",")}{" "}
+                      <span className="text-[11px] font-medium text-muted-foreground">/ 10</span>
                     </p>
                     <p className="text-[11px] text-muted-foreground">{stats.count} avaliações</p>
                   </div>
@@ -601,7 +681,9 @@ function SeriesPage() {
                     <button
                       key={score}
                       disabled={rate.isPending}
-                      onClick={() => (user ? rate.mutate(score) : toast.info("Entre para avaliar."))}
+                      onClick={() =>
+                        user ? rate.mutate(score) : toast.info("Entre para avaliar.")
+                      }
                       className={`h-10 rounded-xl border text-sm font-bold transition ${
                         score === (myRating.data ?? 0)
                           ? "border-gold/50 bg-gold/15 text-gold"
@@ -616,19 +698,39 @@ function SeriesPage() {
 
               <div className="rounded-2xl border border-border bg-surface/60 p-5">
                 <div className="flex items-start gap-3">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-rose-500/10 text-rose-400"><Heart className="h-4 w-4" /></span>
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-rose-500/10 text-rose-400">
+                    <Heart className="h-4 w-4" />
+                  </span>
                   <div>
                     <h3 className="text-sm font-bold">Apoiar a obra</h3>
-                    <p className="text-xs text-muted-foreground">O valor é repassado aos responsáveis pelos capítulos.</p>
+                    <p className="text-xs text-muted-foreground">
+                      O valor é repassado aos responsáveis pelos capítulos.
+                    </p>
                   </div>
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-2">
                   {["R$ 5", "R$ 10", "R$ 15"].map((v) => (
-                    <button key={v} onClick={() => toast.info("Apoio em breve!")} className="h-10 rounded-xl border border-border bg-foreground/[0.03] text-sm font-bold hover:border-primary/40">{v}</button>
+                    <button
+                      key={v}
+                      onClick={() => toast.info("Apoio em breve!")}
+                      className="h-10 rounded-xl border border-border bg-foreground/[0.03] text-sm font-bold hover:border-primary/40"
+                    >
+                      {v}
+                    </button>
                   ))}
                 </div>
-                <button onClick={() => toast.info("Apoio em breve!")} className="mt-2 h-10 w-full rounded-xl border border-border bg-foreground/[0.03] text-sm font-semibold hover:border-primary/40">Personalizado</button>
-                <button onClick={() => toast.info("Apoio em breve!")} className="mt-3 h-10 w-full rounded-xl bg-rose-500/80 text-sm font-bold text-white hover:bg-rose-500">Apoiar agora</button>
+                <button
+                  onClick={() => toast.info("Apoio em breve!")}
+                  className="mt-2 h-10 w-full rounded-xl border border-border bg-foreground/[0.03] text-sm font-semibold hover:border-primary/40"
+                >
+                  Personalizado
+                </button>
+                <button
+                  onClick={() => toast.info("Apoio em breve!")}
+                  className="mt-3 h-10 w-full rounded-xl bg-rose-500/80 text-sm font-bold text-white hover:bg-rose-500"
+                >
+                  Apoiar agora
+                </button>
               </div>
             </aside>
           </div>
@@ -637,16 +739,25 @@ function SeriesPage() {
           {(recommended.data ?? []).length > 0 ? (
             <section className="mt-14">
               <h2 className="flex items-center gap-3 font-display text-lg font-bold">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary"><Sparkles className="h-4 w-4" /></span>
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <Sparkles className="h-4 w-4" />
+                </span>
                 Recomendadas para você
               </h2>
               <div className="mt-5 grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
                 {(recommended.data ?? []).map((r) => (
                   <Link key={r.id} to="/obra/$slug" params={{ slug: r.slug }} className="group">
                     <div className="aspect-[2/3] overflow-hidden rounded-2xl border border-border">
-                      <img src={coverUrl(r.cover_url)} alt={r.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                      <img
+                        src={coverUrl(r.cover_url)}
+                        alt={r.title}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
                     </div>
-                    <p className="mt-2 line-clamp-2 text-[13px] font-bold leading-snug group-hover:text-primary">{r.title}</p>
+                    <p className="mt-2 line-clamp-2 text-[13px] font-bold leading-snug group-hover:text-primary">
+                      {r.title}
+                    </p>
                   </Link>
                 ))}
               </div>
@@ -657,14 +768,23 @@ function SeriesPage() {
           <section className="mx-auto mt-14 max-w-4xl rounded-2xl border border-border bg-surface/60 p-5 md:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary"><MessageCircle className="h-4 w-4" /></span>
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <MessageCircle className="h-4 w-4" />
+                </span>
                 <div>
                   <h2 className="text-sm font-bold">Comentários</h2>
-                  <p className="text-xs text-muted-foreground">{comments.data?.length ?? 0} comentários</p>
+                  <p className="text-xs text-muted-foreground">
+                    {comments.data?.length ?? 0} comentários
+                  </p>
                 </div>
               </div>
               <div className="flex gap-1.5">
-                {([["new", "Mais Recentes"], ["old", "Mais Antigos"]] as const).map(([k, label]) => (
+                {(
+                  [
+                    ["new", "Mais Recentes"],
+                    ["old", "Mais Antigos"],
+                  ] as const
+                ).map(([k, label]) => (
                   <button
                     key={k}
                     onClick={() => setCommentSort(k)}
@@ -686,15 +806,22 @@ function SeriesPage() {
               </div>
             ) : (
               <p className="mt-6 text-sm text-muted-foreground">
-                <Link to="/auth" className="text-primary">Entre</Link> para comentar.
+                <Link to="/auth" className="text-primary">
+                  Entre
+                </Link>{" "}
+                para comentar.
               </p>
             )}
             <ul className="mt-8 space-y-5">
               <CommentThreads
-              comments={sortedComments}
-              userId={user?.id}
-              onReply={user ? (c) => setReplyTo({ id: c.id, username: c.author?.username ?? "leitor" }) : undefined}
-            />
+                comments={sortedComments}
+                userId={user?.id}
+                onReply={
+                  user
+                    ? (c) => setReplyTo({ id: c.id, username: c.author?.username ?? "leitor" })
+                    : undefined
+                }
+              />
             </ul>
           </section>
         </div>
@@ -704,7 +831,17 @@ function SeriesPage() {
   );
 }
 
-function ToolbarButton({ icon, label, onClick, disabled }: { icon: ReactNode; label: string; onClick: () => void; disabled?: boolean }) {
+function ToolbarButton({
+  icon,
+  label,
+  onClick,
+  disabled,
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"

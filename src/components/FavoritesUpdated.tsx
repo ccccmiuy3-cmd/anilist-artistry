@@ -12,7 +12,10 @@ export function FavoritesUpdated({ rows }: { rows: SeriesRow[] }) {
   if (rows.length === 0) return null;
 
   return (
-    <section aria-label="Favoritas atualizadas" className="relative min-w-0 max-w-full py-4 md:py-8">
+    <section
+      aria-label="Favoritas atualizadas"
+      className="relative min-w-0 max-w-full py-4 md:py-8"
+    >
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-destructive/15 text-destructive">
           <Heart className="h-[18px] w-[18px]" />
@@ -76,7 +79,10 @@ export function FavoritesUpdated({ rows }: { rows: SeriesRow[] }) {
                       title={`${item.chapters.length} capítulos · média ${Number(item.rating).toFixed(1).replace(".", ",")}/10`}
                     >
                       <span className="inline-flex shrink-0 items-center gap-1">
-                        <BookOpen className="h-[11px] w-[11px] shrink-0 text-white" strokeWidth={2.5} />
+                        <BookOpen
+                          className="h-[11px] w-[11px] shrink-0 text-white"
+                          strokeWidth={2.5}
+                        />
                         <span className="text-[10px] font-extrabold tabular-nums leading-none text-white">
                           {item.chapters.length}
                         </span>
@@ -95,11 +101,7 @@ export function FavoritesUpdated({ rows }: { rows: SeriesRow[] }) {
                   </Link>
                   <div className="flex min-h-[2.25rem] items-start px-0.5 text-left">
                     <div className="w-full min-w-0">
-                      <Link
-                        to="/obra/$slug"
-                        params={{ slug: item.slug }}
-                        className="no-underline"
-                      >
+                      <Link to="/obra/$slug" params={{ slug: item.slug }} className="no-underline">
                         <h3 className="line-clamp-2 text-[13px] font-semibold leading-tight text-foreground transition-colors group-hover:text-foreground/80">
                           {item.title}
                         </h3>

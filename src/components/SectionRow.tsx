@@ -31,7 +31,5 @@ export function SectionRow({
 }
 
 export function HScroll({ children }: { children: ReactNode }) {
-  return (
-    <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">{children}</div>
-  );
+  return <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">{children}</div>;
 }

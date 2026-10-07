@@ -81,10 +81,7 @@ export function Releases({ rows }: { rows: SeriesRow[] }) {
       <div className="relative -mx-4 md:-mx-8">
         <div className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-20 bg-gradient-to-r from-background to-transparent" />
         <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-20 bg-gradient-to-l from-background to-transparent" />
-        <div
-          ref={scroller}
-          className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-4 md:px-8"
-        >
+        <div ref={scroller} className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-4 md:px-8">
           {rows.map((item) => {
             const latest = item.chapters[0];
             return (

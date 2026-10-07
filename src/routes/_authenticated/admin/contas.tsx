@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Award, Ban, Check, Pencil, Save, Search, Shield, Trash2, Upload as UploadIcon } from "lucide-react";
+import {
+  Award,
+  Ban,
+  Check,
+  Pencil,
+  Save,
+  Search,
+  Shield,
+  Trash2,
+  Upload as UploadIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/AdminShell";
 import { subscriptionSeal } from "@/lib/subscription";
@@ -30,8 +40,17 @@ export const Route = createFileRoute("/_authenticated/admin/contas")({
 });
 
 type Account = {
-  id: string; username: string; display_name: string | null; avatar_url: string | null; bio: string | null;
-  level: number; xp: number; banned: boolean; created_at: string; roles: string[]; subscription_tier: string;
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  level: number;
+  xp: number;
+  banned: boolean;
+  created_at: string;
+  roles: string[];
+  subscription_tier: string;
 };
 
 const ROLES = [
@@ -50,41 +69,82 @@ function Contas() {
     enabled: isAdmin,
     queryFn: async () => {
       const [p, r] = await Promise.all([
-        supabase.from("profiles").select("id, username, display_name, avatar_url, bio, level, xp, banned, created_at, subscription_tier").order("created_at", { ascending: false }),
+        supabase
+          .from("profiles")
+          .select(
+            "id, username, display_name, avatar_url, bio, level, xp, banned, created_at, subscription_tier",
+          )
+          .order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id, role"),
       ]);
       if (p.error) throw p.error;
-      return (p.data ?? []).map((a) => ({ ...a, roles: (r.data ?? []).filter((x) => x.user_id === a.id).map((x) => x.role as string) })) as Account[];
+      return (p.data ?? []).map((a) => ({
+        ...a,
+        roles: (r.data ?? []).filter((x) => x.user_id === a.id).map((x) => x.role as string),
+      })) as Account[];
     },
   });
 
   const rows = useMemo(
-    () => (accounts.data ?? []).filter((a) => `${a.username} ${a.display_name ?? ""}`.toLowerCase().includes(q.toLowerCase())),
+    () =>
+      (accounts.data ?? []).filter((a) =>
+        `${a.username} ${a.display_name ?? ""}`.toLowerCase().includes(q.toLowerCase()),
+      ),
     [accounts.data, q],
   );
 
   return (
-    <AdminShell adminOnly title="Contas" subtitle={`${accounts.data?.length ?? 0} contas cadastradas`}>
+    <AdminShell
+      adminOnly
+      title="Contas"
+      subtitle={`${accounts.data?.length ?? 0} contas cadastradas`}
+    >
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nome ou @usuário…" className="h-11 bg-surface pl-9" />
+        <Input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar por nome ou @usuário…"
+          className="h-11 bg-surface pl-9"
+        />
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2">
         {rows.map((a) => (
-          <div key={a.id} className={`flex items-center gap-4 rounded-2xl border bg-surface p-4 ${a.banned ? "border-destructive/50" : "border-border"}`}>
+          <div
+            key={a.id}
+            className={`flex items-center gap-4 rounded-2xl border bg-surface p-4 ${a.banned ? "border-destructive/50" : "border-border"}`}
+          >
             <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-2 text-lg font-bold text-primary ring-2 ring-border">
-              {a.avatar_url ? <img src={a.avatar_url} alt="" className="h-full w-full object-cover" /> : a.username.slice(0, 2).toUpperCase()}
+              {a.avatar_url ? (
+                <img src={a.avatar_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                a.username.slice(0, 2).toUpperCase()
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5">
-                <Link to="/u/$username" params={{ username: a.username }} className="truncate font-bold hover:text-primary">
+                <Link
+                  to="/u/$username"
+                  params={{ username: a.username }}
+                  className="truncate font-bold hover:text-primary"
+                >
                   {a.display_name || a.username}
                 </Link>
-                <span className="rounded border border-border px-1.5 text-[10px] font-bold text-muted-foreground">Nv. {a.level}</span>
+                <span className="rounded border border-border px-1.5 text-[10px] font-bold text-muted-foreground">
+                  Nv. {a.level}
+                </span>
                 {a.roles.map((r) => (
-                  <span key={r} className="flex items-center gap-0.5 rounded bg-primary/15 px-1.5 text-[10px] font-bold uppercase text-primary">
-                    {r === "admin" ? <Shield className="h-2.5 w-2.5" /> : <UploadIcon className="h-2.5 w-2.5" />} {r}
+                  <span
+                    key={r}
+                    className="flex items-center gap-0.5 rounded bg-primary/15 px-1.5 text-[10px] font-bold uppercase text-primary"
+                  >
+                    {r === "admin" ? (
+                      <Shield className="h-2.5 w-2.5" />
+                    ) : (
+                      <UploadIcon className="h-2.5 w-2.5" />
+                    )}{" "}
+                    {r}
                   </span>
                 ))}
                 {a.banned ? (
@@ -94,7 +154,8 @@ function Contas() {
                 ) : null}
               </div>
               <p className="text-xs text-muted-foreground">
-                @{a.username} · {a.xp.toLocaleString("pt-BR")} XP · desde {new Date(a.created_at).toLocaleDateString("pt-BR")}
+                @{a.username} · {a.xp.toLocaleString("pt-BR")} XP · desde{" "}
+                {new Date(a.created_at).toLocaleDateString("pt-BR")}
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={() => setEditing(a)}>
@@ -103,16 +164,35 @@ function Contas() {
           </div>
         ))}
       </div>
-      {rows.length === 0 && !accounts.isLoading ? <p className="mt-10 text-center text-sm text-muted-foreground">Nenhuma conta encontrada.</p> : null}
+      {rows.length === 0 && !accounts.isLoading ? (
+        <p className="mt-10 text-center text-sm text-muted-foreground">Nenhuma conta encontrada.</p>
+      ) : null}
 
       <AccountDialog account={editing} selfId={user?.id} onClose={() => setEditing(null)} />
     </AdminShell>
   );
 }
 
-function AccountDialog({ account, selfId, onClose }: { account: Account | null; selfId?: string | undefined; onClose: () => void }) {
+function AccountDialog({
+  account,
+  selfId,
+  onClose,
+}: {
+  account: Account | null;
+  selfId?: string | undefined;
+  onClose: () => void;
+}) {
   const qc = useQueryClient();
-  const [f, setF] = useState({ username: "", display_name: "", avatar_url: "", bio: "", xp: "0", banned: false, roles: [] as string[], subscription_tier: "none" });
+  const [f, setF] = useState({
+    username: "",
+    display_name: "",
+    avatar_url: "",
+    bio: "",
+    xp: "0",
+    banned: false,
+    roles: [] as string[],
+    subscription_tier: "none",
+  });
   useEffect(() => {
     if (!account) return;
     setF({
@@ -158,16 +238,17 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
   const giveBadge = useMutation({
     mutationFn: async (event: { id: string; name: string; image_url: string }) => {
       if (!account) return;
-      const { error } = await supabase
-        .from("profile_badges")
-        .insert({
-          user_id: account.id,
-          name: event.name,
-          image_url: event.image_url,
-          event_id: event.id,
-          position: (badges.data?.length ?? 0) + 1,
-        });
-      if (error) throw new Error(error.code === "23505" ? "Este usuário já possui esse selo." : error.message);
+      const { error } = await supabase.from("profile_badges").insert({
+        user_id: account.id,
+        name: event.name,
+        image_url: event.image_url,
+        event_id: event.id,
+        position: (badges.data?.length ?? 0) + 1,
+      });
+      if (error)
+        throw new Error(
+          error.code === "23505" ? "Este usuário já possui esse selo." : error.message,
+        );
     },
     onSuccess: () => {
       toast.success("Selo enviado para o perfil!");
@@ -191,8 +272,12 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
   const save = useMutation({
     mutationFn: async () => {
       if (!account) return;
-      const username = f.username.trim().toLowerCase().replace(/[^a-z0-9_.]/g, "");
-      if (username.length < 3) throw new Error("Usuário precisa ter 3+ caracteres (letras, números, _ ou .).");
+      const username = f.username
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_.]/g, "");
+      if (username.length < 3)
+        throw new Error("Usuário precisa ter 3+ caracteres (letras, números, _ ou .).");
       const xp = Math.max(0, Math.floor(Number(f.xp) || 0));
       const { error } = await supabase
         .from("profiles")
@@ -207,7 +292,8 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
           subscription_tier: f.subscription_tier,
         })
         .eq("id", account.id);
-      if (error) throw error.message.includes("duplicate") ? new Error("Esse @usuário já existe.") : error;
+      if (error)
+        throw error.message.includes("duplicate") ? new Error("Esse @usuário já existe.") : error;
       for (const r of ROLES) {
         const had = account.roles.includes(r.key);
         const has = f.roles.includes(r.key);
@@ -239,12 +325,18 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
           </div>
           <div className="space-y-1.5">
             <Label>Nome de exibição</Label>
-            <Input value={f.display_name} onChange={(e) => setF({ ...f, display_name: e.target.value })} />
+            <Input
+              value={f.display_name}
+              onChange={(e) => setF({ ...f, display_name: e.target.value })}
+            />
           </div>
         </div>
         <div className="space-y-1.5">
           <Label>URL do avatar</Label>
-          <Input value={f.avatar_url} onChange={(e) => setF({ ...f, avatar_url: e.target.value })} />
+          <Input
+            value={f.avatar_url}
+            onChange={(e) => setF({ ...f, avatar_url: e.target.value })}
+          />
         </div>
         <div className="space-y-1.5">
           <Label>Bio</Label>
@@ -252,7 +344,12 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
         </div>
         <div className="space-y-1.5">
           <Label>XP (nível = 1 + XP ÷ 1000)</Label>
-          <Input type="number" min={0} value={f.xp} onChange={(e) => setF({ ...f, xp: e.target.value })} />
+          <Input
+            type="number"
+            min={0}
+            value={f.xp}
+            onChange={(e) => setF({ ...f, xp: e.target.value })}
+          />
         </div>
         <div className="space-y-2 rounded-xl border border-border p-3">
           <p className="text-sm font-bold">Selo de assinatura</p>
@@ -266,13 +363,17 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
                   type="button"
                   onClick={() => setF({ ...f, subscription_tier: tier })}
                   className={`flex flex-col items-center gap-1 rounded-lg border p-2 text-[11px] font-semibold transition-colors ${
-                    active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/40"
+                    active
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:border-primary/40"
                   }`}
                 >
                   {seal ? (
                     <img src={seal.seal} alt={seal.label} className="h-8 w-8 object-contain" />
                   ) : (
-                    <span className="grid h-8 w-8 place-items-center text-muted-foreground/50">—</span>
+                    <span className="grid h-8 w-8 place-items-center text-muted-foreground/50">
+                      —
+                    </span>
                   )}
                   {seal?.label ?? "Nenhum"}
                 </button>
@@ -282,11 +383,21 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
         </div>
         <div className="space-y-2 rounded-xl border border-border p-3">
           <p className="text-sm font-bold">Selos do perfil</p>
-          <p className="text-xs text-muted-foreground">Envie um selo cadastrado ou remova os que este usuário já possui.</p>
+          <p className="text-xs text-muted-foreground">
+            Envie um selo cadastrado ou remova os que este usuário já possui.
+          </p>
           <div className="flex flex-wrap gap-2">
             {(badges.data ?? []).map((b) => (
-              <span key={b.id} className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-2 py-1 text-xs">
-                <img src={b.image_url} alt={b.name} title={b.name} className="h-6 w-6 object-contain" />
+              <span
+                key={b.id}
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-2 py-1 text-xs"
+              >
+                <img
+                  src={b.image_url}
+                  alt={b.name}
+                  title={b.name}
+                  className="h-6 w-6 object-contain"
+                />
                 <span className="max-w-28 truncate">{b.name}</span>
                 <button
                   type="button"
@@ -298,7 +409,9 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
                 </button>
               </span>
             ))}
-            {badges.data?.length === 0 ? <span className="text-xs text-muted-foreground">Nenhum selo recebido.</span> : null}
+            {badges.data?.length === 0 ? (
+              <span className="text-xs text-muted-foreground">Nenhum selo recebido.</span>
+            ) : null}
           </div>
           <div className="border-t border-border pt-3">
             <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase text-muted-foreground">
@@ -307,7 +420,8 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
             <div className="grid max-h-56 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3">
               {(badgeEvents.data ?? []).map((event) => {
                 const owned = badges.data?.some((badge) => badge.event_id === event.id) ?? false;
-                const expired = !event.active || Boolean(event.ends_at && new Date(event.ends_at) <= new Date());
+                const expired =
+                  !event.active || Boolean(event.ends_at && new Date(event.ends_at) <= new Date());
                 return (
                   <Button
                     key={event.id}
@@ -318,18 +432,34 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
                     className="h-auto min-h-20 justify-start gap-2 whitespace-normal p-2 text-left"
                     title={owned ? "Este usuário já possui o selo" : `Enviar ${event.name}`}
                   >
-                    <img src={event.image_url} alt="" className="h-10 w-10 shrink-0 object-contain" />
+                    <img
+                      src={event.image_url}
+                      alt=""
+                      className="h-10 w-10 shrink-0 object-contain"
+                    />
                     <span className="min-w-0">
                       <span className="line-clamp-2 block text-xs font-semibold">{event.name}</span>
-                      <span className={`mt-1 flex items-center gap-1 text-[10px] ${owned ? "text-primary" : "text-muted-foreground"}`}>
-                        {owned ? <><Check className="h-3 w-3" /> Recebido</> : expired ? "Evento encerrado" : "Evento ativo"}
+                      <span
+                        className={`mt-1 flex items-center gap-1 text-[10px] ${owned ? "text-primary" : "text-muted-foreground"}`}
+                      >
+                        {owned ? (
+                          <>
+                            <Check className="h-3 w-3" /> Recebido
+                          </>
+                        ) : expired ? (
+                          "Evento encerrado"
+                        ) : (
+                          "Evento ativo"
+                        )}
                       </span>
                     </span>
                   </Button>
                 );
               })}
             </div>
-            {badgeEvents.data?.length === 0 ? <p className="py-3 text-xs text-muted-foreground">Nenhum selo cadastrado.</p> : null}
+            {badgeEvents.data?.length === 0 ? (
+              <p className="py-3 text-xs text-muted-foreground">Nenhum selo cadastrado.</p>
+            ) : null}
           </div>
         </div>
         <div className="space-y-2 rounded-xl border border-border p-3">
@@ -337,12 +467,18 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
           {ROLES.map((r) => (
             <label key={r.key} className="flex items-center justify-between text-sm">
               <span>
-                <span className="font-semibold">{r.label}</span> <span className="text-xs text-muted-foreground">— {r.desc}</span>
+                <span className="font-semibold">{r.label}</span>{" "}
+                <span className="text-xs text-muted-foreground">— {r.desc}</span>
               </span>
               <Switch
                 disabled={isSelf && r.key === "admin"}
                 checked={f.roles.includes(r.key)}
-                onCheckedChange={(v) => setF({ ...f, roles: v ? [...f.roles, r.key] : f.roles.filter((x) => x !== r.key) })}
+                onCheckedChange={(v) =>
+                  setF({
+                    ...f,
+                    roles: v ? [...f.roles, r.key] : f.roles.filter((x) => x !== r.key),
+                  })
+                }
               />
             </label>
           ))}
@@ -352,9 +488,17 @@ function AccountDialog({ account, selfId, onClose }: { account: Account | null; 
             <span className="font-semibold text-destructive">Bloquear conta</span>
             <span className="block text-xs text-muted-foreground">Impede de comentar no site.</span>
           </span>
-          <Switch disabled={isSelf} checked={f.banned} onCheckedChange={(v) => setF({ ...f, banned: v })} />
+          <Switch
+            disabled={isSelf}
+            checked={f.banned}
+            onCheckedChange={(v) => setF({ ...f, banned: v })}
+          />
         </label>
-        <Button disabled={save.isPending} onClick={() => save.mutate()} className="w-full font-semibold">
+        <Button
+          disabled={save.isPending}
+          onClick={() => save.mutate()}
+          className="w-full font-semibold"
+        >
           <Save className="mr-2 h-4 w-4" /> {save.isPending ? "Salvando…" : "Salvar conta"}
         </Button>
       </DialogContent>

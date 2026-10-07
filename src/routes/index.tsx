@@ -152,7 +152,6 @@ function Home() {
           </SectionRow>
         ) : null}
         <EventBadges />
-
       </main>
       <SiteFooter />
     </div>

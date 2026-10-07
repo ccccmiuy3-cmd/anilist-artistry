@@ -14,14 +14,16 @@ export const Route = createFileRoute("/_authenticated/biblioteca")({
   head: () => ({
     meta: [
       { title: "Minha Coleção — Better Mangá" },
-      { name: "description", content: "Favoritos, obras em leitura e status de leitura da sua conta." },
+      {
+        name: "description",
+        content: "Favoritos, obras em leitura e status de leitura da sua conta.",
+      },
       { property: "og:title", content: "Minha Coleção — Better Mangá" },
       { property: "og:description", content: "Favoritos e histórico de leitura." },
     ],
   }),
   component: Colecao,
 });
-
 
 type Tab = "favoritos" | "continuando" | (typeof STATUSES)[number]["key"];
 
@@ -96,7 +98,9 @@ function Colecao() {
     for (const row of history.data ?? []) {
       const total = row.series.chapters.length || 1;
       const read = row.chapters?.number ?? 0;
-      const idx = [...row.series.chapters].sort((a, b) => a.number - b.number).findIndex((c) => c.number === read);
+      const idx = [...row.series.chapters]
+        .sort((a, b) => a.number - b.number)
+        .findIndex((c) => c.number === read);
       const pct = Math.round(((idx + 1) / total) * 100);
       map.set(row.series_id, Math.max(map.get(row.series_id) ?? 0, pct));
     }
@@ -105,11 +109,13 @@ function Colecao() {
 
   const continuing = useMemo(() => {
     const seen = new Set<string>();
-    return (history.data ?? []).filter((r) => {
-      if (seen.has(r.series_id)) return false;
-      seen.add(r.series_id);
-      return true;
-    }).map((r) => ({ date: r.updated_at, series: r.series }));
+    return (history.data ?? [])
+      .filter((r) => {
+        if (seen.has(r.series_id)) return false;
+        seen.add(r.series_id);
+        return true;
+      })
+      .map((r) => ({ date: r.updated_at, series: r.series }));
   }, [history.data]);
 
   const items: { date: string; series: S }[] =
@@ -117,7 +123,9 @@ function Colecao() {
       ? (favorites.data ?? []).map((f) => ({ date: f.created_at, series: f.series }))
       : tab === "continuando"
         ? continuing
-        : (statuses.data ?? []).filter((s) => s.status === tab).map((s) => ({ date: s.updated_at, series: s.series }));
+        : (statuses.data ?? [])
+            .filter((s) => s.status === tab)
+            .map((s) => ({ date: s.updated_at, series: s.series }));
 
   const filtered = items
     .filter((i) => kind === "Todos" || i.series.kind === kind)
@@ -132,11 +140,32 @@ function Colecao() {
   const remove = useMutation({
     mutationFn: async (seriesId: string) => {
       if (tab === "favoritos") {
-        { const { error: dbErr } = await supabase.from("favorites").delete().eq("user_id", user!.id).eq("series_id", seriesId); if (dbErr) throw dbErr; }
+        {
+          const { error: dbErr } = await supabase
+            .from("favorites")
+            .delete()
+            .eq("user_id", user!.id)
+            .eq("series_id", seriesId);
+          if (dbErr) throw dbErr;
+        }
       } else if (tab === "continuando") {
-        { const { error: dbErr } = await supabase.from("reading_history").delete().eq("user_id", user!.id).eq("series_id", seriesId); if (dbErr) throw dbErr; }
+        {
+          const { error: dbErr } = await supabase
+            .from("reading_history")
+            .delete()
+            .eq("user_id", user!.id)
+            .eq("series_id", seriesId);
+          if (dbErr) throw dbErr;
+        }
       } else {
-        { const { error: dbErr } = await supabase.from("reading_status").delete().eq("user_id", user!.id).eq("series_id", seriesId); if (dbErr) throw dbErr; }
+        {
+          const { error: dbErr } = await supabase
+            .from("reading_status")
+            .delete()
+            .eq("user_id", user!.id)
+            .eq("series_id", seriesId);
+          if (dbErr) throw dbErr;
+        }
       }
     },
     onSuccess: () => {
@@ -153,13 +182,44 @@ function Colecao() {
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-7xl px-4 py-10">
-        <PageTitle icon={<Library className="h-7 w-7" />} title="Minha Coleção" subtitle="Favoritos e histórico de leitura" />
+        <PageTitle
+          icon={<Library className="h-7 w-7" />}
+          title="Minha Coleção"
+          subtitle="Favoritos e histórico de leitura"
+        />
 
         <div className="flex flex-wrap gap-2">
-          <TabButton active={tab === "favoritos"} onClick={() => { setPage(1); setTab("favoritos"); }} icon={<Heart className="h-4 w-4" />} label="Favoritos" count={favorites.data?.length} />
-          <TabButton active={tab === "continuando"} onClick={() => { setPage(1); setTab("continuando"); }} icon={<Play className="h-4 w-4" />} label="Cont. lendo" />
+          <TabButton
+            active={tab === "favoritos"}
+            onClick={() => {
+              setPage(1);
+              setTab("favoritos");
+            }}
+            icon={<Heart className="h-4 w-4" />}
+            label="Favoritos"
+            count={favorites.data?.length}
+          />
+          <TabButton
+            active={tab === "continuando"}
+            onClick={() => {
+              setPage(1);
+              setTab("continuando");
+            }}
+            icon={<Play className="h-4 w-4" />}
+            label="Cont. lendo"
+          />
           {STATUSES.map((s) => (
-            <TabButton key={s.key} active={tab === s.key} onClick={() => { setPage(1); setTab(s.key); }} icon={<s.icon className="h-4 w-4" />} label={s.label} count={countFor(s.key)} />
+            <TabButton
+              key={s.key}
+              active={tab === s.key}
+              onClick={() => {
+                setPage(1);
+                setTab(s.key);
+              }}
+              icon={<s.icon className="h-4 w-4" />}
+              label={s.label}
+              count={countFor(s.key)}
+            />
           ))}
         </div>
 
@@ -195,7 +255,11 @@ function Colecao() {
             />
           ))}
         </div>
-        <Pager page={page} pages={Math.max(1, Math.ceil(filtered.length / 24))} onChange={setPage} />
+        <Pager
+          page={page}
+          pages={Math.max(1, Math.ceil(filtered.length / 24))}
+          onChange={setPage}
+        />
         {filtered.length === 0 ? (
           <p className="mt-10 text-center text-sm text-muted-foreground">
             Nada por aqui ainda.{" "}

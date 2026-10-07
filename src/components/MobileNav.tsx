@@ -53,9 +53,7 @@ export function MobileNav() {
       <div className="flex h-16 w-full items-stretch overflow-hidden px-1">
         <div className="flex w-full items-stretch gap-1">
           {ITEMS.map((item) => {
-            const active = item.exact
-              ? pathname === item.to
-              : pathname.startsWith(item.to);
+            const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
             const Icon = item.icon;
             return (
               <Link

@@ -83,7 +83,11 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen place-items-center px-4 py-10">
       <div className="w-full max-w-sm">
-        <Link to="/" className="mb-8 flex items-center justify-center" aria-label="Better Mangá — início">
+        <Link
+          to="/"
+          className="mb-8 flex items-center justify-center"
+          aria-label="Better Mangá — início"
+        >
           <img
             src="https://cdn.mediocrescan.com/usuarios/156358/056c603c2288529c82b19ad4906b02c7f5a67be8.webp"
             alt="Better Mangá"

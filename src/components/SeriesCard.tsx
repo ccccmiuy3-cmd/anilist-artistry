@@ -115,7 +115,9 @@ export function SeriesCard({
         <div className="pointer-events-none absolute left-2 top-2 z-[3] flex flex-col items-start gap-1.5 antialiased">
           {rating || chapters ? (
             <span
-              title={`Média ${Number(rating ?? 0).toFixed(1).replace(".", ",")} · ${chapters ?? 0} capítulos`}
+              title={`Média ${Number(rating ?? 0)
+                .toFixed(1)
+                .replace(".", ",")} · ${chapters ?? 0} capítulos`}
               className="pointer-events-none inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/65 px-3 py-1 shadow-[0_2px_14px_rgba(0,0,0,0.45)]"
             >
               {rating ? (

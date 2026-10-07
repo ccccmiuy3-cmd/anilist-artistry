@@ -15,7 +15,10 @@ export const Route = createFileRoute("/_authenticated/historico")({
   head: () => ({
     meta: [
       { title: "Histórico — Better Mangá" },
-      { name: "description", content: "As últimas obras e capítulos que você abriu no Better Mangá." },
+      {
+        name: "description",
+        content: "As últimas obras e capítulos que você abriu no Better Mangá.",
+      },
       { property: "og:title", content: "Histórico — Better Mangá" },
       { property: "og:description", content: "Últimas obras que você abriu." },
     ],
@@ -42,7 +45,9 @@ function Historico() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reading_history")
-        .select("updated_at, series_id, chapters(number), series!inner(id, slug, title, cover_url, kind)")
+        .select(
+          "updated_at, series_id, chapters(number), series!inner(id, slug, title, cover_url, kind)",
+        )
         .eq("user_id", user!.id)
         .order("updated_at", { ascending: false });
       if (error) throw error;
@@ -66,13 +71,26 @@ function Historico() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ["hist-page"] });
   const removeOne = useMutation({
     mutationFn: async (id: string) => {
-      { const { error: dbErr } = await supabase.from("reading_history").delete().eq("user_id", user!.id).eq("series_id", id); if (dbErr) throw dbErr; }
+      {
+        const { error: dbErr } = await supabase
+          .from("reading_history")
+          .delete()
+          .eq("user_id", user!.id)
+          .eq("series_id", id);
+        if (dbErr) throw dbErr;
+      }
     },
     onSuccess: invalidate,
   });
   const clearAll = useMutation({
     mutationFn: async () => {
-      { const { error: dbErr } = await supabase.from("reading_history").delete().eq("user_id", user!.id); if (dbErr) throw dbErr; }
+      {
+        const { error: dbErr } = await supabase
+          .from("reading_history")
+          .delete()
+          .eq("user_id", user!.id);
+        if (dbErr) throw dbErr;
+      }
     },
     onSuccess: () => {
       invalidate();
@@ -89,7 +107,11 @@ function Historico() {
           title="Histórico"
           subtitle="Últimas obras que abriste"
           right={
-            <Button variant="outline" onClick={() => clearAll.mutate()} disabled={entries.length === 0}>
+            <Button
+              variant="outline"
+              onClick={() => clearAll.mutate()}
+              disabled={entries.length === 0}
+            >
               <Trash2 className="mr-2 h-4 w-4" /> Limpar histórico
             </Button>
           }
@@ -100,7 +122,21 @@ function Historico() {
 
         <div className="rounded-xl border border-border bg-surface p-5">
           <p className="mb-2 text-xs font-semibold text-muted-foreground">Formato</p>
-          <Chips value={kind === "Todos" ? "Todas" : kind} onChange={(v) => setKind(v === "Todas" ? "Todos" : v)} options={["Todas", "Comic", "Manga", "Manhwa", "Manhua", "Shoujo", "Yaoi", "Yuri", "Novel"]} />
+          <Chips
+            value={kind === "Todos" ? "Todas" : kind}
+            onChange={(v) => setKind(v === "Todas" ? "Todos" : v)}
+            options={[
+              "Todas",
+              "Comic",
+              "Manga",
+              "Manhwa",
+              "Manhua",
+              "Shoujo",
+              "Yaoi",
+              "Yuri",
+              "Novel",
+            ]}
+          />
           <div className="mt-4 flex items-center justify-end gap-2">
             <button
               onClick={() => setOnlyChapter(false)}
@@ -125,7 +161,12 @@ function Historico() {
             <div key={e.series_id} className="group">
               <div className="relative overflow-hidden rounded-xl border border-border">
                 <Link to="/obra/$slug" params={{ slug: e.series.slug }}>
-                  <img src={coverUrl(e.series.cover_url)} alt={e.series.title} className="aspect-[2/3] w-full object-cover" loading="lazy" />
+                  <img
+                    src={coverUrl(e.series.cover_url)}
+                    alt={e.series.title}
+                    className="aspect-[2/3] w-full object-cover"
+                    loading="lazy"
+                  />
                 </Link>
                 <span className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-background/85 px-2 py-0.5 text-[11px] font-bold backdrop-blur">
                   <Clock className="h-3 w-3" /> {timeAgo(e.updated_at)}
@@ -138,7 +179,11 @@ function Historico() {
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <Link to="/obra/$slug" params={{ slug: e.series.slug }} className="mt-2 line-clamp-2 block text-sm font-bold hover:text-primary">
+              <Link
+                to="/obra/$slug"
+                params={{ slug: e.series.slug }}
+                className="mt-2 line-clamp-2 block text-sm font-bold hover:text-primary"
+              >
                 {e.series.title}
               </Link>
               {e.chapters ? (
@@ -155,7 +200,9 @@ function Historico() {
           ))}
         </div>
         {filtered.length === 0 ? (
-          <p className="mt-10 text-center text-sm text-muted-foreground">Nenhuma leitura registrada ainda.</p>
+          <p className="mt-10 text-center text-sm text-muted-foreground">
+            Nenhuma leitura registrada ainda.
+          </p>
         ) : null}
       </main>
       <SiteFooter />
