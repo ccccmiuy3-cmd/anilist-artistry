@@ -215,8 +215,22 @@
     {
       "idx": 30,
       "version": "7",
+      "when": 1791329800000,
+      "tag": "0030_atomic_first_admin",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
       "when": 1791329888089,
       "tag": "0031_storage_public_read_and_signed_url_cleanup",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1791329980000,
+      "tag": "0032_tts_rate_limit",
       "breakpoints": true
     }
   ]
